@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 # from mpl_toolkits.mplot3d import Axes3D
 import meep_objects as mpo
 # import io
-# import sys
+import sys
 import time
 
 
@@ -317,9 +317,12 @@ charge = 1
 t0 = time.time()
 
 # file = 'design_TE_StellaEtAll_2019'
-file = 'design_TM_gd3_buriedDBR_onSiO2'
+file = 'design_TM_gd3_buriedDBR_on'
 
-sim_name = f"spiral_outcoupler_{file}_{pattern_type}_N{N_periods}_charge{charge}_D{D*1e3:.0f}nm_simend0{sim_end:.1e}"
+if len(sys.argv) > 1:
+    sim_prefix = sys.argv[1]SiO2
+
+sim_name = f"spiral_outcoupler_{sim_prefix}_{file}_{pattern_type}_N{N_periods}_charge{charge}_D{D*1e3:.0f}nm_simend0{sim_end:.1e}"
 sim = Simulation(sim_name)
 
 sim.init_geometric_objects(
@@ -378,7 +381,7 @@ def print_time(sim):
 t0 = time.time()
 mp.verbosity(1)
 
-sim.run(mp.at_every(1,print_time),until=30)
+sim.run(mp.at_every(1,print_time),until=.1)
 # sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
 
 t = np.round(sim.sim.round_time(), 2)
@@ -396,7 +399,7 @@ print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 t1 = time.time()
 
 r = 1e6 #1m
-n_freq = 120
+n_freq = 10
 res = n_freq/(r/3)
 
 fields = sim.sim.get_farfields(near2far=sim.monitors[0], resolution=res, center=mp.Vector3(0,0,r), size=mp.Vector3(r/3,r/3,0))
