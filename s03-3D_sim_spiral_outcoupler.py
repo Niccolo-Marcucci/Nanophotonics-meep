@@ -317,10 +317,10 @@ charge = 1
 t0 = time.time()
 
 # file = 'design_TE_StellaEtAll_2019'
-file = 'design_TM_gd3_buriedDBR_on'
+file = 'design_TM_gd3_buriedDBR_onSiO2'
 
 if len(sys.argv) > 1:
-    sim_prefix = sys.argv[1]SiO2
+    sim_prefix = sys.argv[1]
 
 sim_name = f"spiral_outcoupler_{sim_prefix}_{file}_{pattern_type}_N{N_periods}_charge{charge}_D{D*1e3:.0f}nm_simend0{sim_end:.1e}"
 sim = Simulation(sim_name)
