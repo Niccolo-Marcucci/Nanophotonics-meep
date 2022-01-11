@@ -1,0 +1,9 @@
+[submodule "Nanophotonics-meep"]
+	path = Nanophotonics-meep
+	url = https://github.com/Niccolo-Marcucci/Nanophotonics-meep
+[submodule "Lumerical-Objects"]
+	path = Lumerical-Objects
+	url = https://github.com/Niccolo-Marcucci/Lumerical-Objects
+[submodule "meep_objects"]
+	path = meep_objects
+	url = https://github.com/Niccolo-Marcucci/meep_objects
