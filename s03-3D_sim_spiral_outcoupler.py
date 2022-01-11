@@ -345,8 +345,10 @@ sim_suffix = f'res{sim.sim.resolution}_{date}'
 
 print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to initiate\n')
 #%%
-# simsize = sim.sim.cell_size
-# center  = sim.sim.geometry_center
+simsize = sim.sim.cell_size
+center  = sim.sim.geometry_center
+
+
 # # # plt.figure(dpi=200)
 # fig = plt.figure(dpi=300)
 # ax1 = fig.add_subplot(1, 2, 1)
