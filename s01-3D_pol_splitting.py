@@ -300,7 +300,7 @@ class Simulation():
 #%% geometry and simulation parameters
 c0 = 1
 wavelength = 0.570
-wwidth = .25
+wwidth = .20
 f = c0 / wavelength
 
 fmax = c0 / (wavelength - wwidth/2)
@@ -322,8 +322,8 @@ m = 1   # ordinary grating order
 s = (m*2*np.pi + sigma * 2*D_phi) / K_bsw
 # print(s);
 outcoupler_period = s #round(wavelength/(n_eff_l+n_eff_h)*1e3)*1e-3
-N_periods = 1
-D = 1
+N_periods = 9
+D = 5
 charge = 0
 
 t0 = time.time()
@@ -399,7 +399,7 @@ def print_time(sim):
 
 t0 = time.time()
 mp.verbosity(1)
-sim.run(mp.at_every(1,print_time),until=.30)
+sim.run(mp.at_every(1,print_time),until=30)
 # sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
 
 t = np.round(sim.sim.round_time(), 2)

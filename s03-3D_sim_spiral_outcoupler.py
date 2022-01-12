@@ -383,7 +383,7 @@ def print_time(sim):
 t0 = time.time()
 mp.verbosity(1)
 
-sim.run(mp.at_every(1,print_time),until=.1)
+sim.run(mp.at_every(1,print_time),until=30)
 # sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
 
 t = np.round(sim.sim.round_time(), 2)
@@ -401,7 +401,7 @@ print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 t1 = time.time()
 
 r = 1e6 #1m
-n_freq = 10
+n_freq = 120
 res = n_freq/(r/3)
 
 fields = sim.sim.get_farfields(near2far=sim.monitors[0], resolution=res, center=mp.Vector3(0,0,r), size=mp.Vector3(r/3,r/3,0))
