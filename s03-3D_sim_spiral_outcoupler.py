@@ -65,7 +65,7 @@ class Simulation(mp.Simulation):
                     dimensions = dimensions,
                     symmetries = symmetries,
                     filename_prefix = sim_name,
-                    force_complex_fields = False,
+                    force_complex_fields = True,
                     eps_averaging = False)
 
     @property
