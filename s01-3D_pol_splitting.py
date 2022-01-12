@@ -331,7 +331,10 @@ t0 = time.time()
 # file = 'design_TE_StellaEtAll_2019'
 file = 'design_TM_gd3_buriedDBR_onSiO2'
 
-sim_name = f"polSplitter_{file}_{pattern_type}_N{N_periods}_Dphi{int(D_phi/np.pi*180)}_sigma{sigma}"
+if len(sys.argv) > 1:
+    sim_prefix = sys.argv[1]
+
+sim_name = f"polSplitter_{sim_prefix}_{file}_{pattern_type}_N{N_periods}_Dphi{int(D_phi/np.pi*180)}_sigma{sigma}"
 sim = Simulation(sim_name)
 
 sim.init_geometric_objects(
@@ -352,7 +355,7 @@ sim.init_sources_and_monitors(f, df)
 mp.verbosity(1)
 sim.init_sim()
 
-sim.create_openscad(scale_factor = 1e3)
+# sim.create_openscad(scale_factor = 1e3)
 # raise ValueError()
 
 date = time.strftime('%y%m%d-%H%M%S')#'211001-121139'#
@@ -395,36 +398,18 @@ def print_time(sim):
 
 t0 = time.time()
 mp.verbosity(1)
-#
-# sim.run(until=7)
-times_list = []
-for i in range(1):
-    sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-3))
-    t = np.round(sim.sim.round_time(), 2)
-    # sim.sim.save_near2far(near2far=sim.monitors[0], fname=f'{sim_suffix}_nearfield_t{t}')
-    times_list.append(t)
+sim.run(mp.at_every(1,print_time),until=.30)
+# sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
 
-    ex_near, ey_near = [sim.sim.get_dft_array(sim.monitors[0], field, 0) for field in [mp.Ex, mp.Ey]]
-    mpo.savemat(f'{sim_name}-{sim_suffix}_nearfield_t{t}.mat', {'Ex': ex_near, 'Ey': ey_near})
+t = np.round(sim.sim.round_time(), 2)
 
-    print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
+sim.sim.save_near2far(near2far=sim.monitors[0], fname=f'{sim_suffix}_nearfield_t{t}')
 
-# raise RuntimeError("comment this line to compute far fields")
-#%%
+ex_near, ey_near = [sim.sim.get_dft_array(sim.monitors[0], field, 0) for field in [mp.Ex, mp.Ey]]
 
-# for t in times_list :
-#     sim.sim.load_near2far(fname=f'{sim_suffix}_nearfield_t{t}', near2far=sim.monitors[0])
-# sim.sim.load_near2far(fname=f'{sim_suffix}_nearfield', near2far=sim.monitors[0])
+mpo.savemat(f'{sim_name}-{sim_suffix}_nearfield_t{t}.mat', {'Ex': ex_near, 'Ey': ey_near,
+                                                            'Lx': sim.monitors[0].regions[0].size.x,
+                                                            'Ly': sim.monitors[0].regions[0].size.y})
 
-    t1 = time.time()
-
-    r = 1e3 #1m
-    n_freq = 100
-    res = n_freq/r
-
-    fields = sim.sim.get_farfields(near2far=sim.monitors[0], resolution=res, center=mp.Vector3(0,0,r), size=mp.Vector3(r,r,0))
-    Ex, Ey, Ez = [ fields[k] for k in ['Ex', 'Ey', 'Ez']]
-    mpo.savemat(f'{sim_name}-{sim_suffix}_farfield_t{t}.mat', fields)
-
-    print(f'\n\nFar field took {convert_seconds(time.time()-t1)} to compute\n')
+print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
