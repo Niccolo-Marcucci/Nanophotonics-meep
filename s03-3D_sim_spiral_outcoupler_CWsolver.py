@@ -65,7 +65,7 @@ class Simulation(mp.Simulation):
                     dimensions = dimensions,
                     symmetries = symmetries,
                     filename_prefix = sim_name,
-                    force_complex_fields = False,
+                    force_complex_fields = True,
                     eps_averaging = False)
 
     @property
@@ -368,7 +368,7 @@ def print_time(sim):
 t0 = time.time()
 mp.verbosity(1)
 
-sim.sim.solve_cw()
+sim.solve_cw()
 
 
 t = np.round(sim.round_time(), 2)
