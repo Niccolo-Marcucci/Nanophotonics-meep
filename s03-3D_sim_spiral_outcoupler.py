@@ -408,7 +408,7 @@ sim.reset_meep()
 sim = Simulation(sim_name)
 
 sim.init_geometric_objects(
-                multilayer_file = file,
+                multilayer_file = f"Lumerical-Objects/multilayer_design/designs/{file}",
                 D = D,
                 grating_period = outcoupler_period,
                 N_rings = N_periods,
