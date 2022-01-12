@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 # from mpl_toolkits.mplot3d import Axes3D
 import meep_objects as mpo
 # import io
-# import sys
+import sys
 import time
 
 
@@ -322,8 +322,8 @@ m = 1   # ordinary grating order
 s = (m*2*np.pi + sigma * 2*D_phi) / K_bsw
 # print(s);
 outcoupler_period = s #round(wavelength/(n_eff_l+n_eff_h)*1e3)*1e-3
-N_periods = 9
-D = 2
+N_periods = 1
+D = 1
 charge = 0
 
 t0 = time.time()
