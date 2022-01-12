@@ -299,8 +299,8 @@ n_eff = n_eff_h*.7 + n_eff_l*.3
 pattern_type = 'positive'
 
 outcoupler_period = 2*round(wavelength/(n_eff_l+n_eff_h),3)
-N_periods = 1
-D = 1
+N_periods = 6
+D = 5
 charge = 1
 
 t0 = time.time()
@@ -420,7 +420,7 @@ mp.verbosity(1)
 sim.init_sim()
 
 f = plt.figure(dpi=150)
-Animate = mp.Animate2D(sim, fields=mp.Hy, f=f, realtime=False, normalize=True,
+Animate = mp.Animate2D(sim, fields=mp.Hx, f=f, realtime=False, normalize=True,
                         output_plane=mp.Volume(center=center,size=mp.Vector3(0,simsize.y,simsize.z)))
 
 sim.run(mp.at_every(0.1,Animate),until=10)
