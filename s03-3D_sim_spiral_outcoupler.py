@@ -48,7 +48,7 @@ class Simulation():
 
         self.extra_space_xy = .3
 
-        self.PML_width = .5
+        self.PML_width = .3
 
         self.z_top_air_gap = 0.7
 
@@ -311,7 +311,7 @@ pattern_type = 'positive'
 
 outcoupler_period = 2*round(wavelength/(n_eff_l+n_eff_h),3)
 N_periods = 5
-D = .5
+D = 5
 charge = 1
 
 t0 = time.time()
@@ -320,9 +320,11 @@ t0 = time.time()
 file = 'design_TM_gd3_buriedDBR_onSiO2'
 
 if len(sys.argv) > 1:
-    sim_prefix = sys.argv[1]
+    sim_prefix = f"{sys.argv[1]}_"
+else:
+    sim_prefix = ""
 
-sim_name = f"spiral_outcoupler_{sim_prefix}_{file}_{pattern_type}_N{N_periods}_charge{charge}_D{D*1e3:.0f}nm_simend0{sim_end:.1e}"
+sim_name = f"spiral_outcoupler_{sim_prefix}{file}_{pattern_type}_N{N_periods}_charge{charge}_D{D*1e3:.0f}nm_simend0{sim_end:.1e}"
 sim = Simulation(sim_name)
 
 sim.init_geometric_objects(
