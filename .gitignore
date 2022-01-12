@@ -9,6 +9,7 @@
 # avoid data files
 *.mat
 *.csv
+*.h5
 
 # avoid videos and images
 *.mpg
