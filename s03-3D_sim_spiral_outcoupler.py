@@ -288,7 +288,7 @@ f = c0 / wavelength
 
 fmax = c0 / (wavelength - wwidth/2)
 fmin = c0 / (wavelength + wwidth/2)
-df = fmax - fmin
+df = 0# fmax - fmin
 
 sim_end = 1e-4
 
@@ -374,7 +374,7 @@ def print_time(sim):
 t0 = time.time()
 mp.verbosity(1)
 
-sim.run(mp.at_every(1,print_time),until=.30)
+sim.run(mp.at_every(1,print_time),until=10)
 # sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
 
 t = np.round(sim.round_time(), 2)
@@ -423,7 +423,7 @@ f = plt.figure(dpi=150)
 Animate = mp.Animate2D(sim, fields=mp.Hy, f=f, realtime=False, normalize=True,
                         output_plane=mp.Volume(center=center,size=mp.Vector3(0,simsize.y,simsize.z)))
 
-sim.run(mp.at_every(0.1,Animate),until=.2)
+sim.run(mp.at_every(0.1,Animate),until=10)
 
 filename = f'{sim_name}-{sim_suffix}_section.mp4'
 Animate.to_mp4(10,filename)
