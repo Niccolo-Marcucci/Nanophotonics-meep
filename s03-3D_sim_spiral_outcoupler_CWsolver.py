@@ -124,7 +124,7 @@ class Simulation(mp.Simulation):
                         DBR_period = grating_period,
                         N_rings = N_rings,
                         N_arms = N_arms,
-                        thickness = design_specs['d_layers'][-3],
+                        thickness = float(design_specs['d_layers'][-3]),
                         orientation = mp.Vector3(0, 0, 1))
 
         self._geometry.extend(outcoupler)
