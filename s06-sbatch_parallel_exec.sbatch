@@ -7,7 +7,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=12
 #SBATCH --output=meep_run_test_%j.log
-#SBATCH --mem-per-cpu=2048M
+#SBATCH --mem-per-cpu=1200M
 
 mpirun -np 12 python $1 $2
 
