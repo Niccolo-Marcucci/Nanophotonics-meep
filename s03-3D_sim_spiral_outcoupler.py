@@ -375,7 +375,7 @@ mp.verbosity(1)
 
 # sim.run(mp.at_every(1,print_time),until=10)
 # sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
-sim.run(until_after_sources=sim.stop_when_dft_decayed(minimum_run_time=10))
+sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
 t = np.round(sim.round_time(), 2)
 
