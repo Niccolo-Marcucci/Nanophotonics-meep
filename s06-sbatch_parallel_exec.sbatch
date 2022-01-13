@@ -4,9 +4,9 @@
 #SBATCH --partition=global
 #SBATCH --time=04:00:00
 #SBATCH --ntasks=32
-#SBATCH --nodes=2
-#SBATCH --ntasks-per-node=16
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=32
 #SBATCH --mem-per-cpu=2500M
 
-mpirun -np 17 python $1 $2
+mpirun -np 32 python $1 $2
 
