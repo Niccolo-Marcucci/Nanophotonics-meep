@@ -1,5 +1,4 @@
 #!/bin/bash
-#SBATCH --job-name=CW_simulaion
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=niccolo.marcucci@polito.it
 #SBATCH --partition=global
@@ -8,8 +7,6 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=20
 #SBATCH --mem=128G
-#SBATCH --output=CW_simulation_%j.log
-#SBATCH --error=CW_simulation_%j.err
 
 mpirun -np 20 python $1 $2
 
