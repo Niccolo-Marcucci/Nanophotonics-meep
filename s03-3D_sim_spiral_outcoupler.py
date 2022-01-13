@@ -66,7 +66,7 @@ class Simulation(mp.Simulation):
                     symmetries = symmetries,
                     filename_prefix = sim_name,
                     force_complex_fields = False,
-                    eps_averaging = True)
+                    eps_averaging = False)
 
     @property
     def empty(self):
