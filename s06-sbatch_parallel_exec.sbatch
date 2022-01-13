@@ -4,10 +4,11 @@
 #SBATCH --mail-user=niccolo.marcucci@polito.it
 #SBATCH --partition=global
 #SBATCH --time=05:00:00
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=32
+# #SBATCH --nodes=1
+#SBATCH --ntasks=40 
+#SBATCH --cpus-per-task=1
 #SBATCH --output=CW_simulation_%j.log
-#SBATCH --mem-per-cpu=4096M
+#SBATCH --mem=128G
 
-mpirun -np 32 python $1 $2
+mpirun -np 40 python $1 $2
 
