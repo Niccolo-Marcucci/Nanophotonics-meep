@@ -9,4 +9,5 @@
 #SBATCH --output=meep_run_test_%j.log
 #SBATCH --mem-per-cpu=2048M
 
-mpirun -np 16 python $1 $2
+python $1 $2
+
