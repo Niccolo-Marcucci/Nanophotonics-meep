@@ -6,7 +6,7 @@
 #SBATCH --ntasks=32
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=16
-#SBATCH --mem=35G
+#SBATCH --mem-per-cpu=2500M
 
-mpirun -np 32 python $1 $2
+mpirun -np 17 python $1 $2
 
