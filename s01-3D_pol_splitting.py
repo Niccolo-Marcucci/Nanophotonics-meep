@@ -313,7 +313,7 @@ s = (m*2*np.pi + sigma * 2*D_phi) / K_bsw
 outcoupler_period = s #round(wavelength/(n_eff_l+n_eff_h)*1e3)*1e-3
 N_periods = 9
 D = 5
-charge = 1
+charge = 0
 
 t0 = time.time()
 
@@ -325,7 +325,7 @@ if len(sys.argv) > 1:
 else:
     sim_prefix = ""
 
-sim_name = f"polSplitter_{sim_prefix}_{file}_{pattern_type}_N{N_periods}_Dphi{int(D_phi/np.pi*180)}_sigma{sigma}"
+sim_name = f"polSplitter_{sim_prefix}_{file}_{pattern_type}_N{N_periods}_Dphi{int(D_phi/np.pi*180)}_sigma{sigma}_charge{charge}"
 sim = Simulation(sim_name)
 
 sim.init_geometric_objects(
