@@ -339,14 +339,14 @@ print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to initiate\n')
 simsize = sim.cell_size
 center  = sim.geometry_center
 
-plt.figure(dpi=200)
+fig = plt.figure(dpi=200)
 sim.plot2D( output_plane=mp.Volume(center=center,size=mp.Vector3(0,simsize.y,simsize.z)),
                 labels=True,
                 eps_parameters={"interpolation":'none',"cmap":'gnuplot'} )
 fig.savefig(f'{sim_name}-{sim_suffix}_section-yz.jpg')
 plt.close()
 
-plt.figure(dpi=200)
+fig = plt.figure(dpi=200)
 sim.plot2D( output_plane=mp.Volume(size=mp.Vector3(simsize.x,simsize.y)),
                 labels=True,
                 eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
