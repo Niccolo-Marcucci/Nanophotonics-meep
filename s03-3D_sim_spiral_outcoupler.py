@@ -372,7 +372,7 @@ def print_time(sim):
 
 t0 = time.time()
 mp.verbosity(1)
-for i in range(3)
+for i in range(3):
     sim.run(mp.at_every(1,print_time),until=10)
     # sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
