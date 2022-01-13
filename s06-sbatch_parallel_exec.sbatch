@@ -4,11 +4,10 @@
 #SBATCH --mail-user=niccolo.marcucci@polito.it
 #SBATCH --partition=global
 #SBATCH --time=05:00:00
-#SBATCH --ntasks=40
-# #SBATCH --cpus-per-task=1
-#SBATCH --nodes=2
+#SBATCH --ntasks=20
+#SBATCH --nodes=1
 #SBATCH --ntasks-per-node=20
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH --output=CW_simulation_%j.log
 #SBATCH --error=CW_simulation_%j.err
 
