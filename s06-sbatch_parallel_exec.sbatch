@@ -5,9 +5,9 @@
 #SBATCH --partition=global
 #SBATCH --time=05:00:00
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=24
+#SBATCH --ntasks-per-node=32
 #SBATCH --output=CW_simulation_%j.log
-#SBATCH --mem-per-cpu=1024M
+#SBATCH --mem-per-cpu=4096M
 
-mpirun -np 24 python $1 $2
+mpirun -np 32 python $1 $2
 
