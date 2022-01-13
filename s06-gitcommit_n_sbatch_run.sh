@@ -16,4 +16,4 @@ git add $filename
 git add s06-sbatch_parallel_exec.sbatch
 git commit -m "cluster run: job $jobname, file $filename, prefix $prefix. The prefix for the simulation is the hash of the previous commit"
 
-sbatch --job-name=$jobname --output="$jobname_$prefix_%j.log" --error="$jobname_$prefix_%j.err" s06-sbatch_parallel_exec.sbatch $filename $prefix
+sbatch --job-name=$jobname --output="$jobname_$prefix_%j.log" --error="$jobname_$prefix_%j.err" s06-sbatch_parallel_exec.sbatch $filename "$prefix_%i"

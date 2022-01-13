@@ -2,6 +2,7 @@
 *.fsp
 *.lms
 *.log
+*.err
 *.bak
 *.asv
 \#*\#
