@@ -6,7 +6,7 @@
 #SBATCH --time=05:00:00
 # #SBATCH --nodes=1
 #SBATCH --ntasks=40 
-#SBATCH --cpus-per-task=1
+# #SBATCH --cpus-per-task=1
 #SBATCH --output=CW_simulation_%j.log
 #SBATCH --mem-per-cpu=3300M
 
