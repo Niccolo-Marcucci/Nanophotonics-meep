@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=meep_run_test
+#SBATCH --job-name=CW_simulaion
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=niccolo.marcucci@polito.it
 #SBATCH --partition=global
 #SBATCH --time=05:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=24
-#SBATCH --output=meep_run_test_%j.log
+#SBATCH --output=CW_simulation_%j.log
 #SBATCH --mem-per-cpu=1024M
 
-mpirun -np 20 python $1 $2
+mpirun -np 24 python $1 $2
 

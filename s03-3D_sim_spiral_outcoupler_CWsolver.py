@@ -294,8 +294,8 @@ n_eff = n_eff_h*.7 + n_eff_l*.3
 pattern_type = 'positive'
 
 outcoupler_period = 2*round(wavelength/(n_eff_l+n_eff_h),3)
-N_periods = 1
-D = 1
+N_periods = 6
+D = 5
 charge = 1
 
 t0 = time.time()
@@ -380,42 +380,3 @@ mpo.savemat(f'{sim_name}-{sim_suffix}_nearfield_t{t}.mat', {'Ex': ex_near, 'Ey':
                                                             'Ly': sim.monitors[0].regions[0].size.y})
 
 print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
-
-t1 = time.time()
-
-r = 1e6 #1m
-n_freq = 3
-res = n_freq/(r/3)
-
-fields = sim.get_farfields(near2far=sim.monitors[0], resolution=res, center=mp.Vector3(0,0,r), size=mp.Vector3(r/3,r/3,0))
-Ex, Ey, Ez = [ fields[k] for k in ['Ex', 'Ey', 'Ez']]
-mpo.savemat(f'{sim_name}-{sim_suffix}_farfield_t{t}.mat', fields)
-
-print(f'\n\nFar field took {convert_seconds(time.time()-t1)} to compute\n')
-
-del ex_near, ey_near, fields, Ex, Ey, Ez
-plt.close()
-sim.reset_meep()
-
-sim = Simulation(sim_name)
-
-sim.init_geometric_objects(
-                multilayer_file = file,
-                D = D,
-                grating_period = outcoupler_period,
-                N_rings = N_periods,
-                N_arms  = charge,
-                pattern_type=pattern_type)
-
-sim.init_sources_and_monitors(f, df, use_monitor=False)
-mp.verbosity(1)
-sim.init_sim()
-
-f = plt.figure(dpi=150)
-Animate = mp.Animate2D(sim, fields=mp.Hy, f=f, realtime=False, normalize=True,
-                        output_plane=mp.Volume(center=center,size=mp.Vector3(0,simsize.y,simsize.z)))
-
-sim.run(mp.at_every(0.1,Animate),until=.2)
-
-filename = f'{sim_name}-{sim_suffix}_section.mp4'
-Animate.to_mp4(10,filename)
