@@ -8,7 +8,7 @@
 #SBATCH --ntasks=40 
 #SBATCH --cpus-per-task=1
 #SBATCH --output=CW_simulation_%j.log
-#SBATCH --mem=128G
+#SBATCH --mem-per-cpu=3.2G
 
 mpirun -np 40 python $1 $2
 
