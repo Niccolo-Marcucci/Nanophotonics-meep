@@ -288,7 +288,7 @@ f = c0 / wavelength
 
 fmax = c0 / (wavelength - wwidth/2)
 fmin = c0 / (wavelength + wwidth/2)
-df = 0# fmax - fmin
+df = fmax - fmin
 
 sim_end = 1e-4
 
