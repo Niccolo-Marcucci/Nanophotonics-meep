@@ -4,22 +4,20 @@ close all
 
 addpath('Near-to-Far-Field-Transformation')
 
-name = 'spiral_outcoupler_design_TM_gd3_buriedDBR_onSiO2_positive_N10_charge2-res57_220104-132738_nearfield_t9.08.mat';
-name = 'spiral_outcoupler_design_TM_gd3_buriedDBR_onSiO2_positive_N5_charge2_D2000nm_simend01.0e-04-res57_220105-173204_nearfield_t9.08.mat';
-name = 'spiral_outcoupler_design_TM_gd3_buriedDBR_onSiO2_positive_N5_charge1_D2000nm_simend01.0e-04-res57_220105-185003_nearfield_t9.08.mat';
-% name = 'spiral_outcoupler_design_TM_gd3_buriedDBR_onSiO2_positive_N5_charge1_D5000nm_simend01.0e-04-res57_220105-190555_nearfield_t9.08.mat';
-% name = 'spiral_outcoupler_design_TM_gd3_buriedDBR_onSiO2_positive_N5_charge1_simend01.0e-04-res57_220105-123322_nearfield_t9.08.mat';
+name = 'spiral_outcoupler_787f164995_design_TM_gd3_buriedDBR_onSiO2_positive_N5_charge1_D5000nm_simend01.0e-04-res66_220112-014717_nearfield_t30.0.mat';
+name = 'polSplitter_ffd522835c_design_TM_gd3_buriedDBR_onSiO2_positive_N9_Dphi60_sigma1-res66_220112-104136_nearfield_t30.0.mat';
+
 fields = load(['data/',name]);
 
-volume = [5.84848, 5.84848, 2.93939]*1e-6;
+volume = [fields.Lx, fields.Ly, 0]*1e-6;
 
 Ex = fields.Ex;
 Ey = fields.Ey;
 
-% Ex = Ex(2:end,:);
-% Ey = Ey(:,2:end);
-Ex = Ex(:,2:end);
-Ey = Ey(2:end,:);
+Ex = Ex(2:end,:);
+Ey = Ey(:,2:end);
+% Ex = Ex(:,2:end);
+% Ey = Ey(2:end,:);
 
 N = size(Ex);
 x = linspace(-1,1,N(1))*volume(1);
@@ -35,13 +33,18 @@ wavelength = 0.57*1e-6;
 
 freq = c0/wavelength;
 
+
 obj_near = Field2D(X, Y, Ex, Ey, freq, 'm');
 obj_near.plotNearField()
 % drawnow
 
 farGridNumber = 1e2;
+
+kx = linspace(-1, 1, farGridNumber)*1;
+ky = linspace(-1, 1, farGridNumber)*1;
+
 tic
-obj_far = obj_near.getFarFieldGPU(farGridNumber);
+obj_far = obj_near.getFarFieldCPU({kx, ky});
 toc
 % 
 % figure
