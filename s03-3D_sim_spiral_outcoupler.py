@@ -66,7 +66,7 @@ class Simulation(mp.Simulation):
                     symmetries = symmetries,
                     filename_prefix = sim_name,
                     force_complex_fields = False,
-                    eps_averaging = False)
+                    eps_averaging = True)
 
     @property
     def empty(self):
@@ -143,8 +143,8 @@ class Simulation(mp.Simulation):
 
         self.domain_z = self.substrate_thickness + multilayer_thickness + self.z_top_air_gap
 
-                           # resolution is 10 points per wavelength in the highest index material time a scale factor
-        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 1.5)
+        # resolution is 10 points per wavelength in the highest index material time a scale factor
+        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 3)
         print(1/self.resolution)
 
         # round domain with an integer number of grid points
@@ -339,21 +339,20 @@ print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to initiate\n')
 simsize = sim.cell_size
 center  = sim.geometry_center
 
+plt.figure(dpi=200)
+sim.plot2D( output_plane=mp.Volume(center=center,size=mp.Vector3(0,simsize.y,simsize.z)),
+                labels=True,
+                eps_parameters={"interpolation":'none',"cmap":'gnuplot'} )
+fig.savefig(f'{sim_name}-{sim_suffix}_section-yz.jpg')
+plt.close()
 
-# # # plt.figure(dpi=200)
-# fig = plt.figure(dpi=300)
-# ax1 = fig.add_subplot(1, 2, 1)
-# sim.plot2D( output_plane=mp.Volume(center=center,size=mp.Vector3(0,simsize.y,simsize.z)),
-#                 labels=True,
-#                 eps_parameters={"interpolation":'none',"cmap":'gnuplot'} )
-# ax2 = fig.add_subplot(1, 2, 2)
-# sim.plot2D( ax=ax2, output_plane=mp.Volume(size=mp.Vector3(simsize.x,simsize.y)),
-#                 labels=True,
-#                 eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
-# fig.savefig(f'{sim_name}-{sim_suffix}_section.jpg')
-# # plt.close()
-# plt.show()
-# plt.show(block=False)
+plt.figure(dpi=200)
+sim.plot2D( output_plane=mp.Volume(size=mp.Vector3(simsize.x,simsize.y)),
+                labels=True,
+                eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
+fig.savefig(f'{sim_name}-{sim_suffix}_section-xy.jpg')
+plt.close()
+
 # sim.output_epsilon(f'{sim_name}_eps')
 # eps_data = sim.get_epsilon()
 # mpo.savemat(f'{sim_name}_eps.mat', {"eps_data": eps_data})
@@ -374,8 +373,9 @@ def print_time(sim):
 t0 = time.time()
 mp.verbosity(1)
 
-sim.run(mp.at_every(1,print_time),until=10)
+# sim.run(mp.at_every(1,print_time),until=10)
 # sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
+sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
 t = np.round(sim.round_time(), 2)
 
@@ -388,42 +388,3 @@ mpo.savemat(f'{sim_name}-{sim_suffix}_nearfield_t{t}.mat', {'Ex': ex_near, 'Ey':
                                                             'Ly': sim.monitors[0].regions[0].size.y})
 
 print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
-
-t1 = time.time()
-
-r = 1e6 #1m
-n_freq = 3
-res = n_freq/(r/3)
-
-fields = sim.get_farfields(near2far=sim.monitors[0], resolution=res, center=mp.Vector3(0,0,r), size=mp.Vector3(r/3,r/3,0))
-Ex, Ey, Ez = [ fields[k] for k in ['Ex', 'Ey', 'Ez']]
-mpo.savemat(f'{sim_name}-{sim_suffix}_farfield_t{t}.mat', fields)
-
-print(f'\n\nFar field took {convert_seconds(time.time()-t1)} to compute\n')
-
-del ex_near, ey_near, fields, Ex, Ey, Ez
-plt.close()
-sim.reset_meep()
-
-sim = Simulation(sim_name)
-
-sim.init_geometric_objects(
-                multilayer_file = f"Lumerical-Objects/multilayer_design/designs/{file}",
-                D = D,
-                grating_period = outcoupler_period,
-                N_rings = N_periods,
-                N_arms  = charge,
-                pattern_type=pattern_type)
-
-sim.init_sources_and_monitors(f, df, use_monitor=False)
-mp.verbosity(1)
-sim.init_sim()
-
-f = plt.figure(dpi=150)
-Animate = mp.Animate2D(sim, fields=mp.Hx, f=f, realtime=False, normalize=True,
-                        output_plane=mp.Volume(center=center,size=mp.Vector3(0,simsize.y,simsize.z)))
-
-sim.run(mp.at_every(0.1,Animate),until=10)
-
-filename = f'{sim_name}-{sim_suffix}_section.mp4'
-Animate.to_mp4(10,filename)
