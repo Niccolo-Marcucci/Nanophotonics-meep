@@ -299,8 +299,8 @@ n_eff = n_eff_h*.7 + n_eff_l*.3
 pattern_type = 'positive'
 
 outcoupler_period = 2*round(wavelength/(n_eff_l+n_eff_h),3)
-N_periods = 6
-D = 5
+N_periods = 1
+D = 1
 charge = 1
 
 t0 = time.time()
@@ -372,19 +372,19 @@ def print_time(sim):
 
 t0 = time.time()
 mp.verbosity(1)
+for i in range(3)
+    sim.run(mp.at_every(1,print_time),until=10)
+    # sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
+    # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
-# sim.run(mp.at_every(1,print_time),until=10)
-# sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
-sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
+    t = np.round(sim.round_time(), 2)
 
-t = np.round(sim.round_time(), 2)
+    sim.save_near2far(near2far=sim.monitors[0], fname=f'{sim_suffix}_nearfield_t{t}')
 
-sim.save_near2far(near2far=sim.monitors[0], fname=f'{sim_suffix}_nearfield_t{t}')
+    ex_near, ey_near = [sim.get_dft_array(sim.monitors[0], field, 0) for field in [mp.Ex, mp.Ey]]
 
-ex_near, ey_near = [sim.get_dft_array(sim.monitors[0], field, 0) for field in [mp.Ex, mp.Ey]]
+    mpo.savemat(f'{sim_name}-{sim_suffix}_nearfield_t{t}.mat', {'Ex': ex_near, 'Ey': ey_near,
+                                                                'Lx': sim.monitors[0].regions[0].size.x,
+                                                                'Ly': sim.monitors[0].regions[0].size.y})
 
-mpo.savemat(f'{sim_name}-{sim_suffix}_nearfield_t{t}.mat', {'Ex': ex_near, 'Ey': ey_near,
-                                                            'Lx': sim.monitors[0].regions[0].size.x,
-                                                            'Ly': sim.monitors[0].regions[0].size.y})
-
-print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
+    print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
