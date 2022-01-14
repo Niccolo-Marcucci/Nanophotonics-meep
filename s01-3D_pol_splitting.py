@@ -325,7 +325,7 @@ if len(sys.argv) > 1:
 else:
     sim_prefix = ""
 
-sim_name = f"polSplitter_{sim_prefix}_{file}_{pattern_type}_N{N_periods}_Dphi{int(D_phi/np.pi*180)}_sigma{sigma}_charge{charge}"
+sim_name = f"polSplitter_{sim_prefix}{file}_{pattern_type}_N{N_periods}_Dphi{int(D_phi/np.pi*180)}_sigma{sigma}_charge{charge}"
 sim = Simulation(sim_name)
 
 sim.init_geometric_objects(
