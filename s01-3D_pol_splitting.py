@@ -150,7 +150,7 @@ class Simulation(mp.Simulation):
         self.domain_z = self.substrate_thickness + multilayer_thickness + self.z_top_air_gap
 
         # resolution is 10 points per wavelength in the highest index material time a scale factor
-        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 3)
+        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 1)
         print(self.resolution)
 
         # round domain with an integer number of grid points
@@ -325,7 +325,7 @@ if len(sys.argv) > 1:
 else:
     sim_prefix = ""
 
-sim_name = f"polSplitter_{sim_prefix}_{file}_{pattern_type}_N{N_periods}_Dphi{int(D_phi/np.pi*180)}_sigma{sigma}_charge{charge}"
+sim_name = f"polSplitter_{sim_prefix}{file}_{pattern_type}_N{N_periods}_Dphi{int(D_phi/np.pi*180)}_sigma{sigma}_charge{charge}"
 sim = Simulation(sim_name)
 
 sim.init_geometric_objects(
@@ -361,17 +361,27 @@ fig = plt.figure(dpi=200)
 plot = sim.plot2D( output_plane=mp.Volume(center=center,size=mp.Vector3(simsize.x,0,simsize.z)),
                 labels=True,
                 eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'} )
-fig.colorbar(plot.get_images()[0])
-fig.savefig(f'{sim_name}-{sim_suffix}_section-yz.jpg')
+try:
+    fig.colorbar(plot.images[0])
+except:
+    plt.close()
+    print("Only one of the parallel jobs jobs will print the image")
+else:
+    fig.savefig(f'{sim_name}-{sim_suffix}_section-yz.jpg')
+    plt.close()
 
 fig = plt.figure(dpi=200)
 plot = sim.plot2D( output_plane=mp.Volume(center=mp.Vector3(z=-.00),size=mp.Vector3(simsize.x,simsize.y)),
                 labels=True,
                 eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'})
-fig.colorbar(plot.get_images()[0])
-fig.savefig(f'{sim_name}-{sim_suffix}_section-xy.jpg')
-# plt.show()
-plt.close()
+try:
+    fig.colorbar(plot.images[0])
+except:
+    plt.close()
+    print("Only one of the parallel jobs jobs will print the image")
+else:
+    fig.savefig(f'{sim_name}-{sim_suffix}_section-xy.jpg')
+    plt.close()
 
 # sim.output_epsilon(f'{sim_name}_eps')
 # eps_data = sim.get_epsilon()
