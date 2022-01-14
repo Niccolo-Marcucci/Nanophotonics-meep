@@ -85,7 +85,7 @@ class Simulation(mp.Simulation):
 
     def init_geometric_objects(self, multilayer_file, D=5, grating_period=0.2, N_rings=10, N_arms=0, lambda_bsw=0.4,
                                scatter_length=0.4, scatter_width=0.1, scatter_tilt=0,
-                               scatter_type='filled', topology='spiral', pattern_type = 'positive') :
+                               scatter_shape='', topology='spiral', pattern_type = 'positive') :
         self._geometry = []
 
         self.domain_x = self.domain_y = grating_period*N_rings*2 + D + self.extra_space_xy*2
@@ -125,13 +125,13 @@ class Simulation(mp.Simulation):
                         scatter_length = scatter_length,
                         scatter_width = scatter_width,
                         scatter_tilt = scatter_tilt,
-                        scatter_type = 'filled',
-                        topology = 'circular',
+                        scatter_shape = scatter_shape,
+                        topology = topology,
                         n_rings = N_rings,
                         n_arms = N_arms,
                         lambda_bsw = lambda_bsw,
-                        thickness = design_specs['d_layers'][-3],
-                        orientation = mp.Vector3(0, 0, 1))
+                        thickness = float(design_specs['d_layers'][-3]),
+                        center = mp.Vector3())
 
         self._geometry.extend(outcoupler)
 
@@ -150,7 +150,7 @@ class Simulation(mp.Simulation):
         self.domain_z = self.substrate_thickness + multilayer_thickness + self.z_top_air_gap
 
         # resolution is 10 points per wavelength in the highest index material time a scale factor
-        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 2)
+        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 3)
         print(self.resolution)
 
         # round domain with an integer number of grid points
@@ -312,7 +312,7 @@ s = (m*2*np.pi + sigma * 2*D_phi) / K_bsw
 # print(s);
 outcoupler_period = s #round(wavelength/(n_eff_l+n_eff_h)*1e3)*1e-3
 N_periods = 9
-D = 5
+D = 3
 charge = 0
 
 t0 = time.time()
@@ -338,7 +338,7 @@ sim.init_geometric_objects(
                 scatter_length = outcoupler_period*0.9,
                 scatter_width  = outcoupler_period*0.3,
                 scatter_tilt = D_phi,
-                scatter_type = 'filled',
+                scatter_shape = '',
                 topology='spiral',
                 pattern_type=pattern_type)
 
@@ -358,17 +358,19 @@ simsize = sim.cell_size
 center  = sim.geometry_center
 
 fig = plt.figure(dpi=200)
-sim.plot2D( output_plane=mp.Volume(center=center,size=mp.Vector3(0,simsize.y,simsize.z)),
+plot = sim.plot2D( output_plane=mp.Volume(center=center,size=mp.Vector3(simsize.x,0,simsize.z)),
                 labels=True,
-                eps_parameters={"interpolation":'none',"cmap":'gnuplot'} )
+                eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'} )
+fig.colorbar(plot.get_images()[0])
 fig.savefig(f'{sim_name}-{sim_suffix}_section-yz.jpg')
-plt.close()
 
 fig = plt.figure(dpi=200)
-sim.plot2D( output_plane=mp.Volume(size=mp.Vector3(simsize.x,simsize.y)),
+plot = sim.plot2D( output_plane=mp.Volume(center=mp.Vector3(z=-.00),size=mp.Vector3(simsize.x,simsize.y)),
                 labels=True,
-                eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
+                eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'})
+fig.colorbar(plot.get_images()[0])
 fig.savefig(f'{sim_name}-{sim_suffix}_section-xy.jpg')
+# plt.show()
 plt.close()
 
 # sim.output_epsilon(f'{sim_name}_eps')
