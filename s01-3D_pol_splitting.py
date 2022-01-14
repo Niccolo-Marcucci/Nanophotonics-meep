@@ -150,7 +150,7 @@ class Simulation(mp.Simulation):
         self.domain_z = self.substrate_thickness + multilayer_thickness + self.z_top_air_gap
 
         # resolution is 10 points per wavelength in the highest index material time a scale factor
-        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 1)
+        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 3)
         print(self.resolution)
 
         # round domain with an integer number of grid points
