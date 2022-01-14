@@ -9,12 +9,12 @@ else
     jobname="meep_sim"
 fi
 
-previous_hash=$(git log -n 1 --pretty=format:"%H")
-prefix="${previous_hash:0:10}"
-
 git add $filename
 git add s06-sbatch_parallel_exec.sbatch
-git commit -m "cluster run: job $jobname, file $filename, prefix $prefix. The prefix for the simulation is the hash of the previous commit"
+git commit -m "cluster run: job $jobname, file $filename. The prefix for the simulation is the hash of this commit"
+
+hash=$(git log -n 1 --pretty=format:"%H")
+prefix="${hash:0:10}"
 
 outputname="${jobname}_${prefix}_%j.log"
 errorname="${jobname}_${prefix}_%j.err"

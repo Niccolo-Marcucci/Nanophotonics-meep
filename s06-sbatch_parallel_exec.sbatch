@@ -8,5 +8,5 @@
 #SBATCH --ntasks-per-node=24
 #SBATCH --mem-per-cpu=3000M
 
-mpirun -np 32 python $1 $2
+mpirun -np 24 python $1 $2
 
