@@ -16,6 +16,9 @@ git commit -m "cluster run: job $jobname, file $filename. The prefix for the sim
 hash=$(git log -n 1 --pretty=format:"%H")
 prefix="${hash:0:10}"
 
+mkdir -p data/$prefix
+
+jobname="${jobname}_${prefix}"
 outputname="${jobname}_${prefix}_%j.log"
 errorname="${jobname}_${prefix}_%j.err"
 

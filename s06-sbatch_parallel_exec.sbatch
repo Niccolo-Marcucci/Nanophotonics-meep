@@ -10,3 +10,4 @@
 
 mpirun -np 24 python $1 $2
 
+mv -v *${2}* data/$2
