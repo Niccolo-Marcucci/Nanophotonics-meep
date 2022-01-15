@@ -305,10 +305,10 @@ n_eff = n_eff_h*.7 + n_eff_l*.3
 
 pattern_type = 'positive'
 
-scatter_disposition='radial'
+scatter_disposition='filled'
 
 D_phi = np.pi/3;
-sigma = -1;
+sigma = 1;
 K_bsw = 2*np.pi * n_eff / wavelength
 m = 1   # ordinary grating order
 s = (m*2*np.pi + sigma * 2*D_phi) / K_bsw
@@ -353,8 +353,8 @@ sim.init_sim()
 # sim.create_openscad(scale_factor = 1e3)
 # raise ValueError()
 
-date = time.strftime('%y%m%d-%H%M%S')#'211001-121139'#
-sim_suffix = f'res{sim.resolution}_{date}'
+#date = time.strftime('%y%m%d-%H%M%S')#'211001-121139'#
+sim_suffix = f'res{sim.resolution}'#_{date}'
 
 print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to initiate\n')
 #%%

@@ -10,4 +10,4 @@
 
 mpirun -np 24 python $1 $2
 
-mv -v *${2}* data/$2
+mv -v $(ls *${2}* | grep -v 'log\|err') data/*$2

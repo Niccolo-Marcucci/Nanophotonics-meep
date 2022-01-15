@@ -16,11 +16,15 @@ git commit -m "cluster run: job $jobname, file $filename. The prefix for the sim
 hash=$(git log -n 1 --pretty=format:"%H")
 prefix="${hash:0:10}"
 
-mkdir -p data/$prefix
+output_folder="${jobname}_$(date +%y%m%d-%H%M%S)_${prefix}"
 
-jobname="${jobname}_${prefix}"
 outputname="${jobname}_${prefix}_%j.log"
 errorname="${jobname}_${prefix}_%j.err"
+
+jobname="${jobname}_${prefix}"
+prefix="$(date +%y%m%d-%H%M%S)_${prefix}"
+
+mkdir -p data/$output_folder
 
 echo "$outputname, $errorname"
 
