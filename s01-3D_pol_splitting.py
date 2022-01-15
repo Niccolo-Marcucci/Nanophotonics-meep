@@ -305,7 +305,7 @@ n_eff = n_eff_h*.7 + n_eff_l*.3
 
 pattern_type = 'positive'
 
-scatter_disposition='filled'
+scatter_disposition='radial'
 
 D_phi = np.pi/3;
 sigma = -1;
