@@ -85,7 +85,7 @@ class Simulation(mp.Simulation):
 
     def init_geometric_objects(self, multilayer_file, D=5, grating_period=0.2, N_rings=10, N_arms=0, lambda_bsw=0.4,
                                scatter_length=0.4, scatter_width=0.1, scatter_tilt=0,
-                               scatter_shape='', topology='spiral', pattern_type = 'positive') :
+                               scatter_shape='', scatter_disposition='filled', topology='spiral', pattern_type='positive') :
         self._geometry = []
 
         self.domain_x = self.domain_y = grating_period*N_rings*2 + D + self.extra_space_xy*2
@@ -126,6 +126,7 @@ class Simulation(mp.Simulation):
                         scatter_width = scatter_width,
                         scatter_tilt = scatter_tilt,
                         scatter_shape = scatter_shape,
+                        scatter_disposition=scatter_disposition,
                         topology = topology,
                         n_rings = N_rings,
                         n_arms = N_arms,
@@ -137,7 +138,7 @@ class Simulation(mp.Simulation):
 
         beam_block = mp.Cylinder(
                         center = mp.Vector3(0, 0, self.z_top_air_gap-0.1),
-                        radius = D/2*3/4,
+                        radius = D/2*2/4,
                         height = 0.02,
                         material = mp.metal)
         beam_block.name = 'Beam_block'
@@ -150,7 +151,7 @@ class Simulation(mp.Simulation):
         self.domain_z = self.substrate_thickness + multilayer_thickness + self.z_top_air_gap
 
         # resolution is 10 points per wavelength in the highest index material time a scale factor
-        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 3)
+        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 2)
         print(self.resolution)
 
         # round domain with an integer number of grid points
@@ -304,6 +305,8 @@ n_eff = n_eff_h*.7 + n_eff_l*.3
 
 pattern_type = 'positive'
 
+scatter_disposition='filled'
+
 D_phi = np.pi/3;
 sigma = -1;
 K_bsw = 2*np.pi * n_eff / wavelength
@@ -312,7 +315,7 @@ s = (m*2*np.pi + sigma * 2*D_phi) / K_bsw
 # print(s);
 outcoupler_period = s #round(wavelength/(n_eff_l+n_eff_h)*1e3)*1e-3
 N_periods = 9
-D = 3
+D = 5
 charge = 0
 
 t0 = time.time()
@@ -325,7 +328,7 @@ if len(sys.argv) > 1:
 else:
     sim_prefix = ""
 
-sim_name = f"polSplitter_{sim_prefix}{file}_{pattern_type}_N{N_periods}_Dphi{int(D_phi/np.pi*180)}_sigma{sigma}_charge{charge}"
+sim_name = f"polSplitter_BBsmaller_{sim_prefix}{file}_{pattern_type}_{scatter_disposition}_N{N_periods}_Dphi{int(D_phi/np.pi*180)}_sigma{sigma}_charge{charge}"
 sim = Simulation(sim_name)
 
 sim.init_geometric_objects(
@@ -339,6 +342,7 @@ sim.init_geometric_objects(
                 scatter_width  = outcoupler_period*0.3,
                 scatter_tilt = D_phi,
                 scatter_shape = '',
+                scatter_disposition=scatter_disposition,
                 topology='spiral',
                 pattern_type=pattern_type)
 
@@ -402,7 +406,7 @@ def print_time(sim):
 
 t0 = time.time()
 mp.verbosity(1)
-for i in range(4):
+for i in range(3):
     sim.run(mp.at_every(1,print_time),until=10)
     # sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
