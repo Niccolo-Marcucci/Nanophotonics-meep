@@ -348,7 +348,8 @@ else:
     sim_prefix = f"{date}"
 
 sim_name = "cavity_" if N_cavity > 0 else ""
-sim_name += f"{out_grating_type}_{sim_prefix}_{file}"
+sim_name += f"{out_grating_type}" if N_outcoupler > 0 else ""
+sim_name += f"_{sim_prefix}_{file}"
 sim_name += f"_charge{charge}" if N_outcoupler > 0 else ""
 
 # sim_name += f"_{parameter_to_loop}"
@@ -427,10 +428,10 @@ mp.verbosity(1)
 for i in range(1):
     # sim.run(mp.at_every(1,print_time),until=10)
     fig = plt.figure(dpi=100)
-    Animate = mp.Animate2D( sim, fields=mp.Hx, f=fig, realtime=False, normalize=False,
+    Animate = mp.Animate2D( sim, fields=mp.Ez, f=fig, realtime=False, normalize=True,
                             output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.y,simsize.z)),
                             eps_parameters={"interpolation":'none',"vmin":'0'})
-    sim.run(mp.at_every(.1),Animate,mp.at_every(5,print_time),until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-4))
+    sim.run(mp.at_every(.1,Animate),mp.at_every(5,print_time),until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-4))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
     Animate.to_mp4(10,f'{sim_name}_section.mp4')
