@@ -359,7 +359,7 @@ sim.extra_space_xy += wavelength/n_eff_l * (charge > 0)
 
 sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                             used_layer = -3 if buried else -2,
-                            res_scaling = .5,
+                            res_scaling = 1,
                             use_BB = False,
                             pattern_type = pattern_type,
                             cavity_parameters = cavity_parameters,
