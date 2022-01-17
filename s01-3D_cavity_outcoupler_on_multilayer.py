@@ -290,7 +290,7 @@ out_grating_type = 'polSplitting'         # 'spiral' or 'polSplitting' or 'only'
 # cavity info
 N_cavity = 15
 cavity_period = wavelength / n_eff_FF0d5 / 2
-D_cavity = cavity_period * .4
+D_cavity = cavity_period * 1.4
 
 # pol splitting info
 FF_pol_splitter = .3
@@ -430,7 +430,7 @@ for i in range(1):
     Animate = mp.Animate2D( sim, fields=mp.Hx, f=fig, realtime=False, normalize=False,
                             output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.y,simsize.z)),
                             eps_parameters={"interpolation":'none',"vmin":'0'})
-    sim.run(mp.at_every(.1),Animate,mp.at_every(5,print_time),until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-3))
+    sim.run(mp.at_every(.1),Animate,mp.at_every(5,print_time),until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-4))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
     Animate.to_mp4(10,f'{sim_name}_section.mp4')
@@ -481,9 +481,6 @@ for i in range(1):
         for i, monitor in enumerate(sim.spectrum_monitors) :
             spectrum_empty = mp.get_fluxes(monitor)
             spectra_out.append( np.array(spectra[i]) / np.array(spectrum_empty) )
-
-        fig = plt.figure()
-        plt.xlabel("wavelength")
 
         fig = plt.figure(dpi=200)
         ax = fig.add_subplot(111)
