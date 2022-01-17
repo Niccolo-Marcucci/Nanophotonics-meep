@@ -428,13 +428,13 @@ mp.verbosity(1)
 for i in range(1):
     # sim.run(mp.at_every(1,print_time),until=10)
     fig = plt.figure(dpi=100)
-    Animate = mp.Animate2D( sim, fields=mp.Hx, f=fig, realtime=False, normalize=False,
-                            output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.y,simsize.z)),
-                            eps_parameters={"interpolation":'none',"vmin":'0'})
-    sim.run(mp.at_every(.1),Animate,mp.at_every(5,print_time),until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-4))
+#    Animate = mp.Animate2D( sim, fields=mp.Hx, f=fig, realtime=False, normalize=False,
+#                            output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.y,simsize.z)),
+#                            eps_parameters={"interpolation":'none',"vmin":'0'})
+    sim.run(mp.at_every(5,print_time),until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-4))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
-    Animate.to_mp4(10,f'{sim_name}_section.mp4')
+#    Animate.to_mp4(10,f'{sim_name}_section.mp4')
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
     t = np.round(sim.round_time(), 2)
