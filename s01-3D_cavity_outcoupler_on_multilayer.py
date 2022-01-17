@@ -363,7 +363,7 @@ sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_d
                             pattern_type = pattern_type,
                             cavity_parameters = cavity_parameters,
                             outcoupler_parameters = spiral_parameters if out_grating_type=='spiral' else polSplitter_parameters)
-
+sim_name = sim.name
 sim.init_sources_and_monitors(f, df)
 mp.verbosity(2)
 # mpo.create_openscad(sim,1000)
@@ -442,7 +442,7 @@ for i in range(1):
         resonances_Q = []
         resonances_f = []
         for mode in  sim.harminv_instance.modes :
-            if np.abs(mode.Q) > 200 :
+            if np.abs(mode.Q) > 100 :
                 resonances_Q.append(np.abs(mode.Q))
                 resonances_f.append(mode.freq)
         resonances_Q = np.array(resonances_Q)
@@ -466,3 +466,8 @@ for i in range(1):
         for i, monitor in enumerate(sim.spectrum_monitors) :
             spectrum_empty = mp.get_fluxes(monitor)
             spectra_out.append( np.array(spectra[i]) / np.array(spectrum_empty) )
+        
+        fig = plt.figure()    
+        plt.plot(1/spectrum_f, spectra_out[0])
+        plt.xlabel("wavelength")
+        fig.savefig(f'{sim_name}_spectrum_cavity.jpg')
