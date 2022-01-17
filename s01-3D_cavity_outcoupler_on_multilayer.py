@@ -288,7 +288,7 @@ pattern_type = 'negative'           # 'positive' or 'negative'
 out_grating_type = 'polSplitting'         # 'spiral' or 'polSplitting' or 'only'
 
 # cavity info
-N_cavity = 30
+N_cavity = 15
 cavity_period = wavelength / n_eff_FF0d5 / 2
 D_cavity = cavity_period * .4
 
