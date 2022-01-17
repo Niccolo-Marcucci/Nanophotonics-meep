@@ -10,6 +10,7 @@
 *.mat
 *.csv
 *.h5
+*.json
 
 # avoid videos and images
 *.mpg
