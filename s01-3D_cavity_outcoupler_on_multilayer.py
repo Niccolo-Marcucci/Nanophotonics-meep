@@ -43,7 +43,7 @@ def convert_seconds (elapsed):
 
 class Simulation(mp.Simulation):
 
-    def __init__(self, sim_name='simulation_buried', dimensions=3, symmetries = [], empty = False):
+    def __init__(self, sim_name='simulation_buried', dimensions=3, symmetries = []):
 
         self.name = sim_name
 
@@ -55,7 +55,7 @@ class Simulation(mp.Simulation):
 
         self.substrate_thickness = .2
 
-        self._empty = empty
+        self._empty = True
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,1),
@@ -76,12 +76,14 @@ class Simulation(mp.Simulation):
     @empty.setter
     def empty(self,value):
         self._empty = value
-
-        if self._empty :
-            self.geometry = []
-        else:
-            self.geometry = self._geometry
-
+        try:
+            if self._empty :
+                self.geometry = self._empty_geometry
+            else:
+                self.geometry = self._empty_geometry
+                self.geometry.extend(self._geometry)
+        except AttributeError:
+            raise AttributeError("cannot assign 'empty' property before initializing the geometry")
         self.reset_meep()
 
     def init_geometric_objects(self, multilayer_file, used_layer=-3, res_scaling=1, use_BB=True,
@@ -91,7 +93,7 @@ class Simulation(mp.Simulation):
                                # scatter_length=0.4, scatter_width=0.1, scatter_tilt=0,
                                # scatter_shape='', scatter_disposition='filled', topology='spiral', pattern_type='positive') :
         self._geometry = []
-
+        self._empty_geometry = []
 
         self.cavity_r_size = (cavity_parameters["D"]/2 + cavity_parameters["period"] * cavity_parameters["N_rings"]) * (cavity_parameters["N_rings"]>0)
         self.outcou_r_size = (outcoupler_parameters["D"]/2 + outcoupler_parameters["period"] * outcoupler_parameters["N_rings"]) * (outcoupler_parameters["N_rings"]>0)
@@ -108,7 +110,7 @@ class Simulation(mp.Simulation):
             buried = True)
 
         print(design_specs)
-        self._geometry.extend(multilayer)
+        self._empty_geometry.extend(multilayer)            # keep multilayer even if empty
 
         if pattern_type == 'positive':
             grating_index = np.real(design_specs['idx_layers'][used_layer])
@@ -119,7 +121,7 @@ class Simulation(mp.Simulation):
                                       self.domain_y + .5 + 2*self.PML_width,
                                       design_specs['d_layers'][used_layer]),
                 center   = mp.Vector3(0, 0, 0))
-            self._geometry.append(dummy_layer)
+            self._empty_geometry.append(dummy_layer)       # part of the multilayer
 
         elif pattern_type == 'negative':
             grating_index = np.real(design_specs['idx_layers'][used_layer+1])
@@ -179,8 +181,7 @@ class Simulation(mp.Simulation):
 
             self._geometry.append(beam_block)
 
-        if not self.empty:
-            self.geometry = self._geometry
+        self.empty = False                  # this  will add all geometric objects to the simulation
 
         self.domain_z = self.substrate_thickness + multilayer_thickness + self.z_top_air_gap
 
@@ -207,8 +208,10 @@ class Simulation(mp.Simulation):
         Nz -= np.mod(Nz,2) + 1
         self.cell_size.z = Nz * self.grid_step
 
-        print(f"Number of voxels is ({Nx}x{Ny}x{Nz}) = {Nx*Ny*Nz}")
-        print(f"Minimum expected memory is {96*Nx*Ny*Nz/2**30:.2f}G")
+        print()
+        print(f"Number of voxels is ({Nx}x{Ny}x{Nz}) = {Nx*Ny*Nz/1e6} Mln")
+        print(f"Minimum expected memory is {96*Nx*Ny*Nz/2**30:.2f}GB")
+        print()
 
         self.geometry_center = mp.Vector3(0, 0, -(self.cell_size.z/2 - self.z_top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]/2))
 
@@ -229,22 +232,24 @@ class Simulation(mp.Simulation):
             json.dump(data2save, fp,  indent=4)
 
 
-    def init_sources_and_monitors(self, f, df) :
+    def init_sources_and_monitors(self, f, df, allow_farfield=True) :
         self.sources = [ mp.Source(
             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
             center = mp.Vector3(),
             size = mp.Vector3(),
             component = mp.Ez)]
 
-        self.monitors = []
+        self.nearfield_monitor = None
+        self.spectrum_monitors = []
+        self.harminv_instance = None
 
-        if self.outcou_r_size > 0 :
+        if self.outcou_r_size > 0 and allow_farfield :
             nearfield = mp.Near2FarRegion(
                 center = mp.Vector3(0, 0, self.z_top_air_gap - 0.03),
                 size = mp.Vector3(self.domain_x-2*self.grid_step, self.domain_y-2*self.grid_step, 0),
                 direction = mp.Z)
 
-            self.monitors.append(self.add_near2far(f, 0, 1, nearfield))#, yee_grid=True))
+            self.nearfield_monitor = self.add_near2far(f, 0, 1, nearfield)#, yee_grid=True))
 
         if self.cavity_r_size > 0 :
             nfreq = 1000
@@ -252,8 +257,10 @@ class Simulation(mp.Simulation):
                 center = mp.Vector3(0, self.cavity_r_size, 0),
                 size = mp.Vector3(0,0,0),
                 direction = mp.Y)
-            self.monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
+            self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
+            if not self.empty:
+                self.harminv_instance =  mp.Harminv(mp.Ez, mp.Vector3(), f, df)
 
 
 
@@ -277,13 +284,13 @@ n_eff_FF0d5 = n_eff_h*.5 + n_eff_l*.5
 
 file = 'design_TM_gd3_buriedDBR_onSiO2'
 buried = True
-pattern_type = 'positive'           # 'positive' or 'negative'
+pattern_type = 'negative'           # 'positive' or 'negative'
 out_grating_type = 'polSplitting'         # 'spiral' or 'polSplitting' or 'only'
 
 # cavity info
 N_cavity = 30
-D_cavity = 1
 cavity_period = wavelength / n_eff_FF0d5 / 2
+D_cavity = cavity_period * .4
 
 # pol splitting info
 FF_pol_splitter = .3
@@ -298,7 +305,7 @@ s = (m*2*np.pi + sigma * 2*D_phi) / K_bsw
 outcoupler_period = s
 
 # outcoupler info
-N_outcoupler = 6
+N_outcoupler = 0
 d_cavity_out = .5
 charge = 3
 
@@ -347,15 +354,15 @@ sim_name += f"_charge{charge}" if N_outcoupler > 0 else ""
 # sim_name += f"_{parameter_to_loop}"
 
 sim = Simulation(sim_name)
+sim.extra_space_xy += wavelength/n_eff_l * (charge > 0)
 
 sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                             used_layer = -3 if buried else -2,
-                            res_scaling = .5,
+                            res_scaling = 1,
                             use_BB = False,
                             pattern_type = pattern_type,
                             cavity_parameters = cavity_parameters,
                             outcoupler_parameters = spiral_parameters if out_grating_type=='spiral' else polSplitter_parameters)
-
 
 sim.init_sources_and_monitors(f, df)
 mp.verbosity(2)
@@ -370,10 +377,12 @@ print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to initiate\n')
 simsize = sim.cell_size
 center  = sim.geometry_center
 
+max_epsilon = 2.53**2
+
 fig = plt.figure(dpi=200)
 plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.x,simsize.z)),
                     labels=True,
-                    eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'} )
+                    eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon} )
 try:
     fig.colorbar(plot.images[0], orientation="horizontal")
 except:
@@ -386,7 +395,7 @@ else:
 fig = plt.figure(dpi=200)
 plot = sim.plot2D( output_plane=mp.Volume(center=mp.Vector3(z=-.00), size=mp.Vector3(simsize.x,simsize.y)),
                 labels=True,
-                eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'})
+                eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon})
 try:
     fig.colorbar(plot.images[0])
 except:
@@ -409,25 +418,51 @@ else:
 # # mlab.show()
 
 #%%
-raise RuntimeError("comment this line to run til the end")
+# raise RuntimeError("comment this line to run til the end")
 def print_time(sim):
     print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 
 t0 = time.time()
 mp.verbosity(1)
-for i in range(3):
-    sim.run(mp.at_every(1,print_time),until=10)
-    # sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
+for i in range(1):
+    # sim.run(mp.at_every(1,print_time),until=10)
+    sim.run(mp.at_every(5,print_time),until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-3))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
+
+    print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
     t = np.round(sim.round_time(), 2)
 
-    # sim.save_near2far(near2far=sim.monitors[0], fname=f'sim_nearfield_t{t}')
+    if sim.nearfield_monitor != None :
+        ex_near, ey_near = [sim.get_dft_array(sim.nearfield_monitor, field, 0) for field in [mp.Ex, mp.Ey]]
+        mpo.savemat(f'{sim_name}_nearfield_t{t}.mat', {'Ex': ex_near, 'Ey': ey_near,
+                                                                    'Lx': sim.nearfield_monitor.regions[0].size.x,
+                                                                    'Ly': sim.nearfield_monitor.regions[0].size.y})
+    if sim.harminv_instance != None :
+        resonances_Q = []
+        resonances_f = []
+        for mode in  sim.harminv_instance.modes :
+            if np.abs(mode.Q) > 200 :
+                resonances_Q.append(np.abs(mode.Q))
+                resonances_f.append(mode.freq)
+        resonances_Q = np.array(resonances_Q)
+        resonances_f = np.array(resonances_f)
+        sorting = np.argsort(resonances_Q)
+        resonances_Q = resonances_Q[sorting[::-1]]
+        resonances_f = resonances_f[sorting[::-1]]
 
-    ex_near, ey_near = [sim.get_dft_array(sim.monitors[0], field, 0) for field in [mp.Ex, mp.Ey]]
+    spectra = []
+    for monitor in sim.spectrum_monitors :
+        spectrum_f = np.array(mp.get_flux_freqs(monitor))
+        spectra.append(mp.get_fluxes(monitor))
 
-    mpo.savemat(f'{sim_name}_nearfield_t{t}.mat', {'Ex': ex_near, 'Ey': ey_near,
-                                                                'Lx': sim.monitors[0].regions[0].size.x,
-                                                                'Ly': sim.monitors[0].regions[0].size.y})
+    if len(spectra) > 0 :
+        sim.empty = True
+        sim.init_sources_and_monitors(f, df, allow_farfield=False)
 
-    print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
+        sim.run(mp.at_every(1,print_time), until=t)
+
+        spectra_out = []
+        for i, monitor in enumerate(sim.spectrum_monitors) :
+            spectrum_empty = mp.get_fluxes(monitor)
+            spectra_out.append( np.array(spectra[i]) / np.array(spectrum_empty) )
