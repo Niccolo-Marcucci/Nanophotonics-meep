@@ -4,8 +4,8 @@ close all
 
 addpath('Near-to-Far-Field-Transformation')
 
-name = 'spiral_outcoupler_787f164995_design_TM_gd3_buriedDBR_onSiO2_positive_N5_charge1_D5000nm_simend01.0e-04-res66_220112-014717_nearfield_t30.0.mat';
-name = 'polSplitter_ffd522835c_design_TM_gd3_buriedDBR_onSiO2_positive_N9_Dphi60_sigma1-res66_220112-104136_nearfield_t30.0.mat';
+name = 'spiral_outcoupler_7c925374f7_design_TM_gd3_buriedDBR_onSiO2_positive_N6_charge2_D5000nm_simend01.0e-04-res66_220113-092131_nearfield_t30.0.mat';
+name = 'polSplitter_6ec58eed79_design_TM_gd3_buriedDBR_onSiO2_positive_N9_Dphi60_sigma-1_charge0-res133_220114-192330_nearfield_t40.0.mat';
 
 fields = load(['data/',name]);
 
@@ -40,11 +40,11 @@ obj_near.plotNearField()
 
 farGridNumber = 1e2;
 
-kx = linspace(-1, 1, farGridNumber)*1;
-ky = linspace(-1, 1, farGridNumber)*1;
+kx = linspace(-1, 1, farGridNumber)*.5;
+ky = linspace(-1, 1, farGridNumber)*.5;
 
 tic
-obj_far = obj_near.getFarFieldCPU({kx, ky});
+obj_far = obj_near.getFarFieldGPU({kx, ky});
 toc
 % 
 % figure
@@ -57,8 +57,8 @@ Ey_far = obj_far.fy;
 % error
 Ux = obj_far.kx;
 Uy = obj_far.ky;
-ux = linspace(-1,1,farGridNumber);
-uy = linspace(-1,1,farGridNumber);
+ux = kx;
+uy = ky;
 
 ER = sqrt(2)/2*Ex_far + sqrt(2)/2*Ey_far*exp(-1i*pi/2);
 EL = sqrt(2)/2*Ex_far + sqrt(2)/2*Ey_far*exp(+1i*pi/2);
@@ -141,6 +141,8 @@ plot_surf(uy,ux,angle(EL),'jet',"Left circular polarization OAM","symmetric",5);
 % ylim([-5 0]);
 % xlim([0, 0.2]);
 % nicePlot
+
+
 function plot_surf(ux,uy,quantity,map,picture_title,symmetry,massimo,image)
     if nargin < 8 || image 
         imagesc(ux,uy,quantity);

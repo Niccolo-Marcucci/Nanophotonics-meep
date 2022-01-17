@@ -125,7 +125,7 @@ class Simulation(mp.Simulation):
                         N_rings = N_rings,
                         N_arms = N_arms,
                         thickness = float(design_specs['d_layers'][-3]),
-                        orientation = mp.Vector3(0, 0, 1))
+                        center = mp.Vector3(0, 0, 0))
 
         self._geometry.extend(outcoupler)
 
@@ -144,7 +144,7 @@ class Simulation(mp.Simulation):
         self.domain_z = self.substrate_thickness + multilayer_thickness + self.z_top_air_gap
 
         # resolution is 10 points per wavelength in the highest index material time a scale factor
-        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 1)
+        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 3)
         print(1/self.resolution)
 
         # round domain with an integer number of grid points
@@ -157,8 +157,8 @@ class Simulation(mp.Simulation):
         # self.domain_z = int(self.domain_z/self.grid_step) * self.grid_step
 
         self.cell_size = mp.Vector3(self.domain_x + 2*self.PML_width,
-                                        self.domain_y + 2*self.PML_width,
-                                        self.domain_z + 2*self.PML_width)
+                                    self.domain_y + 2*self.PML_width,
+                                    self.domain_z + 2*self.PML_width)
 
         self.geometry_center = mp.Vector3(0, 0, -(self.cell_size.z/2 - self.z_top_air_gap - self.PML_width - design_specs['d_layers'][-2] - design_specs['d_layers'][-3]/2))
 
@@ -300,8 +300,8 @@ pattern_type = 'positive'
 
 outcoupler_period = 2*round(wavelength/(n_eff_l+n_eff_h),3)
 N_periods = 6
-D = 5
-charge = 2
+D = 2
+charge = 1
 
 t0 = time.time()
 
@@ -340,18 +340,30 @@ simsize = sim.cell_size
 center  = sim.geometry_center
 
 fig = plt.figure(dpi=200)
-sim.plot2D( output_plane=mp.Volume(center=center,size=mp.Vector3(0,simsize.y,simsize.z)),
+plot = sim.plot2D( output_plane=mp.Volume(center=center,size=mp.Vector3(simsize.x,0,simsize.z)),
                 labels=True,
-                eps_parameters={"interpolation":'none',"cmap":'gnuplot'} )
-fig.savefig(f'{sim_name}-{sim_suffix}_section-yz.jpg')
-plt.close()
+                eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'} )
+try:
+    fig.colorbar(plot.images[0])
+except:
+    plt.close()
+    print("Only one of the parallel jobs jobs will print the image")
+else:
+    fig.savefig(f'{sim_name}-{sim_suffix}_section-yz.jpg')
+    plt.close()
 
 fig = plt.figure(dpi=200)
-sim.plot2D( output_plane=mp.Volume(size=mp.Vector3(simsize.x,simsize.y)),
+plot = sim.plot2D( output_plane=mp.Volume(center=mp.Vector3(z=-.00),size=mp.Vector3(simsize.x,simsize.y)),
                 labels=True,
-                eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
-fig.savefig(f'{sim_name}-{sim_suffix}_section-xy.jpg')
-plt.close()
+                eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'})
+try:
+    fig.colorbar(plot.images[0])
+except:
+    plt.close()
+    print("Only one of the parallel jobs jobs will print the image")
+else:
+    fig.savefig(f'{sim_name}-{sim_suffix}_section-xy.jpg')
+    plt.close()
 
 # sim.output_epsilon(f'{sim_name}_eps')
 # eps_data = sim.get_epsilon()
@@ -373,7 +385,7 @@ def print_time(sim):
 t0 = time.time()
 mp.verbosity(1)
 for i in range(3):
-    sim.run(mp.at_every(1,print_time),until=10)
+    sim.run(mp.at_every(1,print_time),until=10)#,until=mp.stop_on_interrupt())
     # sim.run(until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), sim_end))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
