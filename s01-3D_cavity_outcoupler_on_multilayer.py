@@ -16,6 +16,7 @@ from matplotlib import pyplot as plt
 import meep_objects as mpo
 # import io
 import sys
+import json
 import time
 
 
@@ -83,67 +84,100 @@ class Simulation(mp.Simulation):
 
         self.reset_meep()
 
-    def init_geometric_objects(self, multilayer_file, D=5, grating_period=0.2, N_rings=10, N_arms=0, lambda_bsw=0.4,
-                               scatter_length=0.4, scatter_width=0.1, scatter_tilt=0,
-                               scatter_shape='', scatter_disposition='filled', topology='spiral', pattern_type='positive') :
+    def init_geometric_objects(self, multilayer_file, used_layer=-3, res_scaling=1, use_BB=True,
+                               pattern_type='positive', cavity_parameters={}, outcoupler_parameters={}):
+
+                               # D=5, grating_period=0.2, N_rings=10, N_arms=0, lambda_bsw=0.4,
+                               # scatter_length=0.4, scatter_width=0.1, scatter_tilt=0,
+                               # scatter_shape='', scatter_disposition='filled', topology='spiral', pattern_type='positive') :
         self._geometry = []
 
-        self.domain_x = self.domain_y = grating_period*N_rings*2 + D + self.extra_space_xy*2
+
+        self.cavity_r_size = (cavity_parameters["D"]/2 + cavity_parameters["period"] * cavity_parameters["N_rings"]) * (cavity_parameters["N_rings"]>0)
+        self.outcou_r_size = (outcoupler_parameters["D"]/2 + outcoupler_parameters["period"] * outcoupler_parameters["N_rings"]) * (outcoupler_parameters["N_rings"]>0)
+
+        self.domain_x = self.domain_y = 2*(self.cavity_r_size + self.outcou_r_size + self.extra_space_xy)
 
         multilayer, multilayer_thickness, design_specs = mpo.dielectric_multilayer(
-                        design_file = multilayer_file,
-                        substrate_thickness = self.substrate_thickness + .5 + 2*self.PML_width,
-                        x_width = self.domain_x + .5 + 2*self.PML_width,
-                        y_width = self.domain_y + .5 + 2*self.PML_width,
-                        unit = 'um',
-                        exclude_last_layer = False,
-                        buried = True)
+            design_file = multilayer_file,
+            substrate_thickness = self.substrate_thickness + .5 + self.PML_width,
+            x_width = self.domain_x + .5 + 2*self.PML_width,
+            y_width = self.domain_y + .5 + 2*self.PML_width,
+            unit = 'um',
+            exclude_last_layer = False,
+            buried = True)
+
         print(design_specs)
         self._geometry.extend(multilayer)
 
         if pattern_type == 'positive':
-            grating_index = np.real(design_specs['idx_layers'][-3])
+            grating_index = np.real(design_specs['idx_layers'][used_layer])
 
-            dummy_layer = mp.Block(material = mp.Medium(index = np.real(design_specs['idx_layers'][-2])),
-                                    size     = mp.Vector3(self.domain_x+.5 + 2*self.PML_width,
-                                                          self.domain_y+.5 + 2*self.PML_width,
-                                                          design_specs['d_layers'][-3]),
-                                    center   = mp.Vector3(0, 0, 0))
+            dummy_layer = mp.Block(
+                material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer+1])),
+                size     = mp.Vector3(self.domain_x + .5 + 2*self.PML_width,
+                                      self.domain_y + .5 + 2*self.PML_width,
+                                      design_specs['d_layers'][used_layer]),
+                center   = mp.Vector3(0, 0, 0))
             self._geometry.append(dummy_layer)
 
         elif pattern_type == 'negative':
-            grating_index = np.real(design_specs['idx_layers'][-2])
+            grating_index = np.real(design_specs['idx_layers'][used_layer+1])
 
         else :
             raise ValueError(f'patter type "{pattern_type}" is unknown')
 
+        if cavity_parameters["N_rings"] > 0:
+            cavity = mpo.spiral_grating(
+                medium_groove = mp.Medium(index=grating_index),
+                D = cavity_parameters["D"],
+                FF = cavity_parameters["FF"],
+                DBR_period = cavity_parameters["period"],
+                N_rings = cavity_parameters["N_rings"],
+                N_arms = 0,
+                thickness = float(design_specs['d_layers'][used_layer]),
+                center = mp.Vector3())
+            self._geometry.extend(cavity)
 
-        outcoupler = mpo.pol_splitting_grating(
-                        medium_groove = mp.Medium(index=grating_index),
-                        D = D,
-                        metasurface_period = grating_period,
-                        scatter_length = scatter_length,
-                        scatter_width = scatter_width,
-                        scatter_tilt = scatter_tilt,
-                        scatter_shape = scatter_shape,
-                        scatter_disposition=scatter_disposition,
-                        topology = topology,
-                        n_rings = N_rings,
-                        n_arms = N_arms,
-                        lambda_bsw = lambda_bsw,
-                        thickness = float(design_specs['d_layers'][-3]),
-                        center = mp.Vector3())
+        if outcoupler_parameters["type"] == 'pol_splitting' and outcoupler_parameters["N_rings"] > 0:
+            outcoupler = mpo.pol_splitting_grating(
+                medium_groove = mp.Medium(index=grating_index),
+                D = self.cavity_r_size*2 + outcoupler_parameters["D"],
+                metasurface_period = outcoupler_parameters["period"],
+                scatter_length = outcoupler_parameters["scatter_length"],
+                scatter_width = outcoupler_parameters["scatter_width"],
+                scatter_tilt = outcoupler_parameters["scatter_tilt"],
+                scatter_shape = outcoupler_parameters["scatter_shape"],
+                scatter_disposition = outcoupler_parameters["scatter_disposition"],
+                topology = outcoupler_parameters["topology"],
+                n_rings = outcoupler_parameters["N_rings"],
+                n_arms = outcoupler_parameters["N_arms"],
+                lambda_bsw = outcoupler_parameters["lambda_bsw"],
+                thickness = float(design_specs['d_layers'][used_layer]),
+                center = mp.Vector3())
+            self._geometry.extend(outcoupler)
 
-        self._geometry.extend(outcoupler)
+        elif outcoupler_parameters["type"] == 'spiral' and outcoupler_parameters["N_rings"] > 0:
+            outcoupler = mpo.spiral_grating(
+                medium_groove = mp.Medium(index=grating_index),
+                D = self.cavity_r_size*2 + outcoupler_parameters["D"],
+                FF = outcoupler_parameters["FF"],
+                DBR_period = outcoupler_parameters["period"],
+                N_rings = outcoupler_parameters["N_rings"],
+                N_arms = outcoupler_parameters["N_arms"],
+                thickness = float(design_specs['d_layers'][used_layer]),
+                center = mp.Vector3())
+            self._geometry.extend(outcoupler)
 
-        beam_block = mp.Cylinder(
-                        center = mp.Vector3(0, 0, self.z_top_air_gap-0.1),
-                        radius = D/2*2/4,
-                        height = 0.02,
-                        material = mp.metal)
-        beam_block.name = 'Beam_block'
+        if use_BB:
+            beam_block = mp.Cylinder(
+                            center = mp.Vector3(0, 0, self.z_top_air_gap-0.1),
+                            radius = 3/4 * (self.cavity_r_size + outcoupler_parameters["D"]/2),
+                            height = 0.02,
+                            material = mp.metal)
+            beam_block.name = 'Beam_block'
 
-        self._geometry.append(beam_block)
+            self._geometry.append(beam_block)
 
         if not self.empty:
             self.geometry = self._geometry
@@ -151,139 +185,76 @@ class Simulation(mp.Simulation):
         self.domain_z = self.substrate_thickness + multilayer_thickness + self.z_top_air_gap
 
         # resolution is 10 points per wavelength in the highest index material time a scale factor
-        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * 2)
-        print(self.resolution)
+        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * res_scaling)
+
+        self.name = self.name + f'res{sim.resolution}'
+        self.filename_prefix = self.name
 
         # round domain with an integer number of grid points
         self.grid_step = 1/self.resolution
-        # self.domain_x = int(self.domain_x/self.grid_step) * self.grid_step
-        # self.domain_y = int(self.domain_y/self.grid_step) * self.grid_step
-        # self.PML_width = int(self.PML_width/self.grid_step) * self.grid_step
-        # print(self.PML_width)
-        # print(self.grid_step)
-        # self.domain_z = int(self.domain_z/self.grid_step) * self.grid_step
 
         self.cell_size = mp.Vector3(self.domain_x + 2*self.PML_width,
-                                        self.domain_y + 2*self.PML_width,
-                                        self.domain_z + 2*self.PML_width)
+                                    self.domain_y + 2*self.PML_width,
+                                    self.domain_z + 2*self.PML_width)
+        # make domain an integer number of voxels
+        Nx = int(self.cell_size.x / self.grid_step)
+        Nx -= np.mod(Nx,2)
+        self.cell_size.x = (Nx+1) * self.grid_step
+        Ny = int(self.cell_size.y / self.grid_step)
+        Ny -= np.mod(Ny,2)
+        self.cell_size.y = (Ny+1) * self.grid_step
+        Nz = int(self.cell_size.z / self.grid_step)
+        Nz -= np.mod(Nz,2)
+        self.cell_size.z = (Nz+1) * self.grid_step
 
-        self.geometry_center = mp.Vector3(0, 0, -(self.cell_size.z/2 - self.z_top_air_gap - self.PML_width - design_specs['d_layers'][-2] - design_specs['d_layers'][-3]/2))
+        print(f"Number of voxels is ({Nx}x{Ny}x{Nz}) = {Nx*Ny*Nz}")
+        print(f"Minimum expected memory is {96*Nx*Ny*Nz/2**30:.2f}G")
+
+        self.geometry_center = mp.Vector3(0, 0, -(self.cell_size.z/2 - self.z_top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]/2))
 
         self.boundary_layers = [mp.PML(self.PML_width)]
         # print( [self.cell_size.x / self.
 
+        with open(f'{sim_name}.json', 'w') as fp:
+            data2save = {"multilayer": multilayer_file,
+                         "pattern_type": pattern_type,
+                         "use_beam_block": use_BB}
+
+            if cavity_parameters["N_rings"] > 0:
+                data2save["cavity_parameters"] = cavity_parameters
+
+            if outcoupler_parameters["N_rings"] > 0:
+                data2save["outcoupler_parameters"] = outcoupler_parameters
+
+            json.dump(data2save, fp,  indent=4)
+
+
     def init_sources_and_monitors(self, f, df) :
-
-        if df == 0 :
-            source = mp.Source(mp.ContinuousSource(f,width=0.1 ),
-                               component=mp.Ez,
-                               center=mp.Vector3() )
-        else :
-            source = mp.Source(mp.GaussianSource(f,df),
-                               component=mp.Ez,
-                               center=mp.Vector3() )
-
-        self.sources.append(source)
-
-        monitor_distance  = self.z_top_air_gap - 0.03
-
-        # nfreq = 1000
+        self.sources = [ mp.Source(
+            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+            center = mp.Vector3(),
+            size = mp.Vector3(),
+            component = mp.Ez)]
 
         self.monitors = []
 
-        nearfield = mp.Near2FarRegion(mp.Vector3(0, 0, monitor_distance),
-                                      size = mp.Vector3(self.domain_x-2*self.grid_step, self.domain_y-2*self.grid_step, 0),
-                                      direction = mp.Z)
+        if self.outcou_r_size > 0 :
+            nearfield = mp.Near2FarRegion(
+                center = mp.Vector3(0, 0, self.z_top_air_gap - 0.03),
+                size = mp.Vector3(self.domain_x-2*self.grid_step, self.domain_y-2*self.grid_step, 0),
+                direction = mp.Z)
 
-        # fluxr = mp.FluxRegion(center=mp.Vector3(0, 0, monitor_distance),
-        #                       size=mp.Vector3(0,0,0),
-        #                       direction=mp.Z)
+            self.monitors.append(self.add_near2far(f, 0, 1, nearfield))#, yee_grid=True))
 
-        self.monitors.append(self.add_near2far(f, 0, 1, nearfield))#, yee_grid=True))
-
-    # def create_blender_primitive(self, scale_factor=1):
-    #     blend_name = f"{self.name}.blendtxt"
-    #     with open(blend_name,"w") as file:
-    #         file.write("//Simulation 00\n")
-
-    #     if obj.__class__ == mp.Block:
-    #         name = "cube"
-
-    #         obj_centre = np.array([obj.center.x*scale_factor,
-    #                                obj.center.y*scale_factor,
-    #                                obj.center.z*scale_factor])
-    #         obj_vertices = [np.array([ -.5 * obj.size.x, -.5 * obj.size.y]),
-    #                         np.array([ -.5 * obj.size.x, +.5 * obj.size.y]),
-    #                         np.array([ +.5 * obj.size.x, +.5 * obj.size.y]),
-    #                         np.array([ +.5 * obj.size.x, -.5 * obj.size.y])]
+        if self.cavity_r_size > 0 :
+            nfreq = 1000
+            fluxr = mp.FluxRegion(
+                center = mp.Vector3(0, self.cavity_r_size, 0),
+                size = mp.Vector3(0,0,0),
+                direction = mp.Y)
+            self.monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
 
-    #         obj_height = obj.size.z
-
-    def create_openscad(self, scale_factor=1):
-        try:
-            import openpyscad as ops
-        except ModuleNotFoundError:
-            print("WARNING openpyscad is not installed in this environment")
-        else:
-            scad_name = f"{self.name}.scad"
-            with open(scad_name,"w") as file:
-                file.write(f"//Simulation {self.name}\n")
-
-            for obj in self.geometry:
-                if obj.__class__ == mp.Block:
-                    cube = ops.Cube([obj.size.x*scale_factor,
-                                      obj.size.y*scale_factor,
-                                      obj.size.z*scale_factor], center = True)
-                    tilt = np.arctan2(obj.e1.y, obj.e1.x)
-                    if tilt != 0:
-                        cube = cube.rotate([0, 0, tilt/np.pi*180])
-
-                    index = np.round(np.sqrt(obj.material.epsilon_diag.x),2)
-                    if index == 2.53:
-                        color = [0, 0, 1]
-                    elif index == 1.65:
-                        color = [0, 1, 0]
-                    elif index == 1.46:
-                        color = [1, 0, 0]
-                    elif index == 1.48:
-                        color = [1, 1, 0]
-                    elif index == 2.08:
-                        color = [0, 1, 1]
-                    cube = cube.color(color)
-
-                    scad = cube
-
-                elif obj.__class__ == mp.Cylinder:
-                    cyl = ops.Cylinder(h=obj.height*scale_factor,
-                                        r=obj.radius*scale_factor, center = True)
-
-                    scad = cyl
-
-                scad = scad.translate([obj.center.x*scale_factor,
-                                       obj.center.y*scale_factor,
-                                       obj.center.z*scale_factor])
-                scad.write(scad_name, mode='a')
-
-            sim_domain = ops.Cube([(self.cell_size.x - self.PML_width) * scale_factor,
-                                    (self.cell_size.y - self.PML_width) * scale_factor,
-                                    (self.cell_size.z - self.PML_width) * scale_factor], center = True)
-            sim_domain = sim_domain.color([.5, .5, .5, .5])
-            sim_domain = sim_domain.translate([self.geometry_center.x*scale_factor,
-                                                self.geometry_center.y*scale_factor,
-                                                self.geometry_center.z*scale_factor])
-
-            # sim_domain.write(scad_name, mode='a')
-
-            # for obj in self.monitors:
-            #     center, size = mp.get_center_and_size(obj.where)
-            #     plane = ops.Cube([size.x*scale_factor,
-            #                       size.y*scale_factor,1e-3*scale_factor], center = True)
-            #     plane = plane.color([.5, .5, 0, .5])
-            #     plane = plane.translate([center.x*scale_factor,
-            #                               center.y*scale_factor,
-            #                               center.z*scale_factor])
-            #     plane.write(scad_name, mode='a')
 
 
 
@@ -301,91 +272,130 @@ sim_end = 1e-4
 
 n_eff_l = 1.6642
 n_eff_h = 1.7899
-n_eff = n_eff_h*.7 + n_eff_l*.3
+n_eff_FF0d5 = n_eff_h*.5 + n_eff_l*.5
 
-pattern_type = 'positive'
 
-scatter_disposition='filled'
+file = 'design_TM_gd3_buriedDBR_onSiO2'
+buried = True
+pattern_type = 'positive'           # 'positive' or 'negative'
+out_grating_type = 'polSplitting'         # 'spiral' or 'polSplitting' or 'only'
 
+# cavity info
+N_cavity = 30
+D_cavity = 1
+cavity_period = wavelength / n_eff_FF0d5 / 2
+
+# pol splitting info
+FF_pol_splitter = .3
+FF = FF_pol_splitter
+n_eff = n_eff_h*(1-FF) + n_eff_l*FF if pattern_type=='positive' else n_eff_h*FF + n_eff_l*(1-FF)
+scatter_disposition='filled'        # 'radial' or 'filled'
 D_phi = np.pi/3;
-sigma = -1;
+sigma = -1;                         # select for circl left or circ right
 K_bsw = 2*np.pi * n_eff / wavelength
-m = 1   # ordinary grating order
+m = 1                               # ordinary grating order
 s = (m*2*np.pi + sigma * 2*D_phi) / K_bsw
-# print(s);
-outcoupler_period = s #round(wavelength/(n_eff_l+n_eff_h)*1e3)*1e-3
-N_periods = 9
-D = 5
-charge = 0
+outcoupler_period = s
+
+# outcoupler info
+N_outcoupler = 6
+d_cavity_out = .5
+charge = 3
+
+cavity_parameters = {
+    "D": D_cavity,
+    "FF": .5,
+    "period": cavity_period,
+    "N_rings": N_cavity}
+
+spiral_parameters = {
+    "type": 'spiral',
+    "D": d_cavity_out,
+    "FF": .5,
+    "period": wavelength / n_eff_FF0d5,
+    "N_rings": N_outcoupler if out_grating_type=='spiral' else 0,
+    "N_arms": charge}
+
+polSplitter_parameters = {
+    "type": 'pol_splitting',
+    "D": d_cavity_out,
+    "period": outcoupler_period,
+    "scatter_length": outcoupler_period*0.9,
+    "scatter_width": outcoupler_period*FF_pol_splitter,
+    "scatter_tilt": D_phi,
+    "scatter_shape": '',
+    "scatter_disposition": scatter_disposition,
+    "topology": 'spiral',
+    "N_rings": N_outcoupler if out_grating_type=='polSplitting' else 0,
+    "N_arms": charge,
+    "lambda_bsw": wavelength/n_eff,
+    "sigma": sigma}
 
 t0 = time.time()
 
-# file = 'design_TE_StellaEtAll_2019'
-file = 'design_TM_gd3_buriedDBR_onSiO2'
 
+date = time.strftime('%y%m%d-%H%M%S')#'211001-121139'#
 if len(sys.argv) > 1:
-    sim_prefix = f"{sys.argv[1]}_"
+    sim_prefix = f"{sys.argv[1]}"
 else:
-    sim_prefix = ""
+    sim_prefix = f"{date}"
 
-sim_name = f"polSplitter_BBsmaller_{sim_prefix}{file}_{pattern_type}_{scatter_disposition}_N{N_periods}_Dphi{int(D_phi/np.pi*180)}_sigma{sigma}_charge{charge}"
+sim_name = "cavity_" if N_cavity > 0 else ""
+sim_name += f"{out_grating_type}_{sim_prefix}_{file}"
+sim_name += f"_charge{charge}" if N_outcoupler > 0 else ""
+
+# sim_name += f"_{parameter_to_loop}"
+
 sim = Simulation(sim_name)
 
-sim.init_geometric_objects(
-                multilayer_file = f"Lumerical-Objects/multilayer_design/designs/{file}",
-                D = D,
-                grating_period = outcoupler_period,
-                N_rings = N_periods,
-                N_arms  = charge,
-                lambda_bsw = wavelength/n_eff,
-                scatter_length = outcoupler_period*0.9,
-                scatter_width  = outcoupler_period*0.3,
-                scatter_tilt = D_phi,
-                scatter_shape = '',
-                scatter_disposition=scatter_disposition,
-                topology='spiral',
-                pattern_type=pattern_type)
+sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
+                            used_layer = -3 if buried else -2,
+                            res_scaling = .5,
+                            use_BB = False,
+                            pattern_type = pattern_type,
+                            cavity_parameters = cavity_parameters,
+                            outcoupler_parameters = spiral_parameters if out_grating_type=='spiral' else polSplitter_parameters)
+
 
 sim.init_sources_and_monitors(f, df)
-mp.verbosity(1)
+mp.verbosity(2)
+# mpo.create_openscad(sim,1000)
 sim.init_sim()
 
 # sim.create_openscad(scale_factor = 1e3)
 # raise ValueError()
-
-date = time.strftime('%y%m%d-%H%M%S')#'211001-121139'#
-sim_suffix = f'res{sim.resolution}_{date}'
+sim_suffix = f'res{sim.resolution}'
 
 print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to initiate\n')
 #%%
 simsize = sim.cell_size
 center  = sim.geometry_center
 
-fig = plt.figure(dpi=200)
-plot = sim.plot2D( output_plane=mp.Volume(center=center,size=mp.Vector3(simsize.x,0,simsize.z)),
-                labels=True,
-                eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'} )
-try:
-    fig.colorbar(plot.images[0])
-except:
-    plt.close()
-    print("Only one of the parallel jobs jobs will print the image")
-else:
-    fig.savefig(f'{sim_name}-{sim_suffix}_section-yz.jpg')
-    plt.close()
+# fig = plt.figure(dpi=200)
+# plot = sim.plot2D( output_plane=mp.Volume(center=center,size=mp.Vector3(simsize.x,0,simsize.z)),
+#                    labels=True,
+#                    eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'} )
+# try:
+#     fig.colorbar(plot.images[0])
+# except:
+#     plt.close()
+#     print("Only one of the parallel jobs jobs will print the image")
+# else:
+#     fig.savefig(f'{sim_name}-{sim_suffix}_section-yz.jpg')
+#     plt.close()
 
-fig = plt.figure(dpi=200)
-plot = sim.plot2D( output_plane=mp.Volume(center=mp.Vector3(z=-.00),size=mp.Vector3(simsize.x,simsize.y)),
-                labels=True,
-                eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'})
-try:
-    fig.colorbar(plot.images[0])
-except:
-    plt.close()
-    print("Only one of the parallel jobs jobs will print the image")
-else:
-    fig.savefig(f'{sim_name}-{sim_suffix}_section-xy.jpg')
-    plt.close()
+# fig = plt.figure(dpi=200)
+# plot = sim.plot2D( output_plane=mp.Volume(center=mp.Vector3(z=-.00),size=mp.Vector3(simsize.x,simsize.y)),
+#                 labels=True,
+#                 eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'})
+# try:
+#     fig.colorbar(plot.images[0])
+# except:
+#     plt.close()
+#     print("Only one of the parallel jobs jobs will print the image")
+# else:
+#     fig.savefig(f'{sim_name}-{sim_suffix}_section-xy.jpg')
+#     plt.close()
 
 # sim.output_epsilon(f'{sim_name}_eps')
 # eps_data = sim.get_epsilon()
