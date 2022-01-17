@@ -375,7 +375,7 @@ plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsi
                     labels=True,
                     eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'} )
 try:
-    fig.colorbar(plot.images[0])
+    fig.colorbar(plot.images[0], orientation="horizontal")
 except:
     plt.close()
     print("Only one of the parallel jobs jobs will print the image")
@@ -409,7 +409,7 @@ else:
 # # mlab.show()
 
 #%%
-# raise RuntimeError("comment this line to run til the end")
+raise RuntimeError("comment this line to run til the end")
 def print_time(sim):
     print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 
