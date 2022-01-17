@@ -371,7 +371,7 @@ simsize = sim.cell_size
 center  = sim.geometry_center
 
 fig = plt.figure(dpi=200)
-plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(simsize.x,0,simsize.z)),
+plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.x,simsize.z)),
                     labels=True,
                     eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'} )
 try:
