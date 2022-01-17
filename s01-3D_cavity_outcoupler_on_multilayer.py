@@ -198,14 +198,14 @@ class Simulation(mp.Simulation):
                                     self.domain_z + 2*self.PML_width)
         # make domain an integer number of voxels
         Nx = int(self.cell_size.x / self.grid_step)
-        Nx -= np.mod(Nx,2)
-        self.cell_size.x = (Nx+1) * self.grid_step
+        Nx -= np.mod(Nx,2) + 1      # make odd
+        self.cell_size.x = Nx * self.grid_step
         Ny = int(self.cell_size.y / self.grid_step)
-        Ny -= np.mod(Ny,2)
-        self.cell_size.y = (Ny+1) * self.grid_step
+        Ny -= np.mod(Ny,2) + 1
+        self.cell_size.y = Ny * self.grid_step
         Nz = int(self.cell_size.z / self.grid_step)
-        Nz -= np.mod(Nz,2)
-        self.cell_size.z = (Nz+1) * self.grid_step
+        Nz -= np.mod(Nz,2) + 1
+        self.cell_size.z = Nz * self.grid_step
 
         print(f"Number of voxels is ({Nx}x{Ny}x{Nz}) = {Nx*Ny*Nz}")
         print(f"Minimum expected memory is {96*Nx*Ny*Nz/2**30:.2f}G")
@@ -362,40 +362,39 @@ mp.verbosity(2)
 # mpo.create_openscad(sim,1000)
 sim.init_sim()
 
-# sim.create_openscad(scale_factor = 1e3)
 # raise ValueError()
-sim_suffix = f'res{sim.resolution}'
 
 print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to initiate\n')
+
 #%%
 simsize = sim.cell_size
 center  = sim.geometry_center
 
-# fig = plt.figure(dpi=200)
-# plot = sim.plot2D( output_plane=mp.Volume(center=center,size=mp.Vector3(simsize.x,0,simsize.z)),
-#                    labels=True,
-#                    eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'} )
-# try:
-#     fig.colorbar(plot.images[0])
-# except:
-#     plt.close()
-#     print("Only one of the parallel jobs jobs will print the image")
-# else:
-#     fig.savefig(f'{sim_name}-{sim_suffix}_section-yz.jpg')
-#     plt.close()
+fig = plt.figure(dpi=200)
+plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(simsize.x,0,simsize.z)),
+                    labels=True,
+                    eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'} )
+try:
+    fig.colorbar(plot.images[0])
+except:
+    plt.close()
+    print("Only one of the parallel jobs jobs will print the image")
+else:
+    fig.savefig(f'{sim_name}_section-yz.jpg')
+    plt.close()
 
-# fig = plt.figure(dpi=200)
-# plot = sim.plot2D( output_plane=mp.Volume(center=mp.Vector3(z=-.00),size=mp.Vector3(simsize.x,simsize.y)),
-#                 labels=True,
-#                 eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'})
-# try:
-#     fig.colorbar(plot.images[0])
-# except:
-#     plt.close()
-#     print("Only one of the parallel jobs jobs will print the image")
-# else:
-#     fig.savefig(f'{sim_name}-{sim_suffix}_section-xy.jpg')
-#     plt.close()
+fig = plt.figure(dpi=200)
+plot = sim.plot2D( output_plane=mp.Volume(center=mp.Vector3(z=-.00), size=mp.Vector3(simsize.x,simsize.y)),
+                labels=True,
+                eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0'})
+try:
+    fig.colorbar(plot.images[0])
+except:
+    plt.close()
+    print("Only one of the parallel jobs jobs will print the image")
+else:
+    fig.savefig(f'{sim_name}_section-xy.jpg')
+    plt.close()
 
 # sim.output_epsilon(f'{sim_name}_eps')
 # eps_data = sim.get_epsilon()
@@ -423,11 +422,11 @@ for i in range(3):
 
     t = np.round(sim.round_time(), 2)
 
-    sim.save_near2far(near2far=sim.monitors[0], fname=f'{sim_suffix}_nearfield_t{t}')
+    # sim.save_near2far(near2far=sim.monitors[0], fname=f'sim_nearfield_t{t}')
 
     ex_near, ey_near = [sim.get_dft_array(sim.monitors[0], field, 0) for field in [mp.Ex, mp.Ey]]
 
-    mpo.savemat(f'{sim_name}-{sim_suffix}_nearfield_t{t}.mat', {'Ex': ex_near, 'Ey': ey_near,
+    mpo.savemat(f'{sim_name}_nearfield_t{t}.mat', {'Ex': ex_near, 'Ey': ey_near,
                                                                 'Lx': sim.monitors[0].regions[0].size.x,
                                                                 'Ly': sim.monitors[0].regions[0].size.y})
 
