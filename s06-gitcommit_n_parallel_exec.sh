@@ -23,3 +23,5 @@ prefix="$(date +%y%m%d-%H%M%S)_${prefix}"
 mkdir -p data/$output_folder
 
 mpirun -np $2 python $filename $prefix
+
+mv *${prefix}* data/$output_folder
