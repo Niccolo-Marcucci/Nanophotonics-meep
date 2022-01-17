@@ -240,8 +240,8 @@ class Simulation(mp.Simulation):
             component = mp.Ez)]
 
         self.nearfield_monitor = None
-        self.spectrum_monitors = []
         self.harminv_instance = None
+        self.spectrum_monitors = []
 
         if self.outcou_r_size > 0 and allow_farfield :
             nearfield = mp.Near2FarRegion(
@@ -358,7 +358,7 @@ sim.extra_space_xy += wavelength/n_eff_l * (charge > 0)
 
 sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                             used_layer = -3 if buried else -2,
-                            res_scaling = 1,
+                            res_scaling = .5,
                             use_BB = False,
                             pattern_type = pattern_type,
                             cavity_parameters = cavity_parameters,
@@ -380,7 +380,7 @@ center  = sim.geometry_center
 max_epsilon = 2.53**2
 
 fig = plt.figure(dpi=200)
-plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.x,simsize.z)),
+plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.y,simsize.z)),
                     labels=True,
                     eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon} )
 try:
@@ -426,6 +426,10 @@ t0 = time.time()
 mp.verbosity(1)
 for i in range(1):
     # sim.run(mp.at_every(1,print_time),until=10)
+    f = plt.figure(dpi=100)
+    Animate = mp.Animate2D( sim, fields=mp.Hx, f=f, realtime=False, normalize=False,
+                            output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.y,simsize.z)),
+                            eps_parameters={"interpolation":'none',"vmin":'0'})
     sim.run(mp.at_every(5,print_time),until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-3))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
@@ -451,6 +455,16 @@ for i in range(1):
         resonances_Q = resonances_Q[sorting[::-1]]
         resonances_f = resonances_f[sorting[::-1]]
 
+        N_resonances = len(resonances_f)
+        resonance_table = []
+        for l in range(N_resonances):
+            resonance_table.append([np.round(1/resonances_f*1e3, 1), np.int(resonances_Q)] )
+        if N_resonances == 0 :
+            resonance_table.append([ 0, 0 ])
+        print()
+        print(resonance_table)
+        print()
+
     spectra = []
     for monitor in sim.spectrum_monitors :
         spectrum_f = np.array(mp.get_flux_freqs(monitor))
@@ -466,8 +480,25 @@ for i in range(1):
         for i, monitor in enumerate(sim.spectrum_monitors) :
             spectrum_empty = mp.get_fluxes(monitor)
             spectra_out.append( np.array(spectra[i]) / np.array(spectrum_empty) )
-        
-        fig = plt.figure()    
-        plt.plot(1/spectrum_f, spectra_out[0])
+
+        fig = plt.figure()
         plt.xlabel("wavelength")
+
+        fig = plt.figure(dpi=200)
+        ax = fig.add_subplot(111)
+        plt.plot(1/spectrum_f*1e3, spectra_out[0])
+        # plt.xlim(540,660)
+        # plt.ylim(-2,2)
+        ax.grid(True)
+        plt.xlabel('wavelength')
+        plt.ylabel('Transmission')
+        ax2 = fig.add_subplot(336)
+        # plt.title('Table of the resonances')
+        collabel=[ "Wavelength", "Quality"]
+        rowlabel=[ f'{i}' for i in range(len(resonance_table))]
+        ax2.axis('tight')
+        ax2.axis('off')
+        the_table = ax2.table(cellText=resonance_table, colLabels=collabel, rowLabels=rowlabel,loc='center')
+
         fig.savefig(f'{sim_name}_spectrum_cavity.jpg')
+        plt.close(fig)
