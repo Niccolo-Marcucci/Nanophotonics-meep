@@ -3,12 +3,7 @@
 filename="$1"
 echo $filename
 
-if [ $# -gt 1 ]
-then
-    jobname="$2"
-else
-    jobname="meep_sim"
-fi
+jobname="meep_sim"
 
 git add $filename
 git commit -m "local run: file $filename. The prefix for the simulation is the hash of this commit"
