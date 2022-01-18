@@ -481,7 +481,6 @@ for i in range(1):
             data2save = {f"resonance_table_t{t}": resonance_table}
             json.dump(data2save, fp,  indent=4)
 
-return
 spectra = []
 for monitor in sim.spectrum_monitors :
     spectrum_f = np.array(mp.get_flux_freqs(monitor))
