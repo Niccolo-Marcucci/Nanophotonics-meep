@@ -4,8 +4,8 @@
 #SBATCH --partition=global
 #SBATCH --time=01:00:00
 #SBATCH --ntasks=12
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=16
+# SBATCH --nodes=1
+# SBATCH --ntasks-per-node=16
 #SBATCH --mem-per-cpu=250M
 
 mpirun -np 16 python $1 $2

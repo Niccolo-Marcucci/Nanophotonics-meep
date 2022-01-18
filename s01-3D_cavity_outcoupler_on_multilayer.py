@@ -257,7 +257,7 @@ class Simulation(mp.Simulation):
                 center = mp.Vector3(0, self.cavity_r_size, 0),
                 size = mp.Vector3(.1,0,0),
                 direction = mp.Y)
-            self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
+#            self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
             if not self.empty:
                 self.harminv_instance =  mp.Harminv(mp.Hx, mp.Vector3(), f, df)
@@ -288,7 +288,7 @@ pattern_type = 'positive'           # 'positive' or 'negative'
 out_grating_type = 'spiral'         # 'spiral' or 'polSplitting' or 'only'
 
 # cavity info
-N_cavity = 15
+N_cavity = 30
 cavity_period = .165 # wavelength / n_eff_FF0d5 / 2
 D_cavity = .400 # cavity_period * 1.4
 
@@ -426,7 +426,7 @@ def print_time(sim):
 
 t0 = time.time()
 mp.verbosity(1)
-for i in range(10):
+for i in range(1):
 
     # fig = plt.figure(dpi=100)
     # Animate = mp.Animate2D( sim, fields=mp.Ez, f=fig, realtime=False, normalize=True,
@@ -441,7 +441,7 @@ for i in range(10):
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
 
-    sim.run(*step_functions, until=20)# until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
+    sim.run(*step_functions, until=100)# until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
     # Animate.to_mp4(10,f'{sim_name}_section.mp4')
