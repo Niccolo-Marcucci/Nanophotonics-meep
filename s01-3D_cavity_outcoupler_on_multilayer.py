@@ -218,7 +218,7 @@ class Simulation(mp.Simulation):
         self.boundary_layers = [mp.PML(self.PML_width)]
         # print( [self.cell_size.x / self.
 
-        with open(f'{sim_name}.json', 'w') as fp:
+        with open(f'{self.name}.json', 'w') as fp:
             data2save = {"multilayer": multilayer_file,
                          "pattern_type": pattern_type,
                          "use_beam_block": use_BB}
@@ -255,7 +255,7 @@ class Simulation(mp.Simulation):
             nfreq = 1000
             fluxr = mp.FluxRegion(
                 center = mp.Vector3(0, self.cavity_r_size, 0),
-                size = mp.Vector3(0,0,0),
+                size = mp.Vector3(.1,0,0),
                 direction = mp.Y)
             self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
@@ -348,8 +348,8 @@ else:
     sim_prefix = f"{date}"
 
 sim_name = "cavity_" if N_cavity > 0 else ""
-sim_name += f"{out_grating_type}" if N_outcoupler > 0 else ""
-sim_name += f"_{sim_prefix}_{file}"
+sim_name += f"{out_grating_type}_" if N_outcoupler > 0 else ""
+sim_name += f"{sim_prefix}_{file}"
 sim_name += f"_charge{charge}" if N_outcoupler > 0 else ""
 
 # sim_name += f"_{parameter_to_loop}"
@@ -428,10 +428,14 @@ mp.verbosity(1)
 for i in range(1):
     # sim.run(mp.at_every(1,print_time),until=10)
     # fig = plt.figure(dpi=100)
-    # Animate = mp.Animate2D( sim, fields=mp.Ez, f=fig, realtime=False, normalize=True,
-    #                         output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.y,simsize.z)),
-    #                         eps_parameters={"interpolation":'none',"vmin":'0'})
-    sim.run(mp.at_every(5,print_time),until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-4))
+    Animate = mp.Animate2D( sim, fields=mp.Ez, f=fig, realtime=False, normalize=True,
+                            output_plane=mp.Volume(center=mp.Vector3(), size=mp.Vector3(simsize.x,simsize.y,0)),
+                            eps_parameters={"interpolation":'none',"vmin":'0'})
+
+    sim.run(mp.at_every(.1, Animate),until=30)
+    Animate.to_mp4(10,f'{sim_name}_section.mp4')
+
+    sim.run(mp.at_every(5,print_time),until=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-2))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
     # Animate.to_mp4(10,f'{sim_name}_section.mp4')
@@ -467,6 +471,10 @@ for i in range(1):
         print(resonance_table)
         print()
 
+        with open(f'{sim_name}_output.json', 'w') as fp:
+            data2save = {"resonance_table": resonance_table}
+            json.dump(data2save, fp,  indent=4)
+
     spectra = []
     for monitor in sim.spectrum_monitors :
         spectrum_f = np.array(mp.get_flux_freqs(monitor))
@@ -476,7 +484,7 @@ for i in range(1):
         sim.empty = True
         sim.init_sources_and_monitors(f, df, allow_farfield=False)
 
-        sim.run(mp.at_every(1,print_time), until=t)
+        sim.run(mp.at_every(5,print_time), until=t)
 
         spectra_out = []
         for i, monitor in enumerate(sim.spectrum_monitors) :
@@ -501,3 +509,8 @@ for i in range(1):
 
         fig.savefig(f'{sim_name}_spectrum_cavity.jpg')
         plt.close(fig)
+
+        with open(f'{sim_name}_output.json', 'a') as fp:
+            data2save = {"wavelength": 1/spectrum_f*1e3,
+                         "spectra": spectra_out}
+            json.dump(1/spectrum_f*1e3, fp,  indent=4)
