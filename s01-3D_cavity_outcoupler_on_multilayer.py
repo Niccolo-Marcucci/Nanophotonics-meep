@@ -289,7 +289,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     out_grating_type = 'polSplitting'         # 'spiral' or 'polSplitting' or 'only'
 
     # cavity info
-    N_cavity = 15
+    N_cavity = 30
     cavity_period = .165 # wavelength / n_eff_FF0d5 / 2
     D_cavity = .400 # cavity_period * 1.4
 
@@ -361,7 +361,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer = -3 if buried else -2,
-                                res_scaling = .4,
+                                res_scaling = 2,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
@@ -442,7 +442,7 @@ if __name__ == "__main__":              # good practise in parallel computing
             step_functions.append( mp.after_sources(sim.harminv_instance) )
 
 
-        sim.run(*step_functions, until=200)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
+        sim.run(*step_functions, until=500)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
         # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
         print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
@@ -499,15 +499,15 @@ if __name__ == "__main__":              # good practise in parallel computing
 
         fig = plt.figure(dpi=200)
         ax = fig.add_subplot(111)
-        plt.plot(1/spectrum_f*1e3, spectra_out[0])
-        # plt.xlim(540,660)
+        plt.plot(1/spectrum_f, spectra_out[0])
+        plt.xlim(wavelength - wwidth, wavelength + wwidth)
         # plt.ylim(-2,2)
         ax.grid(True)
-        plt.xlabel('wavelength')
+        plt.xlabel('wavelength [um]')
         plt.ylabel('Transmission')
         ax2 = fig.add_subplot(336)
         # plt.title('Table of the resonances')
-        collabel=[ "Wavelength", "Quality"]
+        collabel=[ "Wavelength [nm]", "Quality"]
         rowlabel=[ f'{i}' for i in range(len(resonance_table))]
         ax2.axis('tight')
         ax2.axis('off')
