@@ -284,8 +284,8 @@ n_eff_FF0d5 = n_eff_h*.5 + n_eff_l*.5
 
 file = 'design_TM_gd3_buriedDBR_onSiO2'
 buried = True
-pattern_type = 'negative'           # 'positive' or 'negative'
-out_grating_type = 'polSplitting'         # 'spiral' or 'polSplitting' or 'only'
+pattern_type = 'positive'           # 'positive' or 'negative'
+out_grating_type = 'spiral'         # 'spiral' or 'polSplitting' or 'only'
 
 # cavity info
 N_cavity = 15
