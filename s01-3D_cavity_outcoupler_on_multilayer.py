@@ -76,15 +76,16 @@ class Simulation(mp.Simulation):
     @empty.setter
     def empty(self,value):
         self._empty = value
+        self.reset_meep()
+        self.geometry = []
         try:
             if self._empty :
-                self.geometry = self._empty_geometry
+                self.geometry.extend( self._empty_geometry )
             else:
-                self.geometry = self._empty_geometry
-                self.geometry.extend(self._geometry)
+                self.geometry.extend( self._empty_geometry )
+                self.geometry.extend( self._geometry )
         except AttributeError:
             raise AttributeError("cannot assign 'empty' property before initializing the geometry")
-        self.reset_meep()
 
     def init_geometric_objects(self, multilayer_file, used_layer=-3, res_scaling=1, use_BB=True,
                                pattern_type='positive', cavity_parameters={}, outcoupler_parameters={}):
@@ -181,7 +182,8 @@ class Simulation(mp.Simulation):
 
             self._geometry.append(beam_block)
 
-        self.empty = False                  # this  will add all geometric objects to the simulation
+        # this  will add all geometric objects to the simulation
+        self.empty = False
 
         self.domain_z = self.substrate_thickness + multilayer_thickness + self.z_top_air_gap
 
@@ -255,7 +257,7 @@ class Simulation(mp.Simulation):
             nfreq = 1000
             fluxr = mp.FluxRegion(
                 center = mp.Vector3(0, self.cavity_r_size, 0),
-                size = mp.Vector3(.1,0,0),
+                size = mp.Vector3(0,0,0),
                 direction = mp.Y)
             self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
@@ -274,8 +276,6 @@ f = c0 / wavelength
 fmax = c0 / (wavelength - wwidth/2)
 fmin = c0 / (wavelength + wwidth/2)
 df = fmax - fmin
-
-sim_end = 1e-4
 
 n_eff_l = 1.6642
 n_eff_h = 1.7899
@@ -360,7 +360,7 @@ sim.eps_averaging = True
 
 sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                             used_layer = -3 if buried else -2,
-                            res_scaling = 1,
+                            res_scaling = .4,
                             use_BB = False,
                             pattern_type = pattern_type,
                             cavity_parameters = cavity_parameters,
@@ -426,7 +426,7 @@ def print_time(sim):
 
 t0 = time.time()
 mp.verbosity(1)
-for i in range(5):
+for i in range(1):
 
     # fig = plt.figure(dpi=100)
     # Animate = mp.Animate2D( sim, fields=mp.Ez, f=fig, realtime=False, normalize=True,
@@ -441,10 +441,9 @@ for i in range(5):
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
 
-    sim.run(*step_functions, until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
+    sim.run(*step_functions, until=200)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
-    # Animate.to_mp4(10,f'{sim_name}_section.mp4')
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
     t = np.round(sim.round_time(), 2)
@@ -470,7 +469,7 @@ for i in range(5):
         N_resonances = len(resonances_f)
         resonance_table = []
         for l in range(N_resonances):
-            resonance_table.append([np.round(1/resonances_f[l]*1e3, 1), np.int(resonances_Q[l])] )
+            resonance_table.append([np.round(1/resonances_f[l]*1e3, 1), int(resonances_Q[l])] )
         if N_resonances == 0 :
             resonance_table.append([ 0, 0 ])
         print()
