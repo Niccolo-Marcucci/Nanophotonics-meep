@@ -357,7 +357,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim = Simulation(sim_name)
     sim.extra_space_xy += wavelength/n_eff_l * (charge > 0)
-    sim.eps_averaging = False
+    sim.eps_averaging = True
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer = -3 if buried else -2,
