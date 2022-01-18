@@ -190,7 +190,7 @@ class Simulation(mp.Simulation):
         # resolution is 10 points per wavelength in the highest index material time a scale factor
         self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * res_scaling)
 
-        self.name = self.name + f'res{sim.resolution}'
+        self.name = self.name + f'_res{sim.resolution}'
         self.filename_prefix = self.name
 
         # round domain with an integer number of grid points
@@ -223,7 +223,8 @@ class Simulation(mp.Simulation):
         with open(f'{self.name}.json', 'w') as fp:
             data2save = {"multilayer": multilayer_file,
                          "pattern_type": pattern_type,
-                         "use_beam_block": use_BB}
+                         "use_beam_block": use_BB,
+                         "resolution": self.resolution}
 
             if cavity_parameters["N_rings"] > 0:
                 data2save["cavity_parameters"] = cavity_parameters
@@ -254,12 +255,35 @@ class Simulation(mp.Simulation):
             self.nearfield_monitor = self.add_near2far(f, 0, 1, nearfield)#, yee_grid=True))
 
         if self.cavity_r_size > 0 :
+            DL = self.cavity_r_size + 0.02
+
             nfreq = 1000
             fluxr = mp.FluxRegion(
-                center = mp.Vector3(0, self.cavity_r_size, 0),
+                center = mp.Vector3(0, DL, 0),
                 size = mp.Vector3(0,0,0),
                 direction = mp.Y)
             self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
+
+            # monitor_box
+            fr_yp = mp.FluxRegion(
+                center = mp.Vector3(0, +DL, 0),
+                size   = mp.Vector3(2*DL, 0, 0),
+                direction = mp.Y)
+            fr_yn = mp.FluxRegion(
+                center = mp.Vector3(0, -DL, 0),
+                size   = mp.Vector3(2*DL, 0, 0),
+                direction = mp.Y,
+                weight = -1.0)
+            fr_xp = mp.FluxRegion(
+                center = mp.Vector3(+DL, 0, 0),
+                size   = mp.Vector3(0, 2*DL, 0),
+                direction = mp.X)
+            fr_xn = mp.FluxRegion(
+                center = mp.Vector3(-DL, 0, 0),
+                size   = mp.Vector3(0, 2*DL, 0),
+                direction = mp.X,
+                weight = -1.0)
+            self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fr_xp, fr_xn, fr_yp, fr_yn))
 
             if not self.empty:
                 self.harminv_instance =  mp.Harminv(mp.Hx, mp.Vector3(), f, df)
@@ -361,7 +385,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer = -3 if buried else -2,
-                                res_scaling = 2,
+                                res_scaling = 2.27,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
@@ -458,7 +482,7 @@ if __name__ == "__main__":              # good practise in parallel computing
             resonances_Q = []
             resonances_f = []
             for mode in  sim.harminv_instance.modes :
-                if np.abs(mode.Q) > 0 :
+                if np.abs(mode.Q) > 100 :
                     resonances_Q.append(np.abs(mode.Q))
                     resonances_f.append(mode.freq)
             resonances_Q = np.array(resonances_Q)
@@ -499,9 +523,13 @@ if __name__ == "__main__":              # good practise in parallel computing
 
         fig = plt.figure(dpi=200)
         ax = fig.add_subplot(111)
-        plt.plot(1/spectrum_f, spectra_out[0])
+
+        data_plot = []
+        for spectrum in spectra_out:
+            data_plot.extend( [1/spectrum_f, spectrum] )
+        plt.plot(*data_plot)
         plt.xlim(wavelength - wwidth, wavelength + wwidth)
-        # plt.ylim(-2,2)
+        plt.ylim(-2,2)
         ax.grid(True)
         plt.xlabel('wavelength [um]')
         plt.ylabel('Transmission')
