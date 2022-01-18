@@ -385,7 +385,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer = -3 if buried else -2,
-                                res_scaling = 2.27,
+                                res_scaling = 2,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
