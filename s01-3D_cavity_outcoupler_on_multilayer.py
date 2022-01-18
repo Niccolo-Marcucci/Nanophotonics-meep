@@ -426,7 +426,7 @@ def print_time(sim):
 
 t0 = time.time()
 mp.verbosity(1)
-for i in range(1):
+for i in range(10):
 
     # fig = plt.figure(dpi=100)
     # Animate = mp.Animate2D( sim, fields=mp.Ez, f=fig, realtime=False, normalize=True,
@@ -441,7 +441,7 @@ for i in range(1):
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
 
-    sim.run(*step_functions, until=200)# until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
+    sim.run(*step_functions, until=20)# until_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
     # Animate.to_mp4(10,f'{sim_name}_section.mp4')
@@ -484,7 +484,7 @@ for i in range(1):
 spectra = []
 for monitor in sim.spectrum_monitors :
     spectrum_f = np.array(mp.get_flux_freqs(monitor))
-    spectra.append(mp.get_fluxes(monitor))
+    spectra.append(np.array(mp.get_fluxes(monitor)))
 
 if len(spectra) > 0 :
     sim.empty = True
@@ -495,7 +495,7 @@ if len(spectra) > 0 :
     spectra_out = []
     for i, monitor in enumerate(sim.spectrum_monitors) :
         spectrum_empty = mp.get_fluxes(monitor)
-        spectra_out.append( np.array(spectra[i]) / np.array(spectrum_empty) )
+        spectra_out.append( np.array(spectrum_empty) )
 
     fig = plt.figure(dpi=200)
     ax = fig.add_subplot(111)
@@ -517,5 +517,6 @@ if len(spectra) > 0 :
     plt.close(fig)
 
     mpo.savemat(f'{sim_name}_spectra_t{t}.mat', {"wavelength": 1/spectrum_f*1e3,
-                                                  "spectra"   : spectra_out,
-                                                  "resnances" : resonance_table})
+                                                  "spectra"   : spectra,
+						  "spectrum_empty": spectra_out,
+                                                  "resonances" : resonance_table})
