@@ -6,7 +6,7 @@
 #SBATCH --ntasks=12
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=12
-#SBATCH --mem-per-cpu=200M
+#SBATCH --mem-per-cpu=400M
 
 mpirun -np 12 python $1 $2
 
