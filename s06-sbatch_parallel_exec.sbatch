@@ -6,8 +6,8 @@
 #SBATCH --ntasks=48
 # SBATCH --nodes=1
 # SBATCH --ntasks-per-node=16
-#SBATCH --mem-per-cpu=4G
+#SBATCH --mem-per-cpu=1G
 
-mpirun -np 32 python $1 $2
+mpirun -np 48 python $1 $2
 
 mv -v $(ls *${2}* | grep -v 'log\|err') data/*$2
