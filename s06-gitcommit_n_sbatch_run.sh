@@ -28,4 +28,4 @@ mkdir -p data/$output_folder
 
 echo "$outputname, $errorname"
 
-sbatch --job-name=$jobname --output=$outputname --error=$errorname s06-sbatch_parallel_exec.sbatch $filename $prefix
+sbatch --job-name=$jobname --output=$outputname --error=$errorname s06-sbatch_parallel_exec.sbatch $filename $prefix ${@:3}
