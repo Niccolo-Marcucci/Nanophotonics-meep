@@ -338,7 +338,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     outcoupler_period = s
 
     # outcoupler info
-    N_outcoupler = 0
+    N_outcoupler = 6
     d_cavity_out = .5
     charge = 1
 
