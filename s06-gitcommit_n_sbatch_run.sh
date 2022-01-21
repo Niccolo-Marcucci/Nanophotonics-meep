@@ -4,7 +4,7 @@ filename="$1"
 
 if [ $# -gt 2 ]
 then
-    empty="$3"
+    empty="_$3"
 else
     empty=""
 fi
@@ -25,10 +25,10 @@ prefix="${hash:0:10}"
 
 output_folder="${jobname}_$(date +%y%m%d-%H%M%S)_${prefix}"
 
-outputname="${jobname}_${prefix}_${empty}_%j.log"
-errorname="${jobname}_${prefix}_${empty}_%j.err"
+outputname="${jobname}_${prefix}${empty}_%j.log"
+errorname="${jobname}_${prefix}${empty}_%j.err"
 
-jobname="${jobname}_${prefix}_${empty}"
+jobname="${jobname}_${prefix}${empty}"
 prefix="$(date +%y%m%d-%H%M%S)_${prefix}"
 
 mkdir -p data/$output_folder
