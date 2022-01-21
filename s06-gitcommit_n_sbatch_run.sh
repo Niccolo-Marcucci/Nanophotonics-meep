@@ -2,12 +2,19 @@
 
 filename="$1"
 
+if [ $# -gt 2 ]
+then
+    empty="$3"
+else
+    empty=""
+fi
 if [ $# -gt 1 ]
 then
     jobname="$2"
 else
     jobname="meep_sim"
 fi
+
 
 git add $filename
 git add s06-sbatch_parallel_exec.sbatch
@@ -18,10 +25,10 @@ prefix="${hash:0:10}"
 
 output_folder="${jobname}_$(date +%y%m%d-%H%M%S)_${prefix}"
 
-outputname="${jobname}_${prefix}_%j.log"
-errorname="${jobname}_${prefix}_%j.err"
+outputname="${jobname}_${prefix}_${empty}_%j.log"
+errorname="${jobname}_${prefix}_${empty}_%j.err"
 
-jobname="${jobname}_${prefix}"
+jobname="${jobname}_${prefix}_${empty}"
 prefix="$(date +%y%m%d-%H%M%S)_${prefix}"
 
 mkdir -p data/$output_folder
