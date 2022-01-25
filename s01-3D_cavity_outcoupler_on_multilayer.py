@@ -291,7 +291,7 @@ class Simulation(mp.Simulation):
                     center = mp.Vector3(0, 0, self.z_top_air_gap - 0.03),
                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, self.domain_y-.5*self.extra_space_xy, 0),
                     direction = mp.Z)
-                self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))
+#                self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))
 
             if not self.empty:
                 self.harminv_instance =  mp.Harminv(mp.Hx, mp.Vector3(), f, df)
