@@ -252,7 +252,7 @@ class Simulation(mp.Simulation):
                 size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, self.domain_y-.5*self.extra_space_xy, 0),
                 direction = mp.Z)
 
-            self.nearfield_monitor = self.add_near2far(f, 0.03, 5, nearfield)#, yee_grid=True))
+            self.nearfield_monitor = self.add_near2far(f, 0, 1, nearfield)#, yee_grid=True))
 
         if self.cavity_r_size > 0 :
             DL = self.cavity_r_size + 0.02
@@ -318,10 +318,10 @@ if __name__ == "__main__":              # good practise in parallel computing
     file = 'design_TM_gd3_buriedDBR_onSiO2'
     buried = True
     pattern_type = 'positive'           # 'positive' or 'negative'
-    out_grating_type = 'spiral'         # 'spiral' or 'polSplitting' or 'only'
+    out_grating_type = 'polSplitting'         # 'spiral' or 'polSplitting' or 'only'
 
     # cavity info
-    N_cavity = 30
+    N_cavity = 0
     cavity_period = .165 # wavelength / n_eff_FF0d5 / 2
     D_cavity = .400 # cavity_period * 1.4
 
@@ -339,8 +339,8 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # outcoupler info
     N_outcoupler = 6
-    d_cavity_out = .5
-    charge = 1
+    d_cavity_out = 3
+    charge = 0
 
     cavity_parameters = {
         "D": D_cavity,
