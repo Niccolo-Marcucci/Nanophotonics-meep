@@ -338,9 +338,9 @@ if __name__ == "__main__":              # good practise in parallel computing
     outcoupler_period = s
 
     # outcoupler info
-    N_outcoupler = 6
+    N_outcoupler = 9
     d_cavity_out = 3
-    charge = 1
+    charge = 0
 
     cavity_parameters = {
         "D": D_cavity,
