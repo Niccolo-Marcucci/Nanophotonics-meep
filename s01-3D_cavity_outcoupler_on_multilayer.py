@@ -340,7 +340,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # outcoupler info
     N_outcoupler = 6
     d_cavity_out = 3
-    charge = 0
+    charge = 1
 
     cavity_parameters = {
         "D": D_cavity,
