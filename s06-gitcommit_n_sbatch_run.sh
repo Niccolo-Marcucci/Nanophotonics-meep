@@ -25,10 +25,10 @@ prefix="${hash:0:10}"
 
 output_folder="${jobname}_$(date +%y%m%d-%H%M%S)_${prefix}"
 
-outputname="${jobname}_${prefix}${empty}_%j.log"
-errorname="${jobname}_${prefix}${empty}_%j.err"
+outputname="${jobname}${empty}_${prefix}_%j.log"
+errorname="${jobname}${empty}_${prefix}_%j.err"
 
-jobname="${jobname}_${prefix}${empty}"
+jobname="${jobname}${empty}_${prefix}"
 prefix="$(date +%y%m%d-%H%M%S)_${prefix}"
 
 mkdir -p data/$output_folder
