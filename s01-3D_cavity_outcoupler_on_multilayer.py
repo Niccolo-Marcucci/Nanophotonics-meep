@@ -190,7 +190,7 @@ class Simulation(mp.Simulation):
         # resolution is 10 points per wavelength in the highest index material time a scale factor
         self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * res_scaling)
 
-        self.name = self.name + f'_res{sim.resolution}'
+        self.name = self.name + f'_res{self.resolution}'
         self.filename_prefix = self.name
 
         # round domain with an integer number of grid points
