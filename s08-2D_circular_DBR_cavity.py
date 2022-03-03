@@ -48,7 +48,7 @@ class Simulation(mp.Simulation):
         self._empty = True
 
         super().__init__(
-                    cell_size = mp.Vector3(1,1,1),
+                    cell_size = mp.Vector3(1,1,0),
                     geometry = [],
                     sources = [],
                     resolution = 1,
@@ -175,7 +175,7 @@ class Simulation(mp.Simulation):
             json.dump(data2save, fp,  indent=4)
 
 
-    def init_sources_and_monitors(self, f, df, source_pos) :
+    def init_sources_and_monitors(self, f, df, source_pos, allow_profile=False) :
         self.sources = [ mp.Source(
             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
             center = source_pos,
@@ -183,20 +183,26 @@ class Simulation(mp.Simulation):
             component = mp.Ey)]
 
         self.harminv_instance = None
+        self.field_profile = None
         self.spectrum_monitors = []
 
-        if self.cavity_r_size > 0 :
-            DL = self.cavity_r_size + 0.02
+        if  allow_profile :
+            self.field_profile = self.add_dft_fields([mp.Ey], f, 0, 1,
+                                                     center = mp.Vector3(),
+                                                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, 0)) #, yee_grid=True))
+        else:
+            if self.cavity_r_size > 0 :
+                DL = self.cavity_r_size + 0.02
 
-            nfreq = 1000
-            fluxr = mp.FluxRegion(
-                center = mp.Vector3(DL, 0),
-                size = mp.Vector3(0,0),
-                direction = mp.X)
-            self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
+                nfreq = 200
+                fluxr = mp.FluxRegion(
+                    center = mp.Vector3(DL, 0),
+                    size = mp.Vector3(0,0),
+                    direction = mp.X)
+                self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
-            if not self.empty:
-                self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
+                # if not self.empty:
+                #     self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
 
 def sym_circular_cavity (f, df, n_back, n_groove=2, D = 0.4, DBR_period = 0.2,
                          N_rings=10, empty = False, source_pos=0, dimensions = 2, anisotropy = 0, tilt_anisotropy = 0):
@@ -280,11 +286,11 @@ def sym_circular_cavity (f, df, n_back, n_groove=2, D = 0.4, DBR_period = 0.2,
 
 
 #%% function for parallel computing
-def run_parallel(n_eff_h,n_eff_l,D,DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
+def run_parallel(wavelength, n_eff_h,n_eff_l,D,DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
     import meep as mp
 
     c0 = 1
-    wavelength = 0.590
+    # wavelength = 0.590
     wwidth = 0.25
     f=c0/wavelength
 
@@ -316,7 +322,7 @@ def run_parallel(n_eff_h,n_eff_l,D,DBR_period, empty=False, source_pos=0, anisot
         "n_eff_h" : n_eff_h,
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
-        "tilt_anisotropy" : tilt_anisotropy,}
+        "tilt_anisotropy" : tilt_anisotropy}
 
 
     t0 = time.time()
@@ -334,17 +340,14 @@ def run_parallel(n_eff_h,n_eff_l,D,DBR_period, empty=False, source_pos=0, anisot
     sim_name += f"{sim_prefix}_"
     sim_name += f"D_{D*1e3:.0f}_source_{source_pos*1e3:.0f}"
 
-
-
     sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.Y,phase=-1)])
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 50,
+                                resolution = 5,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
-
 
     if empty:
         sim.empty = True
@@ -352,16 +355,15 @@ def run_parallel(n_eff_h,n_eff_l,D,DBR_period, empty=False, source_pos=0, anisot
     else:
         sim.empty = False
 
-
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos))
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos), allow_profile=False)
 
     sim.init_sim()
-    fig = plt.figure(dpi=150, figsize=(10,10))
-    plot =  sim.plot2D( eps_parameters={"interpolation":'none'})
-    fig.colorbar(plot.images[0])
-    # plt.show()
-    fig.savefig(f'{sim.name}-xy.jpg')
-    plt.close()
+    # fig = plt.figure(dpi=150, figsize=(10,10))
+    # plot = sim.plot2D(eps_parameters={"interpolation":'none'})
+    # fig.colorbar(plot.images[0])
+    # # plt.show()
+    # fig.savefig(f'{sim.name}-xy.jpg')
+    # plt.close()
     # raise Exception()
 
 
@@ -395,9 +397,20 @@ def run_parallel(n_eff_h,n_eff_l,D,DBR_period, empty=False, source_pos=0, anisot
         print(resonance_table)
         print()
 
-        with open(f'{sim.name}_output.json', 'a') as fp:
-            data2save = {f"resonance_table_t{t}": resonance_table}
-            json.dump(data2save, fp,  indent=4)
+        # with open(f'{sim.name}_output.json', 'a') as fp:
+        #     data2save = {f"resonance_table_t{t}": resonance_table}
+        #     json.dump(data2save, fp,  indent=4)
+        data2save = {f"resonance_table_t{t}": resonance_table}
+
+    if sim.field_profile != None:
+        for j in range(sim.field_profile.nfreqs):
+            data2save[f"field_profile_Ey_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ey, i)
+        data2save["field_profile_Eps"] = sim.get_array(mp.Dielectric,
+                                                       center = sim.field_profile.regions[0].center,
+                                                       size = sim.field_profile.regions[0].size)
+        (x, _, _, _) = sim.get_array_metadata(center = sim.field_profile.regions[0].center,
+                                              size = sim.field_profile.regions[0].size)
+        data2save["field_profile_x"] = x
 
     spectra = []
     for monitor in sim.spectrum_monitors :
@@ -418,6 +431,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     anisotropy = 0
 
+    wavelength = .590# 0.5703#.6088#.5703#.5884#.5893#0.5947#0.5893#.5922, ]
 
     n_eff_l = 1
     n_eff_hs = [1.1] #np.linspace(1.01,1.2,100) # [1.1]#1.0543, 1.0985, 1.1405] # 50 75 and 100 nm pmma thickness
@@ -427,7 +441,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # for n_eff_h in n_eff_hs:
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
-    Ds = period *np.array([0.45, 0.9, 2.36])#np.linspace(.1, 3, 4) #
+    Ds = period * np.linspace(0, 3, 5) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
     # D = .112# period * .4
 
     # spacers_to_test = [.08] #np.linspace(.00,.700, N)
@@ -437,7 +451,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     # where each element of the list represent one iteration and thus the
     # element of the tuple represent the inputs.
     empty = True
-    tuple_list = [ (n_eff_hs[0], n_eff_l,
+    tuple_list = [ (wavelength,
+                    n_eff_hs[0], n_eff_l,
                     Ds[-1], period,
                     empty,
                     0,
@@ -446,9 +461,10 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    for D in Ds:
-        for source_pos in [0, D/4, D/2]:
-            tuple_list.append( (n_eff_hs[0], n_eff_l,
+    for source_pos in [0]: # 0, period/4, period/2]:
+        for D in Ds:
+            tuple_list.append( (wavelength,
+                                n_eff_hs[0], n_eff_l,
                                 D, period,
                                 empty,
                                 source_pos,
@@ -462,31 +478,50 @@ if __name__ == "__main__":              # good practise in parallel computing
     names = []
     t0 = time.time()
 
-    # try:
-    #     from mpi4py import MPI
-    # except:
-    for i in range(j):
-        t1 = time.time()
-        # print(tuple_list[i])
-        data, name = run_parallel(*tuple_list[i])
-        output.append(data)
-        names.append(name)
-        print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{j}')
-        print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(j-i-1))} more')
-    # else:
-    #     comm = MPI.COMM_WORLD
-    #     i = mp.divide_parallel_processes(int(sys.argv[1]))
-    #     data, name = run_parallel(*tuple_list[i])
-    #     if mp.am_really_master():
-    #         output.append(data)
-    #         names.append(name)
-    #         for src in range(1,int(sys.argv[1])):
-    #             output.append( comm.recv(source=src,tag=11) )
-    #             names.append ( comm.recv(source=src,tag=12) )
-    #     else:
-    #         comm.send(data,tag=11)
-    #         comm.send(data,tag=12)
-    #         exit()
+    try:
+        from mpi4py import MPI
+    except:
+        for i in range(j):
+            t1 = time.time()
+            # print(tuple_list[i])
+            data, name = run_parallel(*tuple_list[i])
+            output.append(data)
+            names.append(name)
+            print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{j}')
+            print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(j-i-1))} more')
+            print()
+            print()
+
+    else:
+        comm = MPI.COMM_WORLD
+        N_jobs = int(sys.argv[1])
+
+        j = mp.divide_parallel_processes(N_jobs)
+
+        N_list = len(tuple_list)
+        if N_list < N_jobs :
+            raise ValueError(f"Number of jobs should be lower than number of loop iterations to (f{N_list}")
+        N_loops_per_job = int(N_list/N_jobs) + 1
+        data_list = []
+        name_list = []
+        for i in range(N_loops_per_job):
+            tuple_index = j*N_loops_per_job + i
+            if tuple_index >= N_list :
+                continue
+            data, name = run_parallel(*tuple_list[tuple_index])
+            data_list.append(data)
+            name_list.append(name)
+
+        if mp.am_really_master():
+            output.append(data)
+            names.append(name)
+            for src in range(1,int(sys.argv[1])):
+                output.extend( comm.recv(source=src,tag=11) )
+                names.extend ( comm.recv(source=src,tag=12) )
+        else:
+            comm.send(data_list,dest=0 ,tag=11)
+            comm.send(name_list,dest=0 ,tag=12)
+            exit()
        # mp.merge_subgroup_data(output)
     # with Pool(5) as parfor:
     #     output = parfor.starmap(run_parallel, tuple_list)
@@ -511,37 +546,56 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     image = []
     spectrum_empty = output[0]["spectra"][0]
+    l=0
     for k, var in enumerate(output[1:]) :
-        k=k+1
-        legend_str = []
-        # resonance_table = [ [ np.round(1/var[2][l]*1e3, 1), np.int(var[3][l]) ]  for l in range(var[2].size) ]
-        wavelength = var["wavelength"]
-        fig = plt.figure(k,dpi=200)
-        ax = fig.add_subplot(111)
         spectrum = ( var['spectra'][0]/spectrum_empty)
-        plt.plot(wavelength, spectrum)
-        plt.xlim(wavelength.min(),wavelength.max())
-        # plt.ylim(-2,2)
-        ax.grid(True)
-        plt.xlabel('wavelength')
-        plt.ylabel('Transmission')
-        plt.title(f'n_eff_h {tuple_list[k][0]:.2f}; D {tuple_list[k][2]*1e3:.0f}; DBR_period {tuple_list[k][3]*1e3:.0f}, sourcePos {tuple_list[k][5]*1e3:.0f}')
-        ax2 = fig.add_subplot(336)
-        # plt.title('Table of the resonances')
-        collabel=[ "Wavelength", "Quality"]
-        rowlabel=[ f'{i}' for i,_ in enumerate(var["resonance_table_t300.0"])]#[ f'({np.int(np.rad2deg(angles[i][0]))},{np.int(np.rad2deg(angles[i][1]))})' for i in indeces]
-        ax2.axis('tight')
-        ax2.axis('off')
-        the_table = ax2.table(cellText=var["resonance_table_t300.0"], colLabels=collabel, rowLabels=rowlabel,loc='center')
+        wavelength = var["wavelength"]
+        # k=k+1
+        # l=np.int((k-1)/3)
+        # # resonance_table = [ [ np.round(1/var[2][l]*1e3, 1), np.int(var[3][l]) ]  for l in range(var[2].size) ]
+        # if np.mod(k-1,3) == 0 :
+        #     fig = plt.figure(l,dpi=150,figsize=(10,5))
+        #     ax = fig.add_subplot(111)
+        #     legend_str = []
+        # ax.plot(wavelength, spectrum)
+        # plt.xlim(550,650)
+        # # plt.ylim(-2,2)
+        # ax.grid(True)
+        # plt.xlabel('Wavelength [nm]')
+        # plt.ylabel('Transmission')
+        # legend_str.append(f"sourcePos {tuple_list[k][6]*1e3:.0f}")
+        # plt.title(f'n_eff_h={tuple_list[k][1]:.2f};   DBR_period={tuple_list[k][4]*1e3:.0f};   D={tuple_list[k][3]/tuple_list[k][2]:.2f}*DBR_period')
+        # # ax2 = fig.add_subplot(336)
+        # # # plt.title('Table of the resonances')
+        # # collabel=[ "Wavelength", "Quality"]
+        # # rowlabel=[ f'{i}' for i,_ in enumerate(var["resonance_table_t300.0"])]#[ f'({np.int(np.rad2deg(angles[i][0]))},{np.int(np.rad2deg(angles[i][1]))})' for i in indeces]
+        # # ax2.axis('tight')
+        # # ax2.axis('off')
+        # # the_table = ax2.table(cellText=var["resonance_table_t300.0"], colLabels=collabel, rowLabels=rowlabel,loc='center')
+        # plt.legend(legend_str)
 
-
-        plt.show()
-        fig.savefig(f'names[k]_spectrum.png')
+        # # plt.show()
+        # fig.savefig(f'{names[k]}_spectrum.png')
         # plt.close(fig)
+
         image.append(spectrum )
-    # image = np.array(image).transpose()
-    # fig = mpo.plot_image(wavelength, n_eff_hs, image)
-    # plt.xlabel('wavelength [nm]')
-    # plt.ylabel('n_eff_h')
-    # plt.title('Spectral response')
-    # fig.savefig(f'n_eff_h {tuple_list[k][0]}_spacer_dependence_DBRperiod{int(tuple_list[k][3]*1e3)}_source_tilted.png')
+
+        # fig = plt.figure(10*k,dpi=150,figsize=(10,5))
+        # ax = fig.add_subplot(111)
+        # ax.plot(var["field_profile_x"], var["field_profile_Eps"])
+        # field = var["field_profile_Ey_0"]
+        # field = np.abs(field/np.max(field))**2
+        # ax.plot(var["field_profile_x"], field)
+        # ax.grid(True)
+        # plt.xlabel('x [um]')
+        # plt.legend(["dielectric_constant", "field_profile"])
+        # plt.title(f'n_eff_h={tuple_list[k][1]:.2f};   DBR_period={tuple_list[k][4]*1e3:.0f}; D={tuple_list[k][3]/tuple_list[k][4]:.2f}*DBR_period')
+        # fig.savefig(f'{names[k]}_spectrumfield_profile.png')
+
+
+    image = np.array(image).transpose()
+    fig = mpo.plot_image(wavelength, Ds, image)
+    plt.xlabel('wavelength [nm]')
+    plt.ylabel('n_eff_h')
+    plt.title('Spectral response')
+    fig.savefig(f'names[0]_spacer_dependence_DBRperiod{period*1e3:.0f}.png')
