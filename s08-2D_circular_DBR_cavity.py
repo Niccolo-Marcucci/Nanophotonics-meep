@@ -194,7 +194,7 @@ class Simulation(mp.Simulation):
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.02
 
-                nfreq = 200
+                nfreq = 1000
                 fluxr = mp.FluxRegion(
                     center = mp.Vector3(DL, 0),
                     size = mp.Vector3(0,0),
@@ -204,89 +204,8 @@ class Simulation(mp.Simulation):
                 # if not self.empty:
                 #     self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
 
-def sym_circular_cavity (f, df, n_back, n_groove=2, D = 0.4, DBR_period = 0.2,
-                         N_rings=10, empty = False, source_pos=0, dimensions = 2, anisotropy = 0, tilt_anisotropy = 0):
-
-    extra_space_x = 1
-    domain_x = DBR_period*N_rings*2+D+extra_space_x + 1# 10*2*2*DBR_period + 1
-    domain_y = domain_x
-    PML = 1
-    monitor_distance  = domain_x/2-extra_space_x/4
-
-    medium_back   = mpo.anysotropic_material(n_back, anisotropy, rot_angle_3=tilt_anisotropy)
-    medium_groove = mp.Medium(epsilon = n_groove**2 )
-
-    domain = mp.Vector3(domain_x+extra_space_x+PML, domain_y+extra_space_x+PML, 0)
-    device = []#mp.Block(domain, material=medium_groove)]
-    # outcoupler
-    # device.extend(mpo.circular_DBR_cavity(
-    #     medium_back, medium_groove, D+2*DBR_period*N_rings+1,
-    #     DBR_period*2, 0.5, 10,
-    #     orientation = mp.Vector3(0,0,1),
-    #     thickness = 0))
-    # cavity
-    device.extend(mpo.circular_DBR_cavity(
-        medium_back, medium_groove, D,
-        DBR_period, 0.5, N_rings,
-        orientation = mp.Vector3(0,0,1),
-        thickness = 0))
-    # cavity = mpo.spiral_grating(
-    #     medium_groove = medium_groove,
-    #     D = D,
-    #     FF = .5,
-    #     DBR_period = DBR_period,
-    #     N_rings = N_rings,
-    #     N_arms = 0,
-    #     thickness = 1,
-    #     center = mp.Vector3())
-    # device.extend(cavity)
-    symmetries=[mp.Mirror(mp.X,phase=-1)]
-    flux_or = mp.Y
-    monitor_pos = mp.Vector3(0,monitor_distance,0)
-    res = 100#np.int(1/(1/f/np.max([np.real(n_back),np.real(n_groove)]))*10)
-
-    if empty:
-        device = []
-
-    pml_layers = [mp.PML(PML)]
-
-    if df == 0 :
-        source = mp.Source(mp.ContinuousSource(f,width=0.1 ),
-                           component=mp.Ex,
-                           center=mp.Vector3(y=source_pos) )
-    else :
-        source = mp.Source(mp.GaussianSource(f,df),
-                           component=mp.Ex,
-                           center=mp.Vector3(y=source_pos) )
-
-    sim = mp.Simulation(cell_size=domain,
-                        geometry=device,
-                        sources=[source],
-                        resolution=res,
-                        boundary_layers=pml_layers,
-                        default_material=medium_back,
-                        dimensions=dimensions,
-                        symmetries=symmetries,
-                        eps_averaging = False)
-
-
-    nfreq = 1000
-    monitors = []
-    fluxr = mp.FluxRegion(center=monitor_pos,
-                          size=mp.Vector3(0,0,0),
-                          direction=flux_or)
-    monitors.append(sim.add_flux(f, df/2, nfreq, fluxr))
-
-    if not empty :
-        harminv_instance = mp.Harminv(mp.Ex, mp.Vector3(), f, df)
-    else :
-        harminv_instance = []
-
-    return sim, monitors, harminv_instance
-
-
 #%% function for parallel computing
-def run_parallel(wavelength, n_eff_h,n_eff_l,D,DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
+def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
     import meep as mp
 
     c0 = 1
@@ -338,13 +257,13 @@ def run_parallel(wavelength, n_eff_h,n_eff_l,D,DBR_period, empty=False, source_p
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_"
-    sim_name += f"D_{D*1e3:.0f}_source_{source_pos*1e3:.0f}"
+    sim_name += f"D{D*1e3:.0f}_src{source_pos*1e3:.0f}"
 
-    sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.Y,phase=-1)])
+    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 5,
+                                resolution = 20,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
@@ -441,7 +360,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # for n_eff_h in n_eff_hs:
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
-    Ds = period * np.linspace(0, 3, 5) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
+    Ds = period * np.linspace(0, 3, 500) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
     # D = .112# period * .4
 
     # spacers_to_test = [.08] #np.linspace(.00,.700, N)
@@ -471,7 +390,7 @@ if __name__ == "__main__":              # good practise in parallel computing
                                 anisotropy,
                                 0 ) )
             j += 1
-    # mp.verbosity(0)
+    mp.verbosity(0)
     # mp.quiet(True)
     # run non parallel
     output = []
@@ -501,11 +420,13 @@ if __name__ == "__main__":              # good practise in parallel computing
         N_list = len(tuple_list)
         if N_list < N_jobs :
             raise ValueError(f"Number of jobs should be lower than number of loop iterations to (f{N_list}")
+
         N_loops_per_job = int(N_list/N_jobs) + 1
         data_list = []
         name_list = []
         for i in range(N_loops_per_job):
             tuple_index = j*N_loops_per_job + i
+            print(tuple_index)
             if tuple_index >= N_list :
                 continue
             data, name = run_parallel(*tuple_list[tuple_index])
@@ -513,14 +434,16 @@ if __name__ == "__main__":              # good practise in parallel computing
             name_list.append(name)
 
         if mp.am_really_master():
-            output.append(data)
-            names.append(name)
-            for src in range(1,int(sys.argv[1])):
-                output.extend( comm.recv(source=src,tag=11) )
-                names.extend ( comm.recv(source=src,tag=12) )
+            output.extend(data_list)
+            names.extend(name_list)
+            for src in range(1, N_jobs):
+                output.extend( comm.recv(source=src, tag=11) )
+                names.extend ( comm.recv(source=src, tag=12) )
+                # comm.recv(source=src, tag=11)
+                # comm.recv(source=src, tag=12)
         else:
-            comm.send(data_list,dest=0 ,tag=11)
-            comm.send(name_list,dest=0 ,tag=12)
+            comm.send(data_list, dest=0, tag=11)
+            comm.send(name_list, dest=0, tag=12)
             exit()
        # mp.merge_subgroup_data(output)
     # with Pool(5) as parfor:
@@ -543,14 +466,16 @@ if __name__ == "__main__":              # good practise in parallel computing
     #         resonance_row.append([ 0, 0 ])
     #     resonance_table.append(resonance_row)
     # print(resonance_table)
-
+    print(names)
+    print(len(names))
+    print(len(output))
     image = []
     spectrum_empty = output[0]["spectra"][0]
     l=0
     for k, var in enumerate(output[1:]) :
+        k=k+1
         spectrum = ( var['spectra'][0]/spectrum_empty)
         wavelength = var["wavelength"]
-        # k=k+1
         # l=np.int((k-1)/3)
         # # resonance_table = [ [ np.round(1/var[2][l]*1e3, 1), np.int(var[3][l]) ]  for l in range(var[2].size) ]
         # if np.mod(k-1,3) == 0 :
@@ -577,8 +502,8 @@ if __name__ == "__main__":              # good practise in parallel computing
         # # plt.show()
         # fig.savefig(f'{names[k]}_spectrum.png')
         # plt.close(fig)
-
-        image.append(spectrum )
+        print(f'{names[k]}_spectrum.png')
+        image.append(np.log10(spectrum))
 
         # fig = plt.figure(10*k,dpi=150,figsize=(10,5))
         # ax = fig.add_subplot(111)
@@ -598,4 +523,4 @@ if __name__ == "__main__":              # good practise in parallel computing
     plt.xlabel('wavelength [nm]')
     plt.ylabel('n_eff_h')
     plt.title('Spectral response')
-    fig.savefig(f'names[0]_spacer_dependence_DBRperiod{period*1e3:.0f}.png')
+    fig.savefig(f'{names[0]}_spacer_dependence_DBRperiod{period*1e3:.0f}_sourcePos{source_pos}.png')
