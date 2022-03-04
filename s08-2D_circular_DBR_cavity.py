@@ -263,7 +263,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 20,
+                                resolution = 5,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
@@ -400,6 +400,11 @@ if __name__ == "__main__":              # good practise in parallel computing
     try:
         from mpi4py import MPI
     except:
+        non_parallel_conda = True
+    else:
+        non_parallel_conda = False
+
+    if len(sys.argv) < 2 or non_parallel_conda:
         for i in range(j):
             t1 = time.time()
             # print(tuple_list[i])
@@ -413,7 +418,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     else:
         comm = MPI.COMM_WORLD
-        N_jobs = int(sys.argv[1])
+        N_jobs = int(sys.argv[2])
 
         j = mp.divide_parallel_processes(N_jobs)
 
