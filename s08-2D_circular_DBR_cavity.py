@@ -213,7 +213,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.25
     f=c0/wavelength
 
-    sim_end=300
+    sim_end=500
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -263,7 +263,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 5,
+                                resolution = 100,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
@@ -430,6 +430,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         data_list = []
         name_list = []
         for i in range(N_loops_per_job):
+            t1 = time.time()
             tuple_index = j*N_loops_per_job + i
             print(tuple_index)
             if tuple_index >= N_list :
@@ -437,6 +438,8 @@ if __name__ == "__main__":              # good practise in parallel computing
             data, name = run_parallel(*tuple_list[tuple_index])
             data_list.append(data)
             name_list.append(name)
+            print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{j}')
+            print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(j-i-1))} more')
 
         if mp.am_really_master():
             output.extend(data_list)
@@ -507,7 +510,6 @@ if __name__ == "__main__":              # good practise in parallel computing
         # # plt.show()
         # fig.savefig(f'{names[k]}_spectrum.png')
         # plt.close(fig)
-        print(f'{names[k]}_spectrum.png')
         image.append(np.log10(spectrum))
 
         # fig = plt.figure(10*k,dpi=150,figsize=(10,5))

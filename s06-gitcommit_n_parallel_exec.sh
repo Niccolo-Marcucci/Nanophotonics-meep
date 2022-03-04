@@ -17,6 +17,6 @@ prefix="$(date +%y%m%d-%H%M%S)_${prefix}"
 
 mkdir -p data/$output_folder
 
-mpirun -np $2 python $filename $prefix
+mpirun -np $2 python $filename $prefix ${@:3}
 
 mv *${prefix}* data/$output_folder
