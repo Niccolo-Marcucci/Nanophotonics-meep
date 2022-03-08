@@ -43,7 +43,7 @@ def convert_seconds (elapsed):
 
 class Simulation(mp.Simulation):
 
-    def __init__(self, sim_name='simulation_buried', dimensions=3, symmetries = []):
+    def __init__(self, sim_name='simulation_buried', dimensions=2, symmetries = []):
 
         self.name = sim_name
 
@@ -51,7 +51,7 @@ class Simulation(mp.Simulation):
 
         self.PML_width = .3
 
-        self.z_top_air_gap = 0.7
+        self.top_air_gap = 0.7
 
         self.substrate_thickness = .2
 
@@ -87,28 +87,26 @@ class Simulation(mp.Simulation):
         except AttributeError:
             raise AttributeError("cannot assign 'empty' property before initializing the geometry")
 
-    def init_geometric_objects(self, multilayer_file, used_layer=-3, res_scaling=1, use_BB=True,
+    def init_geometric_objects(self, multilayer_file, used_layer_info={}, resolution=1, use_BB=True,
                                pattern_type='positive', cavity_parameters={}, outcoupler_parameters={}):
-
-                               # D=5, grating_period=0.2, N_rings=10, N_arms=0, lambda_bsw=0.4,
-                               # scatter_length=0.4, scatter_width=0.1, scatter_tilt=0,
-                               # scatter_shape='', scatter_disposition='filled', topology='spiral', pattern_type='positive') :
+        used_layer = used_layer_info['used_layer']
         self._geometry = []
         self._empty_geometry = []
 
         self.cavity_r_size = (cavity_parameters["D"]/2 + cavity_parameters["period"] * cavity_parameters["N_rings"]) * (cavity_parameters["N_rings"]>0)
         self.outcou_r_size = (outcoupler_parameters["D"]/2 + outcoupler_parameters["period"] * outcoupler_parameters["N_rings"]) * (outcoupler_parameters["N_rings"]>0)
 
-        self.domain_x = self.domain_y = 2*(self.cavity_r_size + self.outcou_r_size + self.extra_space_xy)
+        self.domain_x = 2*(self.cavity_r_size + self.outcou_r_size + self.extra_space_xy)
 
         multilayer, multilayer_thickness, design_specs = mpo.dielectric_multilayer(
             design_file = multilayer_file,
-            substrate_thickness = self.substrate_thickness + .5 + self.PML_width,
+            substrate_thickness = self.substrate_thickness + .5 + 2*self.PML_width,
+            used_layer_info = used_layer_info,
             x_width = self.domain_x + .5 + 2*self.PML_width,
-            y_width = self.domain_y + .5 + 2*self.PML_width,
             unit = 'um',
             exclude_last_layer = False,
-            buried = True)
+            buried = used_layer < -2,
+            axis = mp.Y)
 
         print(design_specs)
         self._empty_geometry.extend(multilayer)            # keep multilayer even if empty
@@ -119,64 +117,56 @@ class Simulation(mp.Simulation):
             dummy_layer = mp.Block(
                 material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer+1])),
                 size     = mp.Vector3(self.domain_x + .5 + 2*self.PML_width,
-                                      self.domain_y + .5 + 2*self.PML_width,
-                                      design_specs['d_layers'][used_layer]),
-                center   = mp.Vector3(0, 0, 0))
+                                      design_specs['d_layers'][used_layer],1),
+                center   = mp.Vector3(0, design_specs['d_layers'][used_layer]/2))
             self._empty_geometry.append(dummy_layer)       # part of the multilayer
 
         elif pattern_type == 'negative':
             grating_index = np.real(design_specs['idx_layers'][used_layer+1])
 
+            dummy_layer = mp.Block(
+                material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer])),
+                size     = mp.Vector3(self.domain_x + .5 + 2*self.PML_width,
+                                      design_specs['d_layers'][used_layer],1),
+                center   = mp.Vector3(0,  design_specs['d_layers'][used_layer]/2))
+            self._empty_geometry.append(dummy_layer)       # part of the multilayer
+
         else :
             raise ValueError(f'patter type "{pattern_type}" is unknown')
 
         if cavity_parameters["N_rings"] > 0:
-            cavity = mpo.spiral_grating(
+            cavity = mpo.linear_DBR_cavity(
                 medium_groove = mp.Medium(index=grating_index),
                 D = cavity_parameters["D"],
                 FF = cavity_parameters["FF"],
                 DBR_period = cavity_parameters["period"],
-                N_rings = cavity_parameters["N_rings"],
-                N_arms = 0,
+                N_periods = cavity_parameters["N_rings"],
                 thickness = float(design_specs['d_layers'][used_layer]),
-                center = mp.Vector3())
+                center = mp.Vector3(y=design_specs['d_layers'][used_layer]/2),
+                axis = mp.Y,
+                axial_rotation = 0)#np.pi/3)
+
             self._geometry.extend(cavity)
 
-        if outcoupler_parameters["type"] == 'pol_splitting' and outcoupler_parameters["N_rings"] > 0:
-            outcoupler = mpo.pol_splitting_grating(
-                medium_groove = mp.Medium(index=grating_index),
-                D = self.cavity_r_size*2 + outcoupler_parameters["D"],
-                metasurface_period = outcoupler_parameters["period"],
-                scatter_length = outcoupler_parameters["scatter_length"],
-                scatter_width = outcoupler_parameters["scatter_width"],
-                scatter_tilt = outcoupler_parameters["scatter_tilt"],
-                scatter_shape = outcoupler_parameters["scatter_shape"],
-                scatter_disposition = outcoupler_parameters["scatter_disposition"],
-                topology = outcoupler_parameters["topology"],
-                n_rings = outcoupler_parameters["N_rings"],
-                n_arms = outcoupler_parameters["N_arms"],
-                lambda_bsw = outcoupler_parameters["lambda_bsw"],
-                thickness = float(design_specs['d_layers'][used_layer]),
-                center = mp.Vector3())
-            self._geometry.extend(outcoupler)
-
-        elif outcoupler_parameters["type"] == 'spiral' and outcoupler_parameters["N_rings"] > 0:
+        elif outcoupler_parameters["N_rings"] > 0:
             outcoupler = mpo.spiral_grating(
                 medium_groove = mp.Medium(index=grating_index),
                 D = self.cavity_r_size*2 + outcoupler_parameters["D"],
                 FF = outcoupler_parameters["FF"],
                 DBR_period = outcoupler_parameters["period"],
-                N_rings = outcoupler_parameters["N_rings"],
-                N_arms = outcoupler_parameters["N_arms"],
+                N_periods = outcoupler_parameters["N_rings"],
                 thickness = float(design_specs['d_layers'][used_layer]),
-                center = mp.Vector3())
+                center = mp.Vector3( y= design_specs['d_layers'][used_layer]/2),
+                axis = mp.Y,
+                axial_rotation = 30)
             self._geometry.extend(outcoupler)
 
         if use_BB:
             beam_block = mp.Cylinder(
-                            center = mp.Vector3(0, 0, self.z_top_air_gap-0.1),
+                            center = mp.Vector3(0, self.top_air_gap-0.1),
                             radius = 3/4 * (self.cavity_r_size + outcoupler_parameters["D"]/2),
                             height = 0.02,
+                            axis = mp.Vector3(y=1),
                             material = mp.metal)
             beam_block.name = 'Beam_block'
 
@@ -185,10 +175,10 @@ class Simulation(mp.Simulation):
         # this  will add all geometric objects to the simulation
         self.empty = False
 
-        self.domain_z = self.substrate_thickness + multilayer_thickness + self.z_top_air_gap
+        self.domain_y = self.substrate_thickness + multilayer_thickness + self.top_air_gap
 
         # resolution is 10 points per wavelength in the highest index material time a scale factor
-        self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * res_scaling)
+        self.resolution = resolution
 
         self.name = self.name + f'_res{self.resolution}'
         self.filename_prefix = self.name
@@ -197,8 +187,8 @@ class Simulation(mp.Simulation):
         self.grid_step = 1/self.resolution
 
         self.cell_size = mp.Vector3(self.domain_x + 2*self.PML_width,
-                                    self.domain_y + 2*self.PML_width,
-                                    self.domain_z + 2*self.PML_width)
+                                    self.domain_y + 2*self.PML_width)
+        print(self.cell_size)
         # make domain an integer number of voxels
         Nx = int(self.cell_size.x / self.grid_step)
         Nx -= np.mod(Nx,2) + 1      # make odd
@@ -206,16 +196,14 @@ class Simulation(mp.Simulation):
         Ny = int(self.cell_size.y / self.grid_step)
         Ny -= np.mod(Ny,2) + 1
         self.cell_size.y = Ny * self.grid_step
-        Nz = int(self.cell_size.z / self.grid_step)
-        Nz -= np.mod(Nz,2) + 1
-        self.cell_size.z = Nz * self.grid_step
 
+        print(self.cell_size)
         print()
-        print(f"Number of voxels is ({Nx}x{Ny}x{Nz}) = {Nx*Ny*Nz/1e6} Mln")
-        print(f"Minimum expected memory is {96*Nx*Ny*Nz/2**30:.2f}GB")
+        print(f"Number of voxels is ({Nx}x{Ny}) = {Nx*Ny/1e6} Mln")
+        print(f"Minimum expected memory is {96*Nx*Ny/2**30:.2f}GB")
         print()
 
-        self.geometry_center = mp.Vector3(0, 0, -(self.cell_size.z/2 - self.z_top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]/2))
+        self.geometry_center = mp.Vector3(0, -(self.cell_size.y/2 - self.top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1])- design_specs['d_layers'][used_layer]))
 
         self.boundary_layers = [mp.PML(self.PML_width)]
         # print( [self.cell_size.x / self.
@@ -238,7 +226,7 @@ class Simulation(mp.Simulation):
     def init_sources_and_monitors(self, f, df, allow_farfield=True) :
         self.sources = [ mp.Source(
             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-            center = mp.Vector3(),
+            center = mp.Vector3(y=0e-3),
             size = mp.Vector3(),
             component = mp.Ez)]
 
@@ -248,61 +236,33 @@ class Simulation(mp.Simulation):
 
         if self.outcou_r_size > 0 and allow_farfield :
             nearfield = mp.Near2FarRegion(
-                center = mp.Vector3(0, 0, self.z_top_air_gap - 0.03),
-                size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, self.domain_y-.5*self.extra_space_xy, 0),
-                direction = mp.Z)
+                center = mp.Vector3(0, self.top_air_gap - 0.03),
+                size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, 0),
+                direction = mp.Y)
 
             self.nearfield_monitor = self.add_near2far(f, 0.03, 5, nearfield)#, yee_grid=True))
 
         if self.cavity_r_size > 0 :
             DL = self.cavity_r_size + 0.02
 
-            nfreq = 1000
+            nfreq = 200
             fluxr = mp.FluxRegion(
-                center = mp.Vector3(0, DL, 0),
-                size = mp.Vector3(0,0,0),
-                direction = mp.Y)
+                center = mp.Vector3(DL, 0),
+                size = mp.Vector3(0,0),
+                direction = mp.X)
             self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
-            if self.outcou_r_size == 0:
-                # monitor_box
-                fr_yp = mp.FluxRegion(
-                    center = mp.Vector3(0, +DL, 0),
-                    size   = mp.Vector3(2*DL, 0, 0),
-                    direction = mp.Y)
-                fr_yn = mp.FluxRegion(
-                    center = mp.Vector3(0, -DL, 0),
-                    size   = mp.Vector3(2*DL, 0, 0),
-                    direction = mp.Y,
-                    weight = -1.0)
-                fr_xp = mp.FluxRegion(
-                    center = mp.Vector3(+DL, 0, 0),
-                    size   = mp.Vector3(0, 2*DL, 0),
-                    direction = mp.X)
-                fr_xn = mp.FluxRegion(
-                    center = mp.Vector3(-DL, 0, 0),
-                    size   = mp.Vector3(0, 2*DL, 0),
-                    direction = mp.X,
-                    weight = -1.0)
-                self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fr_xp, fr_xn, fr_yp, fr_yn))
-            else:
-                DL += self.cavity_r_size
-                fluxr = mp.FluxRegion(
-                    center = mp.Vector3(0, 0, self.z_top_air_gap - 0.03),
-                    size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, self.domain_y-.5*self.extra_space_xy, 0),
-                    direction = mp.Z)
-                self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))
-
             if not self.empty:
-                self.harminv_instance =  mp.Harminv(mp.Hx, mp.Vector3(), f, df)
+                self.harminv_instance = mp.Harminv(mp.Ez, mp.Vector3(), f, df)
 
 
 
 
 #%% geometry and simulation parameters
-if __name__ == "__main__":              # good practise in parallel computing
+def run_parallel(key, value, empty = False):
+    import meep as mp
     c0 = 1
-    wavelength = 0.570
+    wavelength = 0.590
     wwidth = .20
     f = c0 / wavelength
 
@@ -315,21 +275,21 @@ if __name__ == "__main__":              # good practise in parallel computing
     n_eff_FF0d5 = n_eff_h*.5 + n_eff_l*.5
 
 
-    file = 'design_TM_gd3_buriedDBR_onSiO2'
-    buried = True
-    pattern_type = 'positive'           # 'positive' or 'negative'
+    file = 'design_TE_N7'#'design_TM_gd3_buriedDBR_onSiO2'#
+    buried = False
+    pattern_type = 'negative'           # 'positive' or 'negative'
     out_grating_type = 'spiral'         # 'spiral' or 'polSplitting' or 'only'
 
     # cavity info
     N_cavity = 30
-    cavity_period = .165 # wavelength / n_eff_FF0d5 / 2
-    D_cavity = .400 # cavity_period * 1.4
+    cavity_period = .280 # wavelength / n_eff_FF0d5 / 2
+    D_cavity = 80e-3# cavity_period * .4
 
     # pol splitting info
     FF_pol_splitter = .3
     FF = FF_pol_splitter
     n_eff = n_eff_h*(1-FF) + n_eff_l*FF if pattern_type=='positive' else n_eff_h*FF + n_eff_l*(1-FF)
-    scatter_disposition='filled'        # 'radial' or 'filled'
+    scatter_disposition = 'filled'        # 'radial' or 'filled'
     D_phi = np.pi/3;
     sigma = -1;                         # select for circl left or circ right
     K_bsw = 2*np.pi * n_eff / wavelength
@@ -338,9 +298,9 @@ if __name__ == "__main__":              # good practise in parallel computing
     outcoupler_period = s
 
     # outcoupler info
-    N_outcoupler = 6
+    N_outcoupler = 0
     d_cavity_out = .5
-    charge = 1
+    charge = 0
 
     cavity_parameters = {
         "D": D_cavity,
@@ -371,6 +331,13 @@ if __name__ == "__main__":              # good practise in parallel computing
         "lambda_bsw": wavelength/n_eff,
         "sigma": sigma}
 
+    used_layer_info = {
+        "used_layer" : -3 if buried else -2,
+        "thickness"  : 70e-3,
+        "refractive index" : 1.48}
+
+    cavity_parameters[key] = value
+
     t0 = time.time()
 
 
@@ -380,40 +347,47 @@ if __name__ == "__main__":              # good practise in parallel computing
     else:
         sim_prefix = f"{date}"
 
-    sim_name = "cavity_" if N_cavity > 0 else ""
+    sim_name = "2D_section_"
+    sim_name += "cavity_" if N_cavity > 0 else ""
     sim_name += f"{out_grating_type}_" if N_outcoupler > 0 else ""
     sim_name += f"{sim_prefix}_{file}"
     sim_name += f"_charge{charge}" if N_outcoupler > 0 else ""
+    sim_name += f"{key}_{value}"
 
-    # sim_name += f"_{parameter_to_loop}"
+
+
+
+    output = []
+
+
 
     sim = Simulation(sim_name)
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = False
-
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
-                                used_layer = -3 if buried else -2,
-                                res_scaling = .1,
+                                used_layer_info = used_layer_info,
+                                resolution = 200,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
-                                outcoupler_parameters = spiral_parameters if out_grating_type=='spiral' else polSplitter_parameters)
+                                outcoupler_parameters = spiral_parameters )
 
-    if len(sys.argv) > 2:
-        if sys.argv[2] == "empty" :
-            sim.empty = True
-            sim.name += '_empty'
-        else:
-            sim.empty = False
+
+    if empty:
+        sim.empty = True
+        sim.name += '_empty'
+    else:
+        sim.empty = False
+
 
     sim.init_sources_and_monitors(f, df, allow_farfield=(not sim.empty) )
     mp.verbosity(2)
-    # mpo.create_openscad(sim,1000)
+    mpo.create_openscad(sim,1000)
     sim.init_sim()
 
     # raise ValueError()
 
-    print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to initiate\n')
+    # print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to initiate\n')
 
     #%%
     simsize = sim.cell_size
@@ -421,23 +395,8 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     max_epsilon = 2.53**2
 
-    fig = plt.figure(dpi=200)
-    plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.y,simsize.z)),
-                       labels=True,
-                       eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon} )
-    try:
-        fig.colorbar(plot.images[0], orientation="horizontal")
-    except:
-        plt.close()
-        print("Only one of the parallel jobs jobs will print the image")
-    else:
-        fig.savefig(f'{sim.name}_section-yz.jpg')
-        plt.close()
-
-    fig = plt.figure(dpi=200)
-    plot = sim.plot2D( output_plane=mp.Volume(center=mp.Vector3(z=-.00), size=mp.Vector3(simsize.x,simsize.y)),
-                       labels=True,
-                       eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon})
+    fig = plt.figure(dpi=100)
+    plot = sim.plot2D( labels=True, eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon})
     try:
         fig.colorbar(plot.images[0])
     except:
@@ -445,7 +404,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         print("Only one of the parallel jobs jobs will print the image")
     else:
         fig.savefig(f'{sim.name}_section-xy.jpg')
-        plt.close()
+        # plt.close()
 
     # sim.output_epsilon(f'{sim.name}_eps')
     # eps_data = sim.get_epsilon()
@@ -465,7 +424,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 
     t0 = time.time()
-    mp.verbosity(1)
+    mp.verbosity(0)
 
     # fig = plt.figure(dpi=100)
     # Animate = mp.Animate2D( sim, fields=mp.Ez, f=fig, realtime=False, normalize=True,
@@ -479,9 +438,9 @@ if __name__ == "__main__":              # good practise in parallel computing
     if sim.harminv_instance != None :
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
-
-    sim.run(*step_functions, until=50)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
+    sim.run(*step_functions, until=100)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
+
 
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
@@ -490,9 +449,11 @@ if __name__ == "__main__":              # good practise in parallel computing
     if sim.nearfield_monitor != None :
         for i in range( sim.nearfield_monitor.nfreqs):
             ex_near, ey_near = [sim.get_dft_array(sim.nearfield_monitor, field, i) for field in [mp.Ex, mp.Ey]]
-            mpo.savemat(f'{sim.name}_nearfield_fp{i:02}_t{t}.mat', {'Ex': ex_near, 'Ey': ey_near,
-                                                           'Lx': sim.nearfield_monitor.regions[0].size.x,
-                                                           'Ly': sim.nearfield_monitor.regions[0].size.y})
+            dataset = {'Ex': ex_near, 'Ey': ey_near,
+                       'Lx': sim.nearfield_monitor.regions[0].size.x,
+                       'Ly': sim.nearfield_monitor.regions[0].size.y}
+            mpo.savemat(f'{sim.name}_nearfield_fp{i:02}_t{t}.mat', dataset)
+            output.append(dataset)
     data2save = {}
     if sim.harminv_instance != None :
         resonances_Q = []
@@ -524,49 +485,66 @@ if __name__ == "__main__":              # good practise in parallel computing
     spectra = []
     for monitor in sim.spectrum_monitors :
         spectrum_f = np.array(mp.get_flux_freqs(monitor))
-        spectra.append(mp.get_fluxes(monitor))
+        spectra.append(np.array(mp.get_fluxes(monitor)))
 
     if len(spectra) > 0 :
         data2save["wavelength"] = 1/spectrum_f*1e3
         data2save["spectra"] = spectra
-
     if len(data2save) > 0:
         mpo.savemat(f'{sim.name}_spectra_t{t}.mat', data2save)
+        output.append(data2save)
 
-    # if len(spectra) > 0 :
-    #     sim.empty = True
-    #     sim.init_sources_and_monitors(f, df, allow_farfield=False)
+    return output
 
-    #     sim.run(mp.at_every(5,print_time), until=t)
+if __name__ == "__main__":              # good practise in parallel computing
 
-    #     spectra_out = []
-    #     for i, monitor in enumerate(sim.spectrum_monitors) :
-    #         spectrum_empty = mp.get_fluxes(monitor)
-    #         spectra_out.append( np.array(spectra[i]) / np.array(spectrum_empty) )
+    if len(sys.argv) > 2:
+        if sys.argv[2] == "empty" :
+            empty = True
+            i = sys.argv[3]
+            N = sys.argv[4]
+        else:
+            empty = False
+            i = sys.argv[2]
+            N = sys.argv[3]
 
-    #     fig = plt.figure(dpi=200)
-    #     ax = fig.add_subplot(111)
+    spacers_to_test = np.linspace(.00,.700, N)
+    run_parallel("D", spacers_to_test[i], False)
 
-    #     data_plot = []
-    #     for spectrum in spectra_out:
-    #         data_plot.extend( [1/spectrum_f, spectrum] )
-    #     plt.plot(*data_plot)
-    #     plt.xlim(wavelength - wwidth, wavelength + wwidth)
-    #     plt.ylim(-2,2)
+    # tuple_list = [("D", .080, True)]
+    # tuple_list.extend( [ ("D", D, False) for D in spacers_to_test ] )
+    # output=[]
+    # t0 = time.time()
+    # mp.verbosity(0)
+    # mp.quiet(True)
+    # for i in range(len(tuple_list)):
+    #     t1 = time.time()
+    #     # print(tuple_list[i])
+    #     output.append(run_parallel(*tuple_list[i]))
+    #     # print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{j}')
+        # print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(j-i-1))} more')
+    # from multiprocessing import Pool
+    # with Pool(4) as parfor:
+    #     output = parfor.starmap(run_parallel, tuple_list)
+    #%%
+    # image = []
+    # for i in range(1, len(output)) :
+    #     fig, ax  = plt.subplots(1,1)
+    #     spectrum = np.log( output[i][0]["spectra"][0]/output[0][0]["spectra"][0])
+    #     ax.plot(output[0][0]["wavelength"], spectrum)
     #     ax.grid(True)
-    #     plt.xlabel('wavelength [um]')
+    #     plt.xlabel('wavelength')
     #     plt.ylabel('Transmission')
-    #     ax2 = fig.add_subplot(336)
-    #     # plt.title('Table of the resonances')
-    #     collabel=[ "Wavelength [nm]", "Quality"]
-    #     rowlabel=[ f'{i}' for i in range(len(resonance_table))]
-    #     ax2.axis('tight')
-    #     ax2.axis('off')
-    #     the_table = ax2.table(cellText=resonance_table, colLabels=collabel, rowLabels=rowlabel,loc='center')
 
-    #     fig.savefig(f'{sim.name}_spectrum_cavity.jpg')
-    #     plt.close(fig)
+    #     fig.savefig(f'{tuple_list[i][0]}_{int(tuple_list[i][1]*1e3)}.png')
+        # plt.close(fig)
+        # image.append(spectrum)
 
-    #     mpo.savemat(f'{sim.name}_spectra_t{t}.mat', {"wavelength": 1/spectrum_f*1e3,
-    #                                                   "spectra"   : spectra_out,
-    #                                                   "resnances" : resonance_table})
+    # image = np.array(image).transpose()
+    # fig = mpo.plot_image(np.array(output[0][0]["wavelength"]), spacers_to_test, image)
+    # plt.xlabel('wavelength [nm]')
+    # plt.ylabel('n_eff_h')
+    # plt.title('Spectral response')
+    # fig.savefig(f'PMMA_spacer_dependence_DBRperiod280.png')
+
+    # print(f'\n\ntotal time {convert_seconds(time.time()-t0)}\n')
