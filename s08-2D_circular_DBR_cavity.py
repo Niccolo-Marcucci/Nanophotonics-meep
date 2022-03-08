@@ -418,7 +418,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     else:
         comm = MPI.COMM_WORLD
-        N_jobs = int(sys.argv[2])
+        N_jobs = int(sys.argv[-1])
 
         j = mp.divide_parallel_processes(N_jobs)
 
