@@ -418,10 +418,13 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     else:
         comm = MPI.COMM_WORLD
-        N_jobs = int(sys.argv[2])
+        N_jobs = int(sys.argv[-1])
 
-        j = mp.divide_parallel_processes(N_jobs)
-
+        try :
+            j = mp.divide_parallel_processes(N_jobs)
+        except:
+            print(N_jobs)
+            raise
         N_list = len(tuple_list)
         if N_list < N_jobs :
             raise ValueError(f"Number of jobs should be lower than number of loop iterations to (f{N_list}")
