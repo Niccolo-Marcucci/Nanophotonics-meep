@@ -213,7 +213,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.25
     f=c0/wavelength
 
-    sim_end=500
+    sim_end=10
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -528,6 +528,6 @@ if __name__ == "__main__":              # good practise in parallel computing
     image = np.array(image).transpose()
     fig = mpo.plot_image(wavelength, Ds, image)
     plt.xlabel('wavelength [nm]')
-    plt.ylabel('n_eff_h')
+    plt.ylabel('Spacer [nm]')
     plt.title('Spectral response')
     fig.savefig(f'{names[0]}_spacer_dependence_DBRperiod{period*1e3:.0f}_sourcePos{source_pos}.png')
