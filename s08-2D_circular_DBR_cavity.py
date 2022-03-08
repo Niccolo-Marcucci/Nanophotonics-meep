@@ -213,7 +213,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.25
     f=c0/wavelength
 
-    sim_end=10
+    sim_end=500
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -474,9 +474,6 @@ if __name__ == "__main__":              # good practise in parallel computing
     #         resonance_row.append([ 0, 0 ])
     #     resonance_table.append(resonance_row)
     # print(resonance_table)
-    print(names)
-    print(len(names))
-    print(len(output))
     image = []
     spectrum_empty = output[0]["spectra"][0]
     l=0
@@ -527,6 +524,9 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     image = np.array(image).transpose()
     fig = mpo.plot_image(wavelength, Ds, image)
+    fig.set_figheight(6)
+    fig.set_figwidth(12)
+    fig.set_dpi(150)
     plt.xlabel('wavelength [nm]')
     plt.ylabel('Spacer [nm]')
     plt.title('Spectral response')
