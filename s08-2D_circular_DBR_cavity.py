@@ -259,7 +259,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += f"{sim_prefix}_"
     sim_name += f"D{D*1e3:.0f}_src{source_pos*1e3:.0f}"
 
-    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])
+    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
@@ -380,7 +380,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    for source_pos in [period/4]: # 0, period/4, period/2]:
+    for source_pos in [period/4, period/2]: # 0, period/4, period/2]:
         for D in Ds:
             tuple_list.append( (wavelength,
                                 n_eff_hs[0], n_eff_l,
@@ -530,4 +530,4 @@ if __name__ == "__main__":              # good practise in parallel computing
     plt.xlabel('wavelength [um]')
     plt.ylabel('Spacer [um]')
     plt.title('Spectral response')
-    fig.savefig(f'{names[0]}_spacer_dependence_DBRperiod{period*1e3:.0f}_sourcePos{source_pos}.png')
+    fig.savefig(f'{names[0]}_spacer_dependence_DBRperiod{period*1e3:.0f}.png')

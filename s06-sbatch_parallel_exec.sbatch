@@ -2,11 +2,11 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=niccolo.marcucci@polito.it
 #SBATCH --partition=global
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH --ntasks=84
 # SBATCH --nodes=1
 # SBATCH --ntasks-per-node=16
-#SBATCH --mem-per-cpu=400M
+#SBATCH --mem-per-cpu=500M
 
 mpirun -np 84 python $@ 84
 
