@@ -380,7 +380,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    for source_pos in [0]: # 0, period/4, period/2]:
+    for source_pos in [period/4]: # 0, period/4, period/2]:
         for D in Ds:
             tuple_list.append( (wavelength,
                                 n_eff_hs[0], n_eff_l,
@@ -523,11 +523,11 @@ if __name__ == "__main__":              # good practise in parallel computing
 
 
     image = np.array(image).transpose()
-    fig = mpo.plot_image(wavelength, Ds, image)
+    fig = mpo.plot_image(wavelength*1e-3, Ds, image)
     fig.set_figheight(6)
     fig.set_figwidth(12)
     fig.set_dpi(150)
-    plt.xlabel('wavelength [nm]')
-    plt.ylabel('Spacer [nm]')
+    plt.xlabel('wavelength [um]')
+    plt.ylabel('Spacer [um]')
     plt.title('Spectral response')
     fig.savefig(f'{names[0]}_spacer_dependence_DBRperiod{period*1e3:.0f}_sourcePos{source_pos}.png')
