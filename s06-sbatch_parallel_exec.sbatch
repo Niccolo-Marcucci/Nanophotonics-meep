@@ -1,4 +1,4 @@
-q#!/bin/bash
+#!/bin/bash
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=niccolo.marcucci@polito.it
 #SBATCH --partition=global
