@@ -146,10 +146,10 @@ class Simulation(mp.Simulation):
         print(self.cell_size)
         # make domain an integer number of voxels
         Nx = int(self.cell_size.x / self.grid_step)
-        Nx -= np.mod(Nx,2) + 1      # make odd
+        Nx -= np.mod(Nx,2) # make even; + 1      # make odd
         self.cell_size.x = Nx * self.grid_step
         Ny = int(self.cell_size.y / self.grid_step)
-        Ny -= np.mod(Ny,2) + 1
+        Ny -= np.mod(Ny,2) # make even; + 1
         self.cell_size.y = Ny * self.grid_step
 
         print(self.cell_size)
@@ -197,7 +197,7 @@ class Simulation(mp.Simulation):
                 nfreq = 1000
                 fluxr = mp.FluxRegion(
                     center = mp.Vector3(DL, 0),
-                    size = mp.Vector3(0,0),
+                    size = mp.Vector3(0,1),
                     direction = mp.X)
                 self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
@@ -259,11 +259,12 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += f"{sim_prefix}_"
     sim_name += f"D{D*1e3:.0f}_src{source_pos*1e3:.0f}"
 
-    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])
+
+    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 10,
+                                resolution = 100,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
@@ -274,15 +275,15 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos), allow_profile=False)
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
 
     sim.init_sim()
-    # fig = plt.figure(dpi=150, figsize=(10,10))
-    # plot = sim.plot2D(eps_parameters={"interpolation":'none'})
-    # fig.colorbar(plot.images[0])
-    # # plt.show()
-    # fig.savefig(f'{sim.name}-xy.jpg')
-    # plt.close()
+    fig = plt.figure(dpi=150, figsize=(10,10))
+    plot = sim.plot2D(eps_parameters={"interpolation":'none'})
+    fig.colorbar(plot.images[0])
+    # plt.show()
+    fig.savefig(f'{sim.name}-xy.jpg')
+    plt.close()
     # raise Exception()
 
 
@@ -360,7 +361,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # for n_eff_h in n_eff_hs:
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
-    Ds = period * np.linspace(0, 3, 100) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
+    Ds = period * np.array([0.45])# np.linspace(0, 3, 10) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
     # D = .112# period * .4
 
     # spacers_to_test = [.08] #np.linspace(.00,.700, N)
@@ -380,7 +381,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    for source_pos in [0]: # 0, period/4, period/2]:
+    for source_pos in [period/4]: # 0, period/4, period/2]:
         for D in Ds:
             tuple_list.append( (wavelength,
                                 n_eff_hs[0], n_eff_l,
@@ -390,7 +391,7 @@ if __name__ == "__main__":              # good practise in parallel computing
                                 anisotropy,
                                 0 ) )
             j += 1
-    mp.verbosity(0)
+    mp.verbosity(1)
     # mp.quiet(True)
     # run non parallel
     output = []
@@ -424,15 +425,22 @@ if __name__ == "__main__":              # good practise in parallel computing
 
         N_list = len(tuple_list)
         if N_list < N_jobs :
-            raise ValueError(f"Number of jobs should be lower than number of loop iterations to (f{N_list}")
+            raise ValueError(f"Number of jobs should be lower than number of loop iterations ({N_list})")
 
-        N_loops_per_job = int(N_list/N_jobs) + 1
+        reminder = np.mod(N_list/N_jobs)
+        N_loops_per_job = int(N_list/N_jobs)
+        if j < reminder:
+            N_loops_per_job += 1
+
         data_list = []
         name_list = []
         for i in range(N_loops_per_job):
             t1 = time.time()
-            tuple_index = j*N_loops_per_job + i
-            print(tuple_index)
+            if j < reminder:
+                tuple_index = j*N_loops_per_job + i
+            else:
+                tuple_index = reminder*(N_loops_per_job+1) + (j-reminder)*N_loops_per_job + i
+
             if tuple_index >= N_list :
                 continue
             data, name = run_parallel(*tuple_list[tuple_index])
@@ -474,28 +482,28 @@ if __name__ == "__main__":              # good practise in parallel computing
     #         resonance_row.append([ 0, 0 ])
     #     resonance_table.append(resonance_row)
     # print(resonance_table)
-    print(names)
-    print(len(names))
-    print(len(output))
+    # print(names)
+    # print(len(names))
+    # print(len(output))
     image = []
     spectrum_empty = output[0]["spectra"][0]
     l=0
     for k, var in enumerate(output[1:]) :
         k=k+1
         spectrum = ( var['spectra'][0]/spectrum_empty)
-        wavelength = var["wavelength"]
+        wavelength = var["wavelength"]*1e-3
         # l=np.int((k-1)/3)
         # # resonance_table = [ [ np.round(1/var[2][l]*1e3, 1), np.int(var[3][l]) ]  for l in range(var[2].size) ]
-        # if np.mod(k-1,3) == 0 :
-        #     fig = plt.figure(l,dpi=150,figsize=(10,5))
-        #     ax = fig.add_subplot(111)
-        #     legend_str = []
-        # ax.plot(wavelength, spectrum)
+        if np.mod(k-1,3) == 0 :
+            fig = plt.figure(l,dpi=150,figsize=(10,5))
+            ax = fig.add_subplot(111)
+            legend_str = []
+        ax.plot(wavelength, spectrum)
         # plt.xlim(550,650)
         # # plt.ylim(-2,2)
-        # ax.grid(True)
-        # plt.xlabel('Wavelength [nm]')
-        # plt.ylabel('Transmission')
+        ax.grid(True)
+        plt.xlabel('Wavelength [um]')
+        plt.ylabel('Transmission')
         # legend_str.append(f"sourcePos {tuple_list[k][6]*1e3:.0f}")
         # plt.title(f'n_eff_h={tuple_list[k][1]:.2f};   DBR_period={tuple_list[k][4]*1e3:.0f};   D={tuple_list[k][3]/tuple_list[k][2]:.2f}*DBR_period')
         # # ax2 = fig.add_subplot(336)
@@ -510,7 +518,6 @@ if __name__ == "__main__":              # good practise in parallel computing
         # # plt.show()
         # fig.savefig(f'{names[k]}_spectrum.png')
         # plt.close(fig)
-        image.append(np.log10(spectrum))
 
         # fig = plt.figure(10*k,dpi=150,figsize=(10,5))
         # ax = fig.add_subplot(111)
@@ -523,11 +530,3 @@ if __name__ == "__main__":              # good practise in parallel computing
         # plt.legend(["dielectric_constant", "field_profile"])
         # plt.title(f'n_eff_h={tuple_list[k][1]:.2f};   DBR_period={tuple_list[k][4]*1e3:.0f}; D={tuple_list[k][3]/tuple_list[k][4]:.2f}*DBR_period')
         # fig.savefig(f'{names[k]}_spectrumfield_profile.png')
-
-
-    image = np.array(image).transpose()
-    fig = mpo.plot_image(wavelength, Ds, image)
-    plt.xlabel('wavelength [nm]')
-    plt.ylabel('n_eff_h')
-    plt.title('Spectral response')
-    fig.savefig(f'{names[0]}_spacer_dependence_DBRperiod{period*1e3:.0f}_sourcePos{source_pos}.png')
