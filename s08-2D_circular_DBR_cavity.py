@@ -449,84 +449,16 @@ if __name__ == "__main__":              # good practise in parallel computing
             print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{j}')
             print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(j-i-1))} more')
 
-        if mp.am_really_master():
-            output.extend(data_list)
-            names.extend(name_list)
-            for src in range(1, N_jobs):
-                output.extend( comm.recv(source=src, tag=11) )
-                names.extend ( comm.recv(source=src, tag=12) )
-                # comm.recv(source=src, tag=11)
-                # comm.recv(source=src, tag=12)
-        else:
-            comm.send(data_list, dest=0, tag=11)
-            comm.send(name_list, dest=0, tag=12)
-            exit()
-       # mp.merge_subgroup_data(output)
-    # with Pool(5) as parfor:
-    #     output = parfor.starmap(run_parallel, tuple_list)
+        # if mp.am_really_master():
+        #     output.extend(data_list)
+        #     names.extend(name_list)
+        #     for src in range(1, N_jobs):
+        #         output.extend( comm.recv(source=src, tag=11) )
+        #         names.extend ( comm.recv(source=src, tag=12) )
+        #         # comm.recv(source=src, tag=11)
+        #         # comm.recv(source=src, tag=12)
+        # else:
+        #     comm.send(data_list, dest=0, tag=11)
+        #     comm.send(name_list, dest=0, tag=12)
+        #     exit()
     print(f'Total took {convert_seconds(time.time()-t0)}')
-
-    #%% plots
-    N_resonances=0
-    # for var in output:
-    #     if len(var[2]) > N_resonances:
-    #         N_resonances = len(var[2])
-
-    # resonance_table = []
-    # for var in output :
-    #     N_resonances = len(var['resonance_table_t300.0'])
-    #     resonance_row = []
-    #     for l in range(N_resonances):
-    #         resonance_row.append([np.round(1/var['resonance_table_t300.0'][l][0]*1e3, 1), np.int(var['resonance_table_t300.0'][l][1])] )
-    #     if N_resonances == 0 :
-    #         resonance_row.append([ 0, 0 ])
-    #     resonance_table.append(resonance_row)
-    # print(resonance_table)
-    # print(names)
-    # print(len(names))
-    # print(len(output))
-    image = []
-    spectrum_empty = output[0]["spectra"][0]
-    l=0
-    for k, var in enumerate(output[1:]) :
-        k=k+1
-        spectrum = ( var['spectra'][0]/spectrum_empty)
-        wavelength = var["wavelength"]*1e-3
-        # l=np.int((k-1)/3)
-        # # resonance_table = [ [ np.round(1/var[2][l]*1e3, 1), np.int(var[3][l]) ]  for l in range(var[2].size) ]
-        if np.mod(k-1,3) == 0 :
-            fig = plt.figure(l,dpi=150,figsize=(10,5))
-            ax = fig.add_subplot(111)
-            legend_str = []
-        ax.plot(wavelength, spectrum)
-        # plt.xlim(550,650)
-        # # plt.ylim(-2,2)
-        ax.grid(True)
-        plt.xlabel('Wavelength [um]')
-        plt.ylabel('Transmission')
-        # legend_str.append(f"sourcePos {tuple_list[k][6]*1e3:.0f}")
-        # plt.title(f'n_eff_h={tuple_list[k][1]:.2f};   DBR_period={tuple_list[k][4]*1e3:.0f};   D={tuple_list[k][3]/tuple_list[k][2]:.2f}*DBR_period')
-        # # ax2 = fig.add_subplot(336)
-        # # # plt.title('Table of the resonances')
-        # # collabel=[ "Wavelength", "Quality"]
-        # # rowlabel=[ f'{i}' for i,_ in enumerate(var["resonance_table_t300.0"])]#[ f'({np.int(np.rad2deg(angles[i][0]))},{np.int(np.rad2deg(angles[i][1]))})' for i in indeces]
-        # # ax2.axis('tight')
-        # # ax2.axis('off')
-        # # the_table = ax2.table(cellText=var["resonance_table_t300.0"], colLabels=collabel, rowLabels=rowlabel,loc='center')
-        # plt.legend(legend_str)
-
-        # # plt.show()
-        # fig.savefig(f'{names[k]}_spectrum.png')
-        # plt.close(fig)
-
-        # fig = plt.figure(10*k,dpi=150,figsize=(10,5))
-        # ax = fig.add_subplot(111)
-        # ax.plot(var["field_profile_x"], var["field_profile_Eps"])
-        # field = var["field_profile_Ey_0"]
-        # field = np.abs(field/np.max(field))**2
-        # ax.plot(var["field_profile_x"], field)
-        # ax.grid(True)
-        # plt.xlabel('x [um]')
-        # plt.legend(["dielectric_constant", "field_profile"])
-        # plt.title(f'n_eff_h={tuple_list[k][1]:.2f};   DBR_period={tuple_list[k][4]*1e3:.0f}; D={tuple_list[k][3]/tuple_list[k][4]:.2f}*DBR_period')
-        # fig.savefig(f'{names[k]}_spectrumfield_profile.png')
