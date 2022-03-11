@@ -380,7 +380,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    for source_pos in [period/4, period/2]: # 0, period/4, period/2]:
+    for source_pos in [period/4]: # 0, period/4, period/2]:
         for D in Ds:
             tuple_list.append( (wavelength,
                                 n_eff_hs[0], n_eff_l,
