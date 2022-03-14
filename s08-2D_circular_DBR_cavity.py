@@ -260,7 +260,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += f"D{D*1e3:.0f}_src{source_pos*1e3:.0f}"
 
 
-    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
+    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
@@ -361,7 +361,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # for n_eff_h in n_eff_hs:
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
-    Ds = period * np.array([0.45])# np.linspace(0, 3, 10) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
+    Ds = period * np.linspace(0, 3, 500) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
     # D = .112# period * .4
 
     # spacers_to_test = [.08] #np.linspace(.00,.700, N)
@@ -381,7 +381,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    for source_pos in [period/4]: # 0, period/4, period/2]:
+    for source_pos in [period/4, period/2]:
         for D in Ds:
             tuple_list.append( (wavelength,
                                 n_eff_hs[0], n_eff_l,
