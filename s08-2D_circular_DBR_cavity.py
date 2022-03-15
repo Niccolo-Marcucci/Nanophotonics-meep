@@ -427,7 +427,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         if N_list < N_jobs :
             raise ValueError(f"Number of jobs should be lower than number of loop iterations ({N_list})")
 
-        reminder = np.mod(N_list/N_jobs)
+        reminder = np.mod(N_list,N_jobs)
         N_loops_per_job = int(N_list/N_jobs)
         if j < reminder:
             N_loops_per_job += 1
@@ -444,10 +444,10 @@ if __name__ == "__main__":              # good practise in parallel computing
             if tuple_index >= N_list :
                 continue
             data, name = run_parallel(*tuple_list[tuple_index])
-            data_list.append(data)
-            name_list.append(name)
-            print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{j}')
-            print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(j-i-1))} more')
+            # data_list.append(data)
+            # name_list.append(name)
+            print(f'It has run for {convert_seconds(time.time()-t1)}, {N_loops_per_job+1}/{j}')
+            print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(N_loops_per_job-i-1))} more')
 
         # if mp.am_really_master():
         #     output.extend(data_list)
