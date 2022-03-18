@@ -197,7 +197,7 @@ class Simulation(mp.Simulation):
                 nfreq = 1000
                 fluxr = mp.FluxRegion(
                     center = mp.Vector3(DL, 0),
-                    size = mp.Vector3(0,1),
+                    size = mp.Vector3(0, 0),
                     direction = mp.X)
                 self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
@@ -206,7 +206,7 @@ class Simulation(mp.Simulation):
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
-    import meep as mp
+    # import meep as mp
 
     c0 = 1
     # wavelength = 0.590
@@ -264,7 +264,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 100,
+                                resolution = 50,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
@@ -278,12 +278,12 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
 
     sim.init_sim()
-    fig = plt.figure(dpi=150, figsize=(10,10))
-    plot = sim.plot2D(eps_parameters={"interpolation":'none'})
-    fig.colorbar(plot.images[0])
-    # plt.show()
-    fig.savefig(f'{sim.name}-xy.jpg')
-    plt.close()
+    # fig = plt.figure(dpi=150, figsize=(10,10))
+    # plot = sim.plot2D(eps_parameters={"interpolation":'none'})
+    # fig.colorbar(plot.images[0])
+    # # plt.show()
+    # fig.savefig(f'{sim.name}-xy.jpg')
+    # plt.close()
     # raise Exception()
 
 
@@ -356,16 +356,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     n_eff_l = 1
     n_eff_hs = [1.1] #np.linspace(1.01,1.2,100) # [1.1]#1.0543, 1.0985, 1.1405] # 50 75 and 100 nm pmma thickness
 
-    # n_eff_h = 1
-    # n_eff_l = 1.1
-
-    # for n_eff_h in n_eff_hs:
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
     Ds = period * np.linspace(0, 3, 100) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
-    # D = .112# period * .4
-
-    # spacers_to_test = [.08] #np.linspace(.00,.700, N)
-    # output = [run_parallel("D", spacers_to_test[i], False)]
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -393,7 +385,6 @@ if __name__ == "__main__":              # good practise in parallel computing
             j += 1
     mp.verbosity(1)
     # mp.quiet(True)
-    # run non parallel
     output = []
     names = []
     t0 = time.time()
@@ -405,7 +396,11 @@ if __name__ == "__main__":              # good practise in parallel computing
     else:
         non_parallel_conda = False
 
-    if len(sys.argv) < 2 or non_parallel_conda:
+    if len(sys.argv) > 2 and sys.argv[2] == "parallel_grid":
+        non_parallel_conda = True
+
+
+    if len(sys.argv) < 2 or non_parallel_conda :
         for i in range(j):
             t1 = time.time()
             # print(tuple_list[i])
@@ -418,6 +413,7 @@ if __name__ == "__main__":              # good practise in parallel computing
             print()
 
     else:
+        # mp.reset_meep()
         comm = MPI.COMM_WORLD
         N_jobs = int(sys.argv[-1])
 
