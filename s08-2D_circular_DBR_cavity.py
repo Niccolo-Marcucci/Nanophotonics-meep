@@ -324,7 +324,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     if sim.field_profile != None:
         for j in range(sim.field_profile.nfreqs):
-            data2save[f"field_profile_Ey_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ey, i)
+            data2save[f"field_profile_Ey_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ey, j)
         data2save["field_profile_Eps"] = sim.get_array(mp.Dielectric,
                                                        center = sim.field_profile.regions[0].center,
                                                        size = sim.field_profile.regions[0].size)
@@ -416,7 +416,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         # mp.reset_meep()
         comm = MPI.COMM_WORLD
         N_jobs = int(sys.argv[-1])
-
+        print(f'number of processor is {mp.count_processors()}')
         j = mp.divide_parallel_processes(N_jobs)
 
         N_list = len(tuple_list)
