@@ -370,7 +370,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # # mlab.show()
 
     #%%
-    raise RuntimeError("comment this line to run til the end")
+    # raise RuntimeError("comment this line to run til the end")
     def print_time(sim):
         print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 
