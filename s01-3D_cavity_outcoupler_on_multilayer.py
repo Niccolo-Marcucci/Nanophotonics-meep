@@ -51,7 +51,7 @@ class Simulation(mp.Simulation):
 
         self.PML_width = .3
 
-        self.z_top_air_gap = 0.7
+        self.top_air_gap = 0.7
 
         self.substrate_thickness = .2
 
@@ -87,7 +87,7 @@ class Simulation(mp.Simulation):
         except AttributeError:
             raise AttributeError("cannot assign 'empty' property before initializing the geometry")
 
-    def init_geometric_objects(self, multilayer_file, used_layer=-3, res_scaling=1, use_BB=True,
+    def init_geometric_objects(self, multilayer_file, used_layer_info={}, res_scaling=1, use_BB=True,
                                pattern_type='positive', cavity_parameters={}, outcoupler_parameters={}):
 
                                # D=5, grating_period=0.2, N_rings=10, N_arms=0, lambda_bsw=0.4,
@@ -95,6 +95,7 @@ class Simulation(mp.Simulation):
                                # scatter_shape='', scatter_disposition='filled', topology='spiral', pattern_type='positive') :
         self._geometry = []
         self._empty_geometry = []
+        used_layer = used_layer_info['used_layer']
 
         self.cavity_r_size = (cavity_parameters["D"]/2 + cavity_parameters["period"] * cavity_parameters["N_rings"]) * (cavity_parameters["N_rings"]>0)
         self.outcou_r_size = (outcoupler_parameters["D"]/2 + outcoupler_parameters["period"] * outcoupler_parameters["N_rings"]) * (outcoupler_parameters["N_rings"]>0)
@@ -106,6 +107,7 @@ class Simulation(mp.Simulation):
             substrate_thickness = self.substrate_thickness + .5 + self.PML_width,
             x_width = self.domain_x + .5 + 2*self.PML_width,
             y_width = self.domain_y + .5 + 2*self.PML_width,
+            used_layer_info = used_layer_info,
             unit = 'um',
             exclude_last_layer = False,
             buried = True)
@@ -121,11 +123,19 @@ class Simulation(mp.Simulation):
                 size     = mp.Vector3(self.domain_x + .5 + 2*self.PML_width,
                                       self.domain_y + .5 + 2*self.PML_width,
                                       design_specs['d_layers'][used_layer]),
-                center   = mp.Vector3(0, 0, 0))
+                center   = mp.Vector3(0, 0, 0))#design_specs['d_layers'][used_layer]/2))
             self._empty_geometry.append(dummy_layer)       # part of the multilayer
 
         elif pattern_type == 'negative':
             grating_index = np.real(design_specs['idx_layers'][used_layer+1])
+
+            dummy_layer = mp.Block(
+                material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer])),
+                size     = mp.Vector3(self.domain_x + .5 + 2*self.PML_width,
+                                      self.domain_y + .5 + 2*self.PML_width,
+                                      design_specs['d_layers'][used_layer]),
+                center   = mp.Vector3(0, 0, 0))#design_specs['d_layers'][used_layer]/2))
+            self._empty_geometry.append(dummy_layer)       # part of the multilayer
 
         else :
             raise ValueError(f'patter type "{pattern_type}" is unknown')
@@ -157,7 +167,7 @@ class Simulation(mp.Simulation):
                 n_arms = outcoupler_parameters["N_arms"],
                 lambda_bsw = outcoupler_parameters["lambda_bsw"],
                 thickness = float(design_specs['d_layers'][used_layer]),
-                center = mp.Vector3())
+                center = mp.Vector3(z=0))#design_specs['d_layers'][used_layer]/2))
             self._geometry.extend(outcoupler)
 
         elif outcoupler_parameters["type"] == 'spiral' and outcoupler_parameters["N_rings"] > 0:
@@ -169,12 +179,12 @@ class Simulation(mp.Simulation):
                 N_rings = outcoupler_parameters["N_rings"],
                 N_arms = outcoupler_parameters["N_arms"],
                 thickness = float(design_specs['d_layers'][used_layer]),
-                center = mp.Vector3())
+                center = mp.Vector3(z=0))#design_specs['d_layers'][used_layer]/2))
             self._geometry.extend(outcoupler)
 
         if use_BB:
             beam_block = mp.Cylinder(
-                            center = mp.Vector3(0, 0, self.z_top_air_gap-0.1),
+                            center = mp.Vector3(0, 0, self.top_air_gap-0.1),
                             radius = 3/4 * (self.cavity_r_size + outcoupler_parameters["D"]/2),
                             height = 0.02,
                             material = mp.metal)
@@ -185,7 +195,7 @@ class Simulation(mp.Simulation):
         # this  will add all geometric objects to the simulation
         self.empty = False
 
-        self.domain_z = self.substrate_thickness + multilayer_thickness + self.z_top_air_gap
+        self.domain_z = self.substrate_thickness + multilayer_thickness + self.top_air_gap
 
         # resolution is 10 points per wavelength in the highest index material time a scale factor
         self.resolution = int(10/(1/f/np.real(np.max(design_specs['idx_layers']))) * res_scaling)
@@ -215,7 +225,8 @@ class Simulation(mp.Simulation):
         print(f"Minimum expected memory is {96*Nx*Ny*Nz/2**30:.2f}GB")
         print()
 
-        self.geometry_center = mp.Vector3(0, 0, -(self.cell_size.z/2 - self.z_top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]/2))
+        self.geometry_center = mp.Vector3(0, 0, -(self.cell_size.z/2 - self.top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]/2))
+        # self.geometry_center = mp.Vector3(0,    -(self.cell_size.y/2 - self.top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]))
 
         self.boundary_layers = [mp.PML(self.PML_width)]
         # print( [self.cell_size.x / self.
@@ -248,7 +259,7 @@ class Simulation(mp.Simulation):
 
         if self.outcou_r_size > 0 and allow_farfield :
             nearfield = mp.Near2FarRegion(
-                center = mp.Vector3(0, 0, self.z_top_air_gap - 0.03),
+                center = mp.Vector3(0, 0, self.top_air_gap - 0.03),
                 size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, self.domain_y-.5*self.extra_space_xy, 0),
                 direction = mp.Z)
 
@@ -288,7 +299,7 @@ class Simulation(mp.Simulation):
             else:
                 DL += self.cavity_r_size
                 fluxr = mp.FluxRegion(
-                    center = mp.Vector3(0, 0, self.z_top_air_gap - 0.03),
+                    center = mp.Vector3(0, 0, self.top_air_gap - 0.03),
                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, self.domain_y-.5*self.extra_space_xy, 0),
                     direction = mp.Z)
                 self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))
@@ -318,10 +329,10 @@ if __name__ == "__main__":              # good practise in parallel computing
     file = 'design_TM_gd3_buriedDBR_onSiO2'
     buried = True
     pattern_type = 'positive'           # 'positive' or 'negative'
-    out_grating_type = 'spiral'         # 'spiral' or 'polSplitting' or 'only'
+    out_grating_type = 'polSplitting'         # 'spiral' or 'polSplitting' or 'only'
 
     # cavity info
-    N_cavity = 30
+    N_cavity = 0
     cavity_period = .165 # wavelength / n_eff_FF0d5 / 2
     D_cavity = .400 # cavity_period * 1.4
 
@@ -339,7 +350,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # outcoupler info
     N_outcoupler = 6
-    d_cavity_out = .5
+    d_cavity_out = 5
     charge = 1
 
     cavity_parameters = {
@@ -371,6 +382,10 @@ if __name__ == "__main__":              # good practise in parallel computing
         "lambda_bsw": wavelength/n_eff,
         "sigma": sigma}
 
+    used_layer_info = {
+        "used_layer" : -3 if buried else -2,
+        "thickness"  : 20e-3,
+        "refractive index" : 1.48}
     t0 = time.time()
 
 
@@ -392,8 +407,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     sim.eps_averaging = False
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
-                                used_layer = -3 if buried else -2,
-                                res_scaling = .1,
+                                used_layer_info = used_layer_info,
+                                res_scaling = 2,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
@@ -408,8 +423,8 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_sources_and_monitors(f, df, allow_farfield=(not sim.empty) )
     mp.verbosity(2)
-    # mpo.create_openscad(sim,1000)
-    sim.init_sim()
+    mpo.create_openscad(sim,1000)
+    # sim.init_sim()
 
     # raise ValueError()
 
@@ -432,7 +447,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         print("Only one of the parallel jobs jobs will print the image")
     else:
         fig.savefig(f'{sim.name}_section-yz.jpg')
-        plt.close()
+        # plt.close()
 
     fig = plt.figure(dpi=200)
     plot = sim.plot2D( output_plane=mp.Volume(center=mp.Vector3(z=-.00), size=mp.Vector3(simsize.x,simsize.y)),
@@ -445,7 +460,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         print("Only one of the parallel jobs jobs will print the image")
     else:
         fig.savefig(f'{sim.name}_section-xy.jpg')
-        plt.close()
+        # plt.close()
 
     # sim.output_epsilon(f'{sim.name}_eps')
     # eps_data = sim.get_epsilon()
@@ -460,7 +475,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # # mlab.show()
 
     #%%
-    # raise RuntimeError("comment this line to run til the end")
+    raise RuntimeError("comment this line to run til the end")
     def print_time(sim):
         print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 
