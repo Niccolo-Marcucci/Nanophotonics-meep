@@ -216,11 +216,11 @@ class Simulation(mp.Simulation):
 
         if allow_farfield :
             nearfield = mp.Near2FarRegion(
-                center = mp.Vector3(0, 0, self.top_air_gap - 0.03),
+                center = mp.Vector3(0, 0, self.geometry_center.z - self.cell_size.z/2 + self.PML_width + self.substrate_thickness/2),
                 size = mp.Vector3(self.domain_x, self.domain_y, 0),
                 direction = mp.Z)
 
-            self.nearfield_monitor = self.add_near2far(f, 0.03, 5, nearfield)#, yee_grid=True))
+            self.nearfield_monitor = self.add_near2far(f, 0, 1, nearfield)#, yee_grid=True))
 
 
 
@@ -228,7 +228,7 @@ class Simulation(mp.Simulation):
 if __name__ == "__main__":              # good practise in parallel computing
     c0 = 1
     wavelength = 0.532
-    wwidth = .20
+    wwidth = .0
     f = c0 / wavelength
 
     fmax = c0 / (wavelength - wwidth/2)
@@ -370,7 +370,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # # mlab.show()
 
     #%%
-    # raise RuntimeError("comment this line to run til the end")
+    raise RuntimeError("comment this line to run til the end")
     def print_time(sim):
         print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 
