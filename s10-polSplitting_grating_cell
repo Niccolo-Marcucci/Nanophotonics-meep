@@ -218,7 +218,7 @@ class Simulation(mp.Simulation):
             nearfield = mp.Near2FarRegion(
                 center = mp.Vector3(0, 0, self.geometry_center.z - self.cell_size.z/2 + self.PML_width + self.substrate_thickness/2),
                 size = mp.Vector3(self.domain_x, self.domain_y, 0),
-                direction = mp.Z)
+                direction = -mp.Z)
 
             self.nearfield_monitor = self.add_near2far(f, 0, 1, nearfield)#, yee_grid=True))
 
