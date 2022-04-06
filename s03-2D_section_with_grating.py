@@ -421,7 +421,7 @@ def run_parallel(key, value, empty = False):
         print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 
     t0 = time.time()
-    mp.verbosity(0)
+    mp.verbosity(1)
 
     # fig = plt.figure(dpi=100)
     # Animate = mp.Animate2D( sim, fields=mp.Ez, f=fig, realtime=False, normalize=True,
