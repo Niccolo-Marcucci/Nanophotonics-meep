@@ -228,7 +228,7 @@ class Simulation(mp.Simulation):
             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
             center = mp.Vector3(y=0e-3),
             size = mp.Vector3(),
-            component = mp.Ey)]
+            component = mp.Ez)]
 
         self.nearfield_monitor = None
         self.harminv_instance = None
@@ -253,7 +253,7 @@ class Simulation(mp.Simulation):
             self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
             if not self.empty:
-                self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
+                self.harminv_instance = mp.Harminv(mp.Ez, mp.Vector3(), f, df)
 
 
 
