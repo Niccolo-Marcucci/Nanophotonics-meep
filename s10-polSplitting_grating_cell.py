@@ -332,7 +332,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     max_epsilon = 2.53**2
 
     fig = plt.figure(dpi=200)
-    plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(simsize.x, 0, simsize.z)),
+    plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(0, simsize.y, simsize.z)),
                        labels=True,
                        eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon} )
     try:
