@@ -216,7 +216,7 @@ class Simulation(mp.Simulation):
 
         if allow_farfield :
             nearfield = mp.Near2FarRegion(
-                center = mp.Vector3(0, 0, self.geometry_center.z - self.cell_size.z/2 + self.PML_width + self.substrate_thickness/2),
+                center = mp.Vector3(0, 0, self.top_air_gap - 0.03),#self.geometry_center.z - self.cell_size.z/2 + self.PML_width + self.substrate_thickness/2),
                 size = mp.Vector3(self.domain_x, self.domain_y, 0),
                 direction = -mp.Z)
 
@@ -355,7 +355,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         print("Only one of the parallel jobs will print the image")
     else:
         fig.savefig(f'{sim.name}_section-xy.jpg')
-        # plt.close()
+        plt.close()
 
     # sim.output_epsilon(f'{sim.name}_eps')
     # eps_data = sim.get_epsilon()
@@ -377,22 +377,22 @@ if __name__ == "__main__":              # good practise in parallel computing
     t0 = time.time()
     mp.verbosity(1)
 
-    # fig = plt.figure(dpi=100)
-    # Animate = mp.Animate2D( sim, fields=mp.Ez, f=fig, realtime=False, normalize=True,
-    #                         output_plane=mp.Volume(center=mp.Vector3(), size=mp.Vector3(simsize.x,simsize.y,0)),
-    #                         eps_parameters={"interpolation":'none',"vmin":'0'})
+    fig = plt.figure(dpi=100)
+    Animate = mp.Animate2D( sim, fields=mp.Ey, f=fig, realtime=False, normalize=True,
+                            output_plane=mp.Volume(center=center, size=mp.Vector3(simsize.x, 0, simsize.z)),
+                            eps_parameters={"interpolation":'none',"vmin":'0'})
 
-    # sim.run(mp.at_every(.1, Animate),until=30)
-    # Animate.to_mp4(10,f'{sim.name}_section.mp4')
 
     step_functions = [mp.at_every(5,print_time)]
     if sim.harminv_instance != None :
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
+    step_functions.append( mp.at_every(.1, Animate) )
 
     sim.run(*step_functions, until=50)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
+    Animate.to_mp4(10,f'{sim.name}_section.mp4')
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
     t = np.round(sim.round_time(), 2)
@@ -427,7 +427,6 @@ if __name__ == "__main__":              # good practise in parallel computing
     #     for i, monitor in enumerate(sim.spectrum_monitors) :
     #         spectrum_empty = mp.get_fluxes(monitor)
     #         spectra_out.append( np.array(spectra[i]) / np.array(spectrum_empty) )
-
     #     fig = plt.figure(dpi=200)
     #     ax = fig.add_subplot(111)
 
