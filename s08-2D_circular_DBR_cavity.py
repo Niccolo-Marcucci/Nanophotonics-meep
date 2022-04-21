@@ -417,7 +417,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     elif bash_parallel_run :
         N_jobs = int(sys.argv[-1])
-        j = sys.argv[3]
+        j = int(sys.argv[3])
 
         N_list = len(tuple_list)
         if N_list < N_jobs :
