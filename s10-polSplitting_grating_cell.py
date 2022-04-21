@@ -216,7 +216,7 @@ class Simulation(mp.Simulation):
 
         if allow_farfield :
             nearfield = mp.Near2FarRegion(
-                center = mp.Vector3(0, 0, self.top_air_gap - 0.03),#self.geometry_center.z - self.cell_size.z/2 + self.PML_width + self.substrate_thickness/2),
+                center = mp.Vector3(0, 0, self.geometry_center.z - self.cell_size.z/2 + self.PML_width + self.substrate_thickness/2), #self.top_air_gap - 0.03),#
                 size = mp.Vector3(self.domain_x, self.domain_y, 0),
                 direction = -mp.Z)
 
@@ -236,7 +236,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     df = fmax - fmin
 
     n_eff_l = 1.070 # 1.6642
-    n_eff_h = 1.108 # 1.7899
+    n_eff_h = 1.185 # 1.7899
 
     n_eff_FF0d5 = n_eff_h*.5 + n_eff_l*.5
 
@@ -316,6 +316,8 @@ if __name__ == "__main__":              # good practise in parallel computing
         else:
             sim.empty = False
 
+    sim.k_point = mp.Vector3(K_bsw, 0, 0)
+
     sim.init_sources_and_monitors(f, df, allow_farfield=(not sim.empty) )
     mp.verbosity(2)
     mpo.create_openscad(sim,1000)
@@ -332,7 +334,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     max_epsilon = 2.53**2
 
     fig = plt.figure(dpi=200)
-    plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(0, simsize.y, simsize.z)),
+    plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(simsize.x, 0,  simsize.z)),
                        labels=True,
                        eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon} )
     try:
