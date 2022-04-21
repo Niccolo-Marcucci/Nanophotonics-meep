@@ -112,23 +112,23 @@ class Simulation(mp.Simulation):
         self._empty_geometry.extend(multilayer)            # keep multilayer even if empty
 
         if pattern_type == 'positive':
-            grating_index = np.real(design_specs['idx_layers'][used_layer])
-
-            dummy_layer = mp.Block(
-                material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer+1])),
-                size     = mp.Vector3(self.domain_x + .5 + 2*self.PML_width,
-                                      design_specs['d_layers'][used_layer],1),
-                center   = mp.Vector3(0, design_specs['d_layers'][used_layer]/2))
-            self._empty_geometry.append(dummy_layer)       # part of the multilayer
-
-        elif pattern_type == 'negative':
             grating_index = np.real(design_specs['idx_layers'][used_layer+1])
 
             dummy_layer = mp.Block(
                 material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer])),
                 size     = mp.Vector3(self.domain_x + .5 + 2*self.PML_width,
                                       design_specs['d_layers'][used_layer],1),
-                center   = mp.Vector3(0,  design_specs['d_layers'][used_layer]/2))
+                center   = mp.Vector3(0, 0))#design_specs['d_layers'][used_layer]/2))
+            self._empty_geometry.append(dummy_layer)       # part of the multilayer
+
+        elif pattern_type == 'negative':
+            grating_index = np.real(design_specs['idx_layers'][used_layer])
+
+            dummy_layer = mp.Block(
+                material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer+1])),
+                size     = mp.Vector3(self.domain_x + .5 + 2*self.PML_width,
+                                      design_specs['d_layers'][used_layer],1),
+                center   = mp.Vector3(0, 0))# design_specs['d_layers'][used_layer]/2))
             self._empty_geometry.append(dummy_layer)       # part of the multilayer
 
         else :
@@ -142,7 +142,7 @@ class Simulation(mp.Simulation):
                 DBR_period = cavity_parameters["period"],
                 N_periods = cavity_parameters["N_rings"],
                 thickness = float(design_specs['d_layers'][used_layer]),
-                center = mp.Vector3(y=design_specs['d_layers'][used_layer]/2),
+                center = mp.Vector3(y=0),#design_specs['d_layers'][used_layer]/2),
                 axis = mp.Y,
                 axial_rotation = 0)#np.pi/3)
 
@@ -156,7 +156,7 @@ class Simulation(mp.Simulation):
                 DBR_period = outcoupler_parameters["period"],
                 N_periods = outcoupler_parameters["N_rings"],
                 thickness = float(design_specs['d_layers'][used_layer]),
-                center = mp.Vector3( y= design_specs['d_layers'][used_layer]/2),
+                center = mp.Vector3(y=0),# design_specs['d_layers'][used_layer]/2),
                 axis = mp.Y,
                 axial_rotation = 30)
             self._geometry.extend(outcoupler)
@@ -203,7 +203,7 @@ class Simulation(mp.Simulation):
         print(f"Minimum expected memory is {96*Nx*Ny/2**30:.2f}GB")
         print()
 
-        self.geometry_center = mp.Vector3(0, -(self.cell_size.y/2 - self.top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1])- design_specs['d_layers'][used_layer]))
+        self.geometry_center = mp.Vector3(0, -(self.cell_size.y/2 - self.top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1])- design_specs['d_layers'][used_layer]/2))
 
         self.boundary_layers = [mp.PML(self.PML_width)]
         # print( [self.cell_size.x / self.
@@ -277,13 +277,13 @@ def run_parallel(key, value, empty = False):
 
     file = 'design_TE_N7'#'design_TM_gd3_buriedDBR_onSiO2'#
     buried = False
-    pattern_type = 'negative'           # 'positive' or 'negative'
+    pattern_type = 'positive'           # 'positive' or 'negative'
     out_grating_type = 'spiral'         # 'spiral' or 'polSplitting' or 'only'
 
     # cavity info
     N_cavity = 30
     cavity_period = .280 # wavelength / n_eff_FF0d5 / 2
-    D_cavity = 80e-3# cavity_period * .4
+    D_cavity = 400e-3# cavity_period * .4
 
     # pol splitting info
     FF_pol_splitter = .3
@@ -333,8 +333,8 @@ def run_parallel(key, value, empty = False):
 
     used_layer_info = {
         "used_layer" : -3 if buried else -2,
-        "thickness"  : 70e-3,
-        "refractive index" : 1.48}
+        "thickness"  : 60e-3,
+        "refractive index" : 1.62}
 
     cavity_parameters[key] = value
 
@@ -355,10 +355,7 @@ def run_parallel(key, value, empty = False):
     sim_name += f"{key}_{value}"
 
 
-
-
     output = []
-
 
 
     sim = Simulation(sim_name)
@@ -366,11 +363,11 @@ def run_parallel(key, value, empty = False):
     sim.eps_averaging = False
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                resolution = 200,
+                                resolution = 150,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
-                                outcoupler_parameters = spiral_parameters )
+                                outcoupler_parameters = polSplitter_parameters )
 
 
     if empty:
@@ -380,7 +377,7 @@ def run_parallel(key, value, empty = False):
         sim.empty = False
 
 
-    sim.init_sources_and_monitors(f, df, allow_farfield=(not sim.empty) )
+    sim.init_sources_and_monitors(f, df, allow_farfield=False)#(not sim.empty) )
     mp.verbosity(2)
     mpo.create_openscad(sim,1000)
     sim.init_sim()
@@ -419,12 +416,12 @@ def run_parallel(key, value, empty = False):
     # # mlab.show()
 
     #%%
-    # raise RuntimeError("comment this line to run til the end")
+    # raise RuntimeError("comme\nt this line to run til the end")
     def print_time(sim):
         print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 
     t0 = time.time()
-    mp.verbosity(0)
+    mp.verbosity(1)
 
     # fig = plt.figure(dpi=100)
     # Animate = mp.Animate2D( sim, fields=mp.Ez, f=fig, realtime=False, normalize=True,
@@ -496,6 +493,14 @@ def run_parallel(key, value, empty = False):
 
     return output
 
+
+
+
+
+
+
+
+
 if __name__ == "__main__":              # good practise in parallel computing
 
     if len(sys.argv) > 2:
@@ -508,8 +513,8 @@ if __name__ == "__main__":              # good practise in parallel computing
             i = sys.argv[2]
             N = sys.argv[3]
 
-    spacers_to_test = np.linspace(.00,.700, N)
-    run_parallel("D", spacers_to_test[i], False)
+    spacers_to_test = np.linspace(.00,.700, 1)
+    run_parallel("D", .280/4, False)
 
     # tuple_list = [("D", .080, True)]
     # tuple_list.extend( [ ("D", D, False) for D in spacers_to_test ] )

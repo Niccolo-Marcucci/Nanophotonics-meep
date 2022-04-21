@@ -197,7 +197,7 @@ class Simulation(mp.Simulation):
                 nfreq = 1000
                 fluxr = mp.FluxRegion(
                     center = mp.Vector3(DL, 0),
-                    size = mp.Vector3(0,1),
+                    size = mp.Vector3(0, 0),
                     direction = mp.X)
                 self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
@@ -206,7 +206,7 @@ class Simulation(mp.Simulation):
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
-    import meep as mp
+    # import meep as mp
 
     c0 = 1
     # wavelength = 0.590
@@ -260,7 +260,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += f"D{D*1e3:.0f}_src{source_pos*1e3:.0f}"
 
 
-    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
+    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
@@ -278,12 +278,12 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
 
     sim.init_sim()
-    fig = plt.figure(dpi=150, figsize=(10,10))
-    plot = sim.plot2D(eps_parameters={"interpolation":'none'})
-    fig.colorbar(plot.images[0])
-    # plt.show()
-    fig.savefig(f'{sim.name}-xy.jpg')
-    plt.close()
+    # fig = plt.figure(dpi=150, figsize=(10,10))
+    # plot = sim.plot2D(eps_parameters={"interpolation":'none'})
+    # fig.colorbar(plot.images[0])
+    # # plt.show()
+    # fig.savefig(f'{sim.name}-xy.jpg')
+    # plt.close()
     # raise Exception()
 
 
@@ -324,7 +324,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     if sim.field_profile != None:
         for j in range(sim.field_profile.nfreqs):
-            data2save[f"field_profile_Ey_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ey, i)
+            data2save[f"field_profile_Ey_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ey, j)
         data2save["field_profile_Eps"] = sim.get_array(mp.Dielectric,
                                                        center = sim.field_profile.regions[0].center,
                                                        size = sim.field_profile.regions[0].size)
@@ -351,21 +351,13 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     anisotropy = 0
 
-    wavelength = .590# 0.5703#.6088#.5703#.5884#.5893#0.5947#0.5893#.5922, ]
+    wavelength = .600# 0.5703#.6088#.5703#.5884#.5893#0.5947#0.5893#.5922, ]
 
     n_eff_l = 1
-    n_eff_hs = [1.1] #np.linspace(1.01,1.2,100) # [1.1]#1.0543, 1.0985, 1.1405] # 50 75 and 100 nm pmma thickness
+    n_eff_hs = [1.1, 1.14, 1.17] #np.linspace(1.01,1.2,100) # [1.1]#1.0543, 1.0985, 1.1405] # 50 75 and 100 nm pmma thickness
 
-    # n_eff_h = 1
-    # n_eff_l = 1.1
-
-    # for n_eff_h in n_eff_hs:
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
-    Ds = period * np.linspace(0, 3, 500) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
-    # D = .112# period * .4
-
-    # spacers_to_test = [.08] #np.linspace(.00,.700, N)
-    # output = [run_parallel("D", spacers_to_test[i], False)]
+    Ds = period * np.array([0.45])#np.linspace(0, 3, 100) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -381,19 +373,19 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    for source_pos in [period/4, period/2]:
-        for D in Ds:
-            tuple_list.append( (wavelength,
-                                n_eff_hs[0], n_eff_l,
-                                D, period,
-                                empty,
-                                source_pos,
-                                anisotropy,
-                                0 ) )
+    for source_pos in [0]: # 0, period/4, period/2]:
+        for n_eff_h in n_eff_hs :
+            for D in Ds:
+                tuple_list.append( (wavelength,
+                                    n_eff_h, n_eff_l,
+                                    D, period,
+                                    empty,
+                                    source_pos,
+                                    anisotropy,
+                                    0 ) )
             j += 1
     mp.verbosity(1)
     # mp.quiet(True)
-    # run non parallel
     output = []
     names = []
     t0 = time.time()
@@ -405,7 +397,13 @@ if __name__ == "__main__":              # good practise in parallel computing
     else:
         non_parallel_conda = False
 
-    if len(sys.argv) < 2 or non_parallel_conda:
+    if len(sys.argv) > 2:
+        if sys.argv[2] == "parallel_grid":
+            non_parallel_conda = True
+        else:
+            bash_parallel_run = (sys.argv[2] == "parallel_bash")
+
+    if len(sys.argv) < 2 or non_parallel_conda :
         for i in range(j):
             t1 = time.time()
             # print(tuple_list[i])
@@ -417,10 +415,41 @@ if __name__ == "__main__":              # good practise in parallel computing
             print()
             print()
 
+    elif bash_parallel_run :
+        N_jobs = int(sys.argv[-1])
+        j = int(sys.argv[3])
+
+        N_list = len(tuple_list)
+        if N_list < N_jobs :
+            raise ValueError(f"Number of jobs should be lower than number of loop iterations ({N_list})")
+
+        reminder = np.mod(N_list,N_jobs)
+        N_loops_per_job = int(N_list/N_jobs)
+        if j < reminder:
+            N_loops_per_job += 1
+
+        data_list = []
+        name_list = []
+        for i in range(N_loops_per_job):
+            t1 = time.time()
+            if j < reminder:
+                tuple_index = j*N_loops_per_job + i
+            else:
+                tuple_index = reminder*(N_loops_per_job+1) + (j-reminder)*N_loops_per_job + i
+
+            if tuple_index >= N_list :
+                continue
+            data, name = run_parallel(*tuple_list[tuple_index])
+            # data_list.append(data)
+            # name_list.append(name)
+            print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{N_loops_per_job}')
+            print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(N_loops_per_job-i-1))} more')
+
     else:
+        # mp.reset_meep()
         comm = MPI.COMM_WORLD
         N_jobs = int(sys.argv[-1])
-
+        print(f'number of processor is {mp.count_processors()}')
         j = mp.divide_parallel_processes(N_jobs)
 
         N_list = len(tuple_list)
@@ -446,7 +475,7 @@ if __name__ == "__main__":              # good practise in parallel computing
             data, name = run_parallel(*tuple_list[tuple_index])
             # data_list.append(data)
             # name_list.append(name)
-            print(f'It has run for {convert_seconds(time.time()-t1)}, {N_loops_per_job+1}/{j}')
+            print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{N_loops_per_job}')
             print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(N_loops_per_job-i-1))} more')
 
         # if mp.am_really_master():
@@ -462,3 +491,14 @@ if __name__ == "__main__":              # good practise in parallel computing
         #     comm.send(name_list, dest=0, tag=12)
         #     exit()
     print(f'Total took {convert_seconds(time.time()-t0)}')
+
+    #%%
+    # plt.figure()
+    # wv = output[0]["wavelength"]
+    # s0 = output[0]["spectra"][0]
+    # s1 = output[1]["spectra"][0]/s0
+    # s2 = output[2]["spectra"][0]/s0
+    # s3 = output[3]["spectra"][0]/s0
+    # plt.semilogy(wv, s1, wv, s2, wv, s3)
+    # plt.grid(True)
+    # plt.xlabel("wavelength")
