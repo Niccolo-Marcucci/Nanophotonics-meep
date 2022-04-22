@@ -47,7 +47,7 @@ class Simulation(mp.Simulation):
 
         self.name = sim_name
 
-        self.extra_space_xy = .0
+        self.extra_space_xy = 1
 
         self.PML_width = .5
 
@@ -97,8 +97,8 @@ class Simulation(mp.Simulation):
         self._empty_geometry = []
         used_layer = used_layer_info['used_layer']
 
-        self.domain_x = outcoupler_parameters["N_periods_x"] * outcoupler_parameters["period"] + self.extra_space_xy
-        self.domain_y = outcoupler_parameters["N_periods_y"] * outcoupler_parameters["period"] + self.extra_space_xy
+        self.domain_x = outcoupler_parameters["N_periods_x"] * outcoupler_parameters["period"] + self.extra_space_xy + 2*self.PML_width
+        self.domain_y = outcoupler_parameters["N_periods_y"] * outcoupler_parameters["period"] + self.extra_space_xy + 2*self.PML_width
 
         multilayer, multilayer_thickness, design_specs = mpo.dielectric_multilayer(
             design_file = multilayer_file,
@@ -188,8 +188,8 @@ class Simulation(mp.Simulation):
         self.geometry_center = mp.Vector3(0, 0, -(self.cell_size.z/2 - self.top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]/2))
         # self.geometry_center = mp.Vector3(0,    -(self.cell_size.y/2 - self.top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]))
         print(self.geometry_center.z)
-        self.boundary_layers = [mp.PML(thickness=self.PML_width, direction=mp.Z)]
-        self.k_point = mp.Vector3() # PBC
+        self.boundary_layers = [mp.PML(self.PML_width)] #thickness=self.PML_width, direction=mp.Z)]
+        # self.k_point = mp.Vector3() # PBC
 
         # print( [self.cell_size.x / self.
 
@@ -228,7 +228,7 @@ class Simulation(mp.Simulation):
 if __name__ == "__main__":              # good practise in parallel computing
     c0 = 1
     wavelength = 0.532
-    wwidth = .0
+    wwidth = .03
     f = c0 / wavelength
 
     fmax = c0 / (wavelength - wwidth/2)
@@ -245,11 +245,6 @@ if __name__ == "__main__":              # good practise in parallel computing
     buried = False
     pattern_type = 'positive'           # 'positive' or 'negative'
     out_grating_type = 'polSplitting'         # 'spiral' or 'polSplitting' or 'only'
-
-    # cavity info
-    N_cavity = 0
-    cavity_period = .165 # wavelength / n_eff_FF0d5 / 2
-    D_cavity = .400 # cavity_period * 1.4
 
     # pol splitting info
     FF_pol_splitter = .3
@@ -273,11 +268,10 @@ if __name__ == "__main__":              # good practise in parallel computing
         "period": outcoupler_period,
         "scatter_length": outcoupler_period*0.8,
         "scatter_width": outcoupler_period*FF_pol_splitter,
-        "scatter_tilt": D_phi,
+        "scatter_tilt": 0, # D_phi,
         "scatter_shape": '',
         "scatter_disposition": scatter_disposition,
-        "topology": 'spiral',
-        "N_periods_x": N_outcoupler,
+        "N_periods_x": 1,  # N_outcoupler,
         "N_periods_y": 1}
 
     used_layer_info = {
@@ -316,7 +310,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         else:
             sim.empty = False
 
-    sim.k_point = mp.Vector3(K_bsw, 0, 0)
+    # sim.k_point = mp.Vector3(K_bsw, 0, 0)
 
     sim.init_sources_and_monitors(f, df, allow_farfield=(not sim.empty) )
     mp.verbosity(2)
@@ -357,7 +351,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         print("Only one of the parallel jobs will print the image")
     else:
         fig.savefig(f'{sim.name}_section-xy.jpg')
-        plt.close()
+        # plt.close()
 
     # sim.output_epsilon(f'{sim.name}_eps')
     # eps_data = sim.get_epsilon()
