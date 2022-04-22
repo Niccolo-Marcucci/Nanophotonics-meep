@@ -3,6 +3,7 @@
 import meep as mp
 import numpy as np
 from multiprocessing import Pool
+from concurrent.futures import ProcessPoolExecutor
 import sys
 
 #%% function for parallel computing
@@ -31,6 +32,8 @@ def run_parallel(x, y):
 
     sim.run(until=100)
 
+def proxy_fun( tuple_ ):
+    run_parallel( *tuple_ )
 
 #%% geometry and simulation parameters
 if __name__ == "__main__":              # good practise in parallel computing
@@ -46,8 +49,8 @@ if __name__ == "__main__":              # good practise in parallel computing
             run_parallel(*tuple_list[i])
 
     elif N_jobs == 1 :
-        with Pool(6) as parfor:
-          parfor.starmap(run_parallel, tuple_list)
+        with ProcessPoolExecutor(6) as parfor:
+          parfor.map(proxy_fun, tuple_list)
 
     else:
         # parallel execution using mpirun
