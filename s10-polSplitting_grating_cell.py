@@ -67,8 +67,7 @@ class Simulation(mp.Simulation):
                     symmetries = symmetries,
                     filename_prefix = sim_name,
                     force_complex_fields = False,
-                    eps_averaging = False,
-                    Courant = .7)
+                    eps_averaging = False)
 
     @property
     def empty(self):
@@ -206,7 +205,7 @@ class Simulation(mp.Simulation):
 
     def init_sources_and_monitors(self, f, df, allow_farfield=True) :
         self.sources = [ mp.Source(
-            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+            src = mp.ContinuousSource(f,fwidth=0.1,is_integrated=True) if df==0 else mp.GaussianSource(f,fwidth=df,is_integrated=True),
             center = mp.Vector3(z = self.top_air_gap/2),
             size = mp.Vector3(self.cell_size.x, self.cell_size.y, 0),
             component = mp.Ey)]
