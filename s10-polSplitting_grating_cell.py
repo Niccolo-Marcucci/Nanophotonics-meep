@@ -260,7 +260,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # outcoupler info
 
-    # N_outcoupler = round(np.pi/D_phi) * 1
+    N_outcoupler = 1 #round(np.pi/D_phi) * 1
     d_cavity_out = 5
     charge = 1
 
@@ -272,7 +272,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         "scatter_tilt": D_phi,
         "scatter_shape": '',
         "scatter_disposition": scatter_disposition,
-        "N_periods_x": 1,  # N_outcoupler,
+        "N_periods_x": N_outcoupler,
         "N_periods_y": 1}
 
     used_layer_info = {
