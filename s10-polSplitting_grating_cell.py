@@ -47,7 +47,7 @@ class Simulation(mp.Simulation):
 
         self.name = sim_name
 
-        self.extra_space_xy = 0
+        self.extra_space_xy = 0.
 
         self.PML_width = .5
 
@@ -107,8 +107,7 @@ class Simulation(mp.Simulation):
             y_width = self.domain_y,
             used_layer_info = used_layer_info,
             unit = 'um',
-            exclude_last_layer = False,
-            buried = True)
+            exclude_last_layer = False)
 
         print(design_specs)
         self._empty_geometry.extend(multilayer)            # keep multilayer even if empty
@@ -295,7 +294,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # sim_name += f"_{parameter_to_loop}"
 
     sim = Simulation(sim_name)
-    sim.extra_space_xy = 0
+    sim.extra_space_xy = 1
     sim.eps_averaging = False
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
@@ -367,7 +366,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # # mlab.show()
 
     #%%
-    # raise RuntimeError("comment this line to run til the end")
+    raise RuntimeError("comment this line to run til the end")
     def print_time(sim):
         print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 
