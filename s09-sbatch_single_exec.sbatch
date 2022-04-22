@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=niccolo.marcucci@polito.it
+#SBATCH --partition=global
+#SBATCH --time=7-00:00:00
+#SBATCH --ntasks=1
+# SBATCH --nodes=4
+# SBATCH --ntasks-per-node=1
+#SBATCH --mem-per-cpu=1G
+# SBATCH --partition=global
+# SBATCH --nodelist=compute-3-[13,17-20]
+# the following nodes are not reserved for anyone in particular
+# SBATCH --nodelist=compute-2-[5,6,9],compute-4-1
+
+python $@
+
+mv -v $(ls *${2}* | grep -v 'log\|err') data/*$2
