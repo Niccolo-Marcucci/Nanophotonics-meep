@@ -380,21 +380,22 @@ if __name__ == "__main__":              # good practise in parallel computing
     mp.verbosity(1)
 
     fig = plt.figure(dpi=100)
-    Animate = mp.Animate2D( sim, fields=mp.Ey, f=fig, realtime=False, normalize=True,
-                            output_plane=mp.Volume(center=center, size=mp.Vector3(simsize.x, 0, simsize.z)),
-                            eps_parameters={"interpolation":'none',"vmin":'0'})
+    # Animate = mp.Animate2D( sim, fields=mp.Ey, f=fig, realtime=False, normalize=True,
+    #                         output_plane=mp.Volume(center=center, size=mp.Vector3(simsize.x, 0, simsize.z)),
+    #                         eps_parameters={"interpolation":'none',"vmin":'0'})
 
 
     step_functions = [mp.at_every(5,print_time)]
     if sim.harminv_instance != None :
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
-    step_functions.append( mp.at_every(.1, Animate) )
+    # step_functions.append( mp.at_every(.1, Animate) )
 
     sim.run(*step_functions, until=50)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
-    Animate.to_mp4(10,f'{sim.name}_section.mp4')
+    # Animate.to_mp4(10,f'{sim.name}_section.mp4')
+
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
     t = np.round(sim.round_time(), 2)

@@ -1,11 +1,10 @@
-% clc
-clear all
+clc
 close all
+clear all
 
 addpath('Near-to-Far-Field-Transformation')
 
-name = 'spiral_outcoupler_7c925374f7_design_TM_gd3_buriedDBR_onSiO2_positive_N6_charge2_D5000nm_simend01.0e-04-res66_220113-092131_nearfield_t30.0.mat';
-name = 'polSplitter_6ec58eed79_design_TM_gd3_buriedDBR_onSiO2_positive_N9_Dphi60_sigma-1_charge0-res133_220114-192330_nearfield_t40.0.mat';
+name = 'polSplitting_220421-103148_design_TE_N7_res100_nearfield_fp00_t50.0.mat';%meep_sim_220403-155345_7cad278a5f/polSplitting_220403-155345_7cad278a5f_design_TE_N7_res100_nearfield_fp00_t50.0.mat';%'polSplitting_220413-182635_design_TE_N7_res100_nearfield_fp00_t50.0.mat';%
 
 fields = load(['data/',name]);
 
@@ -14,10 +13,20 @@ volume = [fields.Lx, fields.Ly, 0]*1e-6;
 Ex = fields.Ex;
 Ey = fields.Ey;
 
-Ex = Ex(2:end,:);
-Ey = Ey(:,2:end);
-% Ex = Ex(:,2:end);
-% Ey = Ey(2:end,:);
+% Ex = Ex(2:end,:);
+% Ey = Ey(:,2:end);
+Ex = Ex(:,2:end);
+Ey = Ey(2:end,:);
+
+% Ex = Ex(2:end,2:end);
+
+% if periodic repeat the structure and increase the volume size
+N_rep_x = 5;
+N_rep_y = 15;
+Ex = repmat(Ex, N_rep_x, N_rep_y);
+Ey = repmat(Ey, N_rep_x, N_rep_y);
+volume = volume .* [N_rep_x, N_rep_y, 1] ;
+
 
 N = size(Ex);
 x = linspace(-1,1,N(1))*volume(1);
@@ -40,8 +49,8 @@ obj_near.plotNearField()
 
 farGridNumber = 1e2;
 
-kx = linspace(-1, 1, farGridNumber)*.5;
-ky = linspace(-1, 1, farGridNumber)*.5;
+kx = linspace(-1, 1, farGridNumber)*1;
+ky = linspace(-1, 1, farGridNumber)*1;
 
 tic
 obj_far = obj_near.getFarFieldGPU({kx, ky});
@@ -105,7 +114,7 @@ mL(abs(mL)>8) = NaN;
 %     plot_surf(rho,theta,(mL),'hsv',"Left circular polarization OAM","symmetric",5,0);
 %     plot_surf(ux,uy,round(m),'hsv',"Right circular polarization phase","symmetric",5);
 subplot(2,3,1)
-plot_surf(ux,uy,abs(ER).^2,'hot',"Right circular polarization intensity");
+plot_surf(ux,uy,log(abs(ER)),'hot',"Right circular polarization intensity");
 subplot(2,3,4)
 plot_surf(ux,uy,abs(EL).^2,'hot',"Left circular polarization intensity");
 subplot(2,3,2)

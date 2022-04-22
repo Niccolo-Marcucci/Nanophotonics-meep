@@ -350,8 +350,8 @@ def run_parallel(key, value, empty = False):
     sim_name = "2D_section_"
     sim_name += "cavity_" if N_cavity > 0 else ""
     sim_name += f"{out_grating_type}_" if N_outcoupler > 0 else ""
-    sim_name += f"{sim_prefix}_{file}"
-    sim_name += f"_charge{charge}" if N_outcoupler > 0 else ""
+    sim_name += f"{sim_prefix}_{file}_"
+    sim_name += f"charge{charge}_" if N_outcoupler > 0 else ""
     sim_name += f"{key}_{value}"
 
 
