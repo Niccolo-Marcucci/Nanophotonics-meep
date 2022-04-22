@@ -299,7 +299,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                res = 100,
+                                res = 88,
                                 pattern_type = pattern_type,
                                 outcoupler_parameters = polSplitter_parameters)
 
