@@ -47,7 +47,7 @@ class Simulation(mp.Simulation):
 
         self.name = sim_name
 
-        self.extra_space_xy = 0.
+        self.extra_space_xy = .5
 
         self.PML_width = .5
 
@@ -97,8 +97,8 @@ class Simulation(mp.Simulation):
         self._empty_geometry = []
         used_layer = used_layer_info['used_layer']
 
-        self.domain_x = outcoupler_parameters["N_periods_x"] * outcoupler_parameters["period"] + self.extra_space_xy + 2*self.PML_width
-        self.domain_y = outcoupler_parameters["N_periods_y"] * outcoupler_parameters["period"] + self.extra_space_xy + 2*self.PML_width
+        self.domain_x = outcoupler_parameters["N_periods_x"] * outcoupler_parameters["period"] + self.extra_space_xy
+        self.domain_y = outcoupler_parameters["N_periods_y"] * outcoupler_parameters["period"] + self.extra_space_xy
 
         multilayer, multilayer_thickness, design_specs = mpo.dielectric_multilayer(
             design_file = multilayer_file,
@@ -165,8 +165,8 @@ class Simulation(mp.Simulation):
         # round domain with an integer number of grid points
         self.grid_step = 1/self.resolution
 
-        self.cell_size = mp.Vector3(self.domain_x ,
-                                    self.domain_y ,
+        self.cell_size = mp.Vector3(self.domain_x + 2*self.PML_width,
+                                    self.domain_y + 2*self.PML_width,
                                     self.domain_z + 2*self.PML_width)
         # make domain an integer number of voxels
         Nx = int(self.cell_size.x / self.grid_step)
@@ -294,7 +294,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # sim_name += f"_{parameter_to_loop}"
 
     sim = Simulation(sim_name)
-    sim.extra_space_xy = 1
+    # sim.extra_space_xy = 1
     sim.eps_averaging = False
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
