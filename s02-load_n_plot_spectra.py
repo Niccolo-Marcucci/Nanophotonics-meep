@@ -22,8 +22,8 @@ import sys
 import json
 import time
 
-folder = "data/2D_parametric_spacer_220308-174312_301b3cc982"
-sim_prefix = "2D_eff_index_cavity_220308-174312_301b3cc982"
+folder = "data/meep_sim_220411-121536_12d7e2bb21"
+sim_prefix = "2D_section_cavity_220411-121536_12d7e2bb21"
 period = 280
 
 files = os.listdir(folder)
@@ -128,3 +128,15 @@ for j, second_parameter in enumerate(scnd_param['list']):
     plt.ylabel(f'{frst_param["label"]}')
     plt.title(f'Period DBR {period}nm, {scnd_param["label"]} {second_parameter}, eff index 1.1')
     fig.savefig(f'{folder}/{sim_prefix}{scnd_param["name"]}{second_parameter}_spacer_dependence_DBRperiod{period}.png')
+
+
+
+
+    #%%%
+
+    file = "2D_section_cavity_220411-121536_12d7e2bb21_design_TE_N7D_0.07_res150_spectra_t100.0.mat"
+    data = mpo.loadmat(folder +  '/' + file)
+
+    sp = data["spectra"][0]
+    wv = data["wavelength"].reshape( (sp.shape))
+    plt.plot(wv, sp)

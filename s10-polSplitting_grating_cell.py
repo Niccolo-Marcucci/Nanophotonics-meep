@@ -47,7 +47,7 @@ class Simulation(mp.Simulation):
 
         self.name = sim_name
 
-        self.extra_space_xy = .0
+        self.extra_space_xy = 4
 
         self.PML_width = .5
 
@@ -107,8 +107,7 @@ class Simulation(mp.Simulation):
             y_width = self.domain_y,
             used_layer_info = used_layer_info,
             unit = 'um',
-            exclude_last_layer = False,
-            buried = True)
+            exclude_last_layer = False)
 
         print(design_specs)
         self._empty_geometry.extend(multilayer)            # keep multilayer even if empty
@@ -166,8 +165,8 @@ class Simulation(mp.Simulation):
         # round domain with an integer number of grid points
         self.grid_step = 1/self.resolution
 
-        self.cell_size = mp.Vector3(self.domain_x ,
-                                    self.domain_y ,
+        self.cell_size = mp.Vector3(self.domain_x + 2*self.PML_width,
+                                    self.domain_y + 2*self.PML_width,
                                     self.domain_z + 2*self.PML_width)
         # make domain an integer number of voxels
         Nx = int(self.cell_size.x / self.grid_step)
@@ -188,8 +187,8 @@ class Simulation(mp.Simulation):
         self.geometry_center = mp.Vector3(0, 0, -(self.cell_size.z/2 - self.top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]/2))
         # self.geometry_center = mp.Vector3(0,    -(self.cell_size.y/2 - self.top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]))
         print(self.geometry_center.z)
-        self.boundary_layers = [mp.PML(thickness=self.PML_width, direction=mp.Z)]
-        self.k_point = mp.Vector3() # PBC
+        self.boundary_layers = [mp.PML(self.PML_width)] #thickness=self.PML_width, direction=mp.Z)]
+        # self.k_point = mp.Vector3() # PBC
 
         # print( [self.cell_size.x / self.
 
@@ -205,7 +204,7 @@ class Simulation(mp.Simulation):
 
     def init_sources_and_monitors(self, f, df, allow_farfield=True) :
         self.sources = [ mp.Source(
-            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+            src = mp.ContinuousSource(f,fwidth=0.1,is_integrated=True) if df==0 else mp.GaussianSource(f,fwidth=df,is_integrated=True),
             center = mp.Vector3(z = self.top_air_gap/2),
             size = mp.Vector3(self.cell_size.x, self.cell_size.y, 0),
             component = mp.Ey)]
@@ -228,7 +227,7 @@ class Simulation(mp.Simulation):
 if __name__ == "__main__":              # good practise in parallel computing
     c0 = 1
     wavelength = 0.532
-    wwidth = .0
+    wwidth = .03
     f = c0 / wavelength
 
     fmax = c0 / (wavelength - wwidth/2)
@@ -246,17 +245,12 @@ if __name__ == "__main__":              # good practise in parallel computing
     pattern_type = 'positive'           # 'positive' or 'negative'
     out_grating_type = 'polSplitting'         # 'spiral' or 'polSplitting' or 'only'
 
-    # cavity info
-    N_cavity = 0
-    cavity_period = .165 # wavelength / n_eff_FF0d5 / 2
-    D_cavity = .400 # cavity_period * 1.4
-
     # pol splitting info
     FF_pol_splitter = .3
     FF = FF_pol_splitter
     n_eff = n_eff_h*(1-FF) + n_eff_l*FF if pattern_type=='positive' else n_eff_h*FF + n_eff_l*(1-FF)
     scatter_disposition='filled'        # 'radial' or 'filled'
-    D_phi = np.pi/3;
+    D_phi = 0# np.pi/3;
     sigma = -1;                         # select for circl left or circ right
     K_bsw = 2*np.pi * n_eff / wavelength
     m = 1                               # ordinary grating order
@@ -264,7 +258,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     outcoupler_period = s
 
     # outcoupler info
-    N_outcoupler = round(np.pi/D_phi) * 1
+
+    N_outcoupler = 1 #round(np.pi/D_phi) * 1
     d_cavity_out = 5
     charge = 1
 
@@ -276,7 +271,6 @@ if __name__ == "__main__":              # good practise in parallel computing
         "scatter_tilt": D_phi,
         "scatter_shape": '',
         "scatter_disposition": scatter_disposition,
-        "topology": 'spiral',
         "N_periods_x": N_outcoupler,
         "N_periods_y": 1}
 
@@ -300,12 +294,12 @@ if __name__ == "__main__":              # good practise in parallel computing
     # sim_name += f"_{parameter_to_loop}"
 
     sim = Simulation(sim_name)
-    sim.extra_space_xy = 0
+    # sim.extra_space_xy = 1
     sim.eps_averaging = False
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                res = 100,
+                                res = 88,
                                 pattern_type = pattern_type,
                                 outcoupler_parameters = polSplitter_parameters)
 
@@ -316,7 +310,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         else:
             sim.empty = False
 
-    sim.k_point = mp.Vector3(K_bsw, 0, 0)
+    # sim.k_point = mp.Vector3(K_bsw, 0, 0)
 
     sim.init_sources_and_monitors(f, df, allow_farfield=(not sim.empty) )
     mp.verbosity(2)
@@ -357,7 +351,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         print("Only one of the parallel jobs will print the image")
     else:
         fig.savefig(f'{sim.name}_section-xy.jpg')
-        plt.close()
+        # plt.close()
 
     # sim.output_epsilon(f'{sim.name}_eps')
     # eps_data = sim.get_epsilon()
@@ -380,21 +374,22 @@ if __name__ == "__main__":              # good practise in parallel computing
     mp.verbosity(1)
 
     fig = plt.figure(dpi=100)
-    Animate = mp.Animate2D( sim, fields=mp.Ey, f=fig, realtime=False, normalize=True,
-                            output_plane=mp.Volume(center=center, size=mp.Vector3(simsize.x, 0, simsize.z)),
-                            eps_parameters={"interpolation":'none',"vmin":'0'})
+    # Animate = mp.Animate2D( sim, fields=mp.Ey, f=fig, realtime=False, normalize=True,
+    #                         output_plane=mp.Volume(center=center, size=mp.Vector3(simsize.x, 0, simsize.z)),
+    #                         eps_parameters={"interpolation":'none',"vmin":'0'})
 
 
     step_functions = [mp.at_every(5,print_time)]
     if sim.harminv_instance != None :
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
-    step_functions.append( mp.at_every(.1, Animate) )
+    # step_functions.append( mp.at_every(.1, Animate) )
 
     sim.run(*step_functions, until=50)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
-    Animate.to_mp4(10,f'{sim.name}_section.mp4')
+    # Animate.to_mp4(10,f'{sim.name}_section.mp4')
+
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
     t = np.round(sim.round_time(), 2)
