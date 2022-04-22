@@ -44,9 +44,25 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     N_jobs = mp.count_processors()
 
-    if len(sys.argv) > 1 and sys.argv[1] == "serial" :
-        for i in range(len(tuple_list)):
-            run_parallel(*tuple_list[i])
+    if len(sys.argv) > 1 :
+        if sys.argv[1] == "serial" :
+            for i in range(len(tuple_list)):
+                run_parallel(*tuple_list[i])
+
+        elif sys.argv[1] == "bash" :
+            j = int(sys.argv[2])
+
+            N_list = len(tuple_list)
+            N_jobs = 6
+            N_loops_per_job = int(np.ceil(N_list/N_jobs))
+
+            for i in range(N_loops_per_job):
+                tuple_index = N_loops_per_job*i + j
+                print(tuple_index)
+                if tuple_index >= N_list :
+                    continue
+                else:
+                    run_parallel(*tuple_list[tuple_index])
 
     elif N_jobs == 1 :
         with ProcessPoolExecutor(6) as parfor:
