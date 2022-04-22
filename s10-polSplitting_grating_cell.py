@@ -47,7 +47,7 @@ class Simulation(mp.Simulation):
 
         self.name = sim_name
 
-        self.extra_space_xy = 1
+        self.extra_space_xy = 0
 
         self.PML_width = .5
 
@@ -251,7 +251,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     FF = FF_pol_splitter
     n_eff = n_eff_h*(1-FF) + n_eff_l*FF if pattern_type=='positive' else n_eff_h*FF + n_eff_l*(1-FF)
     scatter_disposition='filled'        # 'radial' or 'filled'
-    D_phi = np.pi/3;
+    D_phi = 0# np.pi/3;
     sigma = -1;                         # select for circl left or circ right
     K_bsw = 2*np.pi * n_eff / wavelength
     m = 1                               # ordinary grating order
@@ -268,7 +268,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         "period": outcoupler_period,
         "scatter_length": outcoupler_period*0.8,
         "scatter_width": outcoupler_period*FF_pol_splitter,
-        "scatter_tilt": 0, # D_phi,
+        "scatter_tilt": D_phi,
         "scatter_shape": '',
         "scatter_disposition": scatter_disposition,
         "N_periods_x": 1,  # N_outcoupler,
