@@ -68,7 +68,7 @@ class Simulation(mp.Simulation):
                     filename_prefix = sim_name,
                     force_complex_fields = False,
                     eps_averaging = False,
-                    Courant = 1)
+                    Courant = .7)
 
     @property
     def empty(self):
