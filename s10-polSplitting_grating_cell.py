@@ -47,7 +47,7 @@ class Simulation(mp.Simulation):
 
         self.name = sim_name
 
-        self.extra_space_xy = .5
+        self.extra_space_xy = 10
 
         self.PML_width = .5
 
