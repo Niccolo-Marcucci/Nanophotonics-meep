@@ -103,8 +103,8 @@ class Simulation(mp.Simulation):
         multilayer, multilayer_thickness, design_specs = mpo.dielectric_multilayer(
             design_file = multilayer_file,
             substrate_thickness = self.substrate_thickness + self.PML_width,
-            x_width = self.domain_x,
-            y_width = self.domain_y,
+            x_width = self.domain_x + 2*self.PML_width,
+            y_width = self.domain_y + 2*self.PML_width,
             used_layer_info = used_layer_info,
             unit = 'um',
             exclude_last_layer = False)
@@ -128,8 +128,8 @@ class Simulation(mp.Simulation):
 
             dummy_layer = mp.Block(
                 material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer+1])),
-                size     = mp.Vector3(self.domain_x,
-                                      self.domain_y,
+                size     = mp.Vector3(self.domain_x + 2*self.PML_width,
+                                      self.domain_y + 2*self.PML_width,
                                       design_specs['d_layers'][used_layer]),
                 center   = mp.Vector3(0, 0, 0))#design_specs['d_layers'][used_layer]/2))
             self._empty_geometry.append(dummy_layer)       # part of the multilayer
@@ -299,7 +299,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                res = 88,
+                                res = 100,
                                 pattern_type = pattern_type,
                                 outcoupler_parameters = polSplitter_parameters)
 

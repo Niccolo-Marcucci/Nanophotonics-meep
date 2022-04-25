@@ -3,7 +3,7 @@
 #SBATCH --mail-user=niccolo.marcucci@polito.it
 #SBATCH --partition=global
 #SBATCH --time=2-00:00:00
-#SBATCH --ntasks=32
+#SBATCH --ntasks=40
 # SBATCH --nodes=4
 # SBATCH --ntasks-per-node=16
 #SBATCH --mem-per-cpu=500M
@@ -12,6 +12,6 @@
 # the following nodes are not reserved for anyone in particular
 # SBATCH --nodelist=compute-2-[5,6,9],compute-4-1
 
-mpirun -np 32 python $@
+mpirun -np 40 python $@
 
 mv -v $(ls *${2}* | grep -v 'log\|err') data/*$2
