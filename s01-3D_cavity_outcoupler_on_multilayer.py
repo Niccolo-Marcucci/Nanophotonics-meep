@@ -173,7 +173,7 @@ class Simulation(mp.Simulation):
         elif outcoupler_parameters["type"] == 'spiral' and outcoupler_parameters["N_rings"] > 0:
             outcoupler = mpo.spiral_grating(
                 medium_groove = mp.Medium(index=grating_index),
-                D = self.cavity_r_size*2 + outcoupler_parameters["D"],
+                D = self.cavity_r_size*2 + 2*outcoupler_parameters["D"],
                 FF = outcoupler_parameters["FF"],
                 DBR_period = outcoupler_parameters["period"],
                 N_rings = outcoupler_parameters["N_rings"],
@@ -337,7 +337,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     out_grating_type = 'spiral'         # 'spiral' or 'polSplitting' or 'only'
 
     # cavity info
-    N_cavity = 30
+    N_cavity = 0
     cavity_period = .280 # wavelength / n_eff_FF0d5 / 2
     D_cavity = .420 # cavity_period * 1.4
 
@@ -355,7 +355,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # outcoupler info
     N_outcoupler = 10
-    d_cavity_out = .5
+    d_cavity_out = 30*cavity_period + 0.25
     charge = 0
 
     cavity_parameters = {
