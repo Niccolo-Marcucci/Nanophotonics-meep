@@ -117,9 +117,11 @@ class Simulation(mp.Simulation):
 
         if pattern_type == 'positive':
             grating_index = np.real(design_specs['idx_layers'][used_layer+1])
+            grating_medium = mp.Medium(index=grating_index)
 
             dummy_layer = mp.Block(
-                material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer])),
+                material = mpo.anisotropic_material(np.real(design_specs['idx_layers'][used_layer]),
+                                                    used_layer_info["anisotropy"], rot_angle_3=used_layer_info["z_rotation"]),
                 size     = mp.Vector3(self.domain_x + .5 + 2*self.PML_width,
                                       self.domain_y + .5 + 2*self.PML_width,
                                       design_specs['d_layers'][used_layer]),
@@ -128,6 +130,7 @@ class Simulation(mp.Simulation):
 
         elif pattern_type == 'negative':
             grating_index = np.real(design_specs['idx_layers'][used_layer])
+            grating_medium = mpo.anisotropic_material(grating_index, used_layer_info["anisotropy"], rot_angle_3=used_layer_info["z_rotation"])
 
             dummy_layer = mp.Block(
                 material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer+1])),
@@ -142,7 +145,7 @@ class Simulation(mp.Simulation):
 
         if cavity_parameters["N_rings"] > 0:
             cavity = mpo.spiral_grating(
-                medium_groove = mp.Medium(index=grating_index),
+                medium_groove = grating_medium,
                 D = cavity_parameters["D"],
                 FF = cavity_parameters["FF"],
                 DBR_period = cavity_parameters["period"],
@@ -154,8 +157,8 @@ class Simulation(mp.Simulation):
 
         if outcoupler_parameters["type"] == 'pol_splitting' and outcoupler_parameters["N_rings"] > 0:
             outcoupler = mpo.pol_splitting_grating(
-                medium_groove = mp.Medium(index=grating_index),
-                D = self.cavity_r_size*2 + outcoupler_parameters["D"],
+                medium_groove = grating_medium,
+                D = self.cavity_r_size*2 + 2*outcoupler_parameters["D"],
                 metasurface_period = outcoupler_parameters["period"],
                 scatter_length = outcoupler_parameters["scatter_length"],
                 scatter_width = outcoupler_parameters["scatter_width"],
@@ -172,8 +175,8 @@ class Simulation(mp.Simulation):
 
         elif outcoupler_parameters["type"] == 'spiral' and outcoupler_parameters["N_rings"] > 0:
             outcoupler = mpo.spiral_grating(
-                medium_groove = mp.Medium(index=grating_index),
-                D = self.cavity_r_size*2 + 2*outcoupler_parameters["D"],
+                medium_groove = grating_medium,
+                D = self.cavity_r_size*2 + outcoupler_parameters["D"],
                 FF = outcoupler_parameters["FF"],
                 DBR_period = outcoupler_parameters["period"],
                 N_rings = outcoupler_parameters["N_rings"],
@@ -243,6 +246,8 @@ class Simulation(mp.Simulation):
             if outcoupler_parameters["N_rings"] > 0:
                 data2save["outcoupler_parameters"] = outcoupler_parameters
 
+            data2save["used_layer_info"] = used_layer_info
+
             json.dump(data2save, fp,  indent=4)
 
 
@@ -257,7 +262,7 @@ class Simulation(mp.Simulation):
             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
             center = mp.Vector3(z=self.top_air_gap/2), # mp.Vector3(),
             size = mp.Vector3(self.domain_x, self.domain_y),
-            component = mp.Ex)]
+            component = mp.Ey)]
 
         self.nearfield_monitor = None
         self.harminv_instance = None
@@ -278,7 +283,7 @@ class Simulation(mp.Simulation):
             fluxr = mp.FluxRegion(
                 center = mp.Vector3(0, 0, 0),
                 size = mp.Vector3(0,0,0),
-                direction = mp.Y)
+                direction = mp.X)
             self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
             if self.outcou_r_size == 0:
@@ -311,7 +316,7 @@ class Simulation(mp.Simulation):
                 # self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))
 
             if not self.empty:
-                self.harminv_instance =  mp.Harminv(mp.Ex, mp.Vector3(), f, df)
+                self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
 
 
 
@@ -334,10 +339,10 @@ if __name__ == "__main__":              # good practise in parallel computing
     file = 'design_TE_N7' #'design_TM_gd3_buriedDBR_onSiO2'
     buried = False
     pattern_type = 'positive'           # 'positive' or 'negative'
-    out_grating_type = 'spiral'         # 'spiral' or 'polSplitting' or 'only'
+    out_grating_type = 'only'         # 'spiral' or 'polSplitting' or 'only'
 
     # cavity info
-    N_cavity = 0
+    N_cavity = 30
     cavity_period = .280 # wavelength / n_eff_FF0d5 / 2
     D_cavity = .420 # cavity_period * 1.4
 
@@ -354,8 +359,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     outcoupler_period = s
 
     # outcoupler info
-    N_outcoupler = 10
-    d_cavity_out = 30*cavity_period + 0.25
+    N_outcoupler = 0
+    d_cavity_out = .5
     charge = 0
 
     cavity_parameters = {
@@ -390,7 +395,9 @@ if __name__ == "__main__":              # good practise in parallel computing
     used_layer_info = {
         "used_layer" : -3 if buried else -2,
         "thickness"  : 60e-3,
-        "refractive index" : 1.64}
+        "refractive index" : 1.6397, #1.645 * (1-0.6461/100 /2),
+        "anisotropy": 0.6461,
+        "z_rotation": 0}
     t0 = time.time()
 
 
@@ -413,7 +420,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                resolution = 50,
+                                resolution = 80,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
@@ -440,26 +447,37 @@ if __name__ == "__main__":              # good practise in parallel computing
     center  = sim.geometry_center
 
     max_epsilon = 2.53**2
+    #%% plot both sections in one figure
+    eps = sim.cell_size.z/sim.cell_size.x
 
-    fig = plt.figure(dpi=200)
-    plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(0,simsize.y,simsize.z)),
-                       labels=True,
+    eps2 = eps/(1+eps)
+    lp = 0.12 #label_padding
+
+    # fw = ww + 0.1 + lp
+    fw = 1
+    ww = fw - 2*lp
+    fh = ww + ww * eps + 2*lp + 0.1
+
+
+    fig = plt.figure(dpi=200,figsize=[8,8*fh])
+    ax_plane = plt.axes([lp, lp*2+eps2, 1-2*lp, 1-2.5*lp-eps2])
+    ax_section = plt.axes([lp, lp, 1-2*lp, eps2])
+    ax_colorbar = plt.axes([0.91, lp, 0.02, 1 - lp - 0.1])
+
+    plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(simsize.x, 0,simsize.z)),
+                       ax=ax_section, labels=True,
                        eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon} )
-    try:
-        fig.colorbar(plot.images[0], orientation="horizontal")
-    except:
-        plt.close()
-        print("Only one of the parallel jobs jobs will print the image")
-    else:
-        fig.savefig(f'{sim.name}_section-yz.jpg')
-        # plt.close()
 
-    fig = plt.figure(dpi=200)
     plot = sim.plot2D( output_plane=mp.Volume(center=mp.Vector3(z=-.00), size=mp.Vector3(simsize.x,simsize.y)),
-                       labels=True,
+                       ax=ax_plane, labels=True,
                        eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon})
     try:
-        fig.colorbar(plot.images[0])
+        fig.colorbar(plot.images[0], cax=ax_colorbar)
+        p1 = ax_plane.get_position().bounds
+        p2 = ax_section.get_position().bounds
+        lpy = p2[0]/fh
+        ax_plane.set_position([p2[0], lpy*2+eps2, p2[2], p2[2]*p1[3]/p1[2]])
+        ax_section.set_position([p2[0], lpy, p2[2], p2[3]])
     except:
         plt.close()
         print("Only one of the parallel jobs jobs will print the image")
@@ -480,7 +498,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # # mlab.show()
 
     #%%
-    #raise RuntimeError("comment this line to run til the end")
+    # raise RuntimeError("comment this line to run til the end")
     def print_time(sim):
         print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 
