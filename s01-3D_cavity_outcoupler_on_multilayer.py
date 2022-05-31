@@ -315,8 +315,8 @@ class Simulation(mp.Simulation):
                 #     direction = mp.Z)
                 # self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))
 
-            if not self.empty:
-                self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
+#            if not self.empty:
+#                self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
 
 
 
@@ -397,7 +397,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         "thickness"  : 60e-3,
         "refractive index" : 1.6503, #1.645 * (1+0.6461/100 /2),
         "anisotropy": -0.6461,
-        "z_rotation": np.pi/2}
+        "z_rotation": 0} #np.pi/2}
     t0 = time.time()
 
 
@@ -420,7 +420,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                resolution = 80,
+                                resolution = 50,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
