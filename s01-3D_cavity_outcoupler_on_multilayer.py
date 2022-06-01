@@ -253,16 +253,15 @@ class Simulation(mp.Simulation):
 
     def init_sources_and_monitors(self, f, df, allow_farfield=True) :
         self.sources = [ mp.Source(
-            # dipole
-            # src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-            # center = mp.Vector3(),
-            # size = mp.Vector3(),
-            # component = mp.Ez)]
-            # plane wave
             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-            center = mp.Vector3(z=self.top_air_gap/2), # mp.Vector3(),
-            size = mp.Vector3(self.domain_x, self.domain_y),
+            # dipole
+            center = mp.Vector3(),
+            size = mp.Vector3(),
             component = mp.Ey)]
+            # plane wave
+            # center = mp.Vector3(z=self.top_air_gap/2), # mp.Vector3(),
+            # size = mp.Vector3(self.domain_x, self.domain_y),
+            # component = mp.Ey)]
 
         self.nearfield_monitor = None
         self.harminv_instance = None
@@ -281,39 +280,39 @@ class Simulation(mp.Simulation):
 
             nfreq = 1000
             fluxr = mp.FluxRegion(
-                center = mp.Vector3(0, 0, 0),
+                center = mp.Vector3(+DL, 0, 0),
                 size = mp.Vector3(0,0,0),
                 direction = mp.X)
             self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
-            if self.outcou_r_size == 0:
-                # monitor_box
-                fr_yp = mp.FluxRegion(
-                    center = mp.Vector3(0, +DL, 0),
-                    size   = mp.Vector3(2*DL, 0, 0),
-                    direction = mp.Y)
-                fr_yn = mp.FluxRegion(
-                    center = mp.Vector3(0, -DL, 0),
-                    size   = mp.Vector3(2*DL, 0, 0),
-                    direction = mp.Y,
-                    weight = -1.0)
-                fr_xp = mp.FluxRegion(
-                    center = mp.Vector3(+DL, 0, 0),
-                    size   = mp.Vector3(0, 2*DL, 0),
-                    direction = mp.X)
-                fr_xn = mp.FluxRegion(
-                    center = mp.Vector3(-DL, 0, 0),
-                    size   = mp.Vector3(0, 2*DL, 0),
-                    direction = mp.X,
-                    weight = -1.0)
-                self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fr_xp, fr_xn, fr_yp, fr_yn))
-            else:
-                DL += self.cavity_r_size
-                # fluxr = mp.FluxRegion(
-                #     center = mp.Vector3(0, 0, self.top_air_gap - 0.03),
-                #     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, self.domain_y-.5*self.extra_space_xy, 0),
-                #     direction = mp.Z)
-                # self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))
+            # if self.outcou_r_size == 0 :
+            #     # monitor_box
+            #     fr_yp = mp.FluxRegion(
+            #         center = mp.Vector3(0, +DL, 0),
+            #         size   = mp.Vector3(2*DL, 0, 0),
+            #         direction = mp.Y)
+            #     fr_yn = mp.FluxRegion(
+            #         center = mp.Vector3(0, -DL, 0),
+            #         size   = mp.Vector3(2*DL, 0, 0),
+            #         direction = mp.Y,
+            #         weight = -1.0)
+            #     fr_xp = mp.FluxRegion(
+            #         center = mp.Vector3(+DL, 0, 0),
+            #         size   = mp.Vector3(0, 2*DL, 0),
+            #         direction = mp.X)
+            #     fr_xn = mp.FluxRegion(
+            #         center = mp.Vector3(-DL, 0, 0),
+            #         size   = mp.Vector3(0, 2*DL, 0),
+            #         direction = mp.X,
+            #         weight = -1.0)
+            #     self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fr_xp, fr_xn, fr_yp, fr_yn))
+            # else:
+            #     DL += self.cavity_r_size
+            #     fluxr = mp.FluxRegion(
+            #         center = mp.Vector3(0, 0, self.top_air_gap - 0.03),
+            #         size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, self.domain_y-.5*self.extra_space_xy, 0),
+            #         direction = mp.Z)
+            #     self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))
 
             if not self.empty:
                 self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
@@ -395,8 +394,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     used_layer_info = {
         "used_layer" : -3 if buried else -2,
         "thickness"  : 60e-3,
-        "refractive index" : 1.6397, #1.645 * (1-0.6461/100 /2),
-        "anisotropy": 0.6461,
+        "refractive index" : 1.6503, #1.645 * (1+0.6461/100 /2),
+        "anisotropy": -0.6461,
         "z_rotation": 0}
     t0 = time.time()
 
@@ -420,7 +419,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                resolution = 80,
+                                resolution = 50,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
