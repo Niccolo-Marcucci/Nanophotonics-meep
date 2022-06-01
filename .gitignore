@@ -23,6 +23,7 @@
 *.JPEG
 *.gif
 *.xcf
+*.scad
 
 #avoid personal notes
 *.txt
