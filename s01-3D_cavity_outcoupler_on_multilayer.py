@@ -396,7 +396,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         "thickness"  : 60e-3,
         "refractive index" : 1.645, # 1.6503, #1.645 * (1+0.6461/100 /2),
         "anisotropy": -0.6, #-0.6461,
-        "z_rotation": np.pi/2}
+        "z_rotation": 0}#np.pi/2}
     t0 = time.time()
 
 
