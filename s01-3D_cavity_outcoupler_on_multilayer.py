@@ -323,7 +323,7 @@ class Simulation(mp.Simulation):
 #%% geometry and simulation parameters
 if __name__ == "__main__":              # good practise in parallel computing
     c0 = 1
-    wavelength = 0.590
+    wavelength = 0.600
     wwidth = .10
     f = c0 / wavelength
 
@@ -343,7 +343,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # cavity info
     N_cavity = 30
     cavity_period = .280 # wavelength / n_eff_FF0d5 / 2
-    D_cavity = .420 # cavity_period * 1.4
+    D_cavity = .661 # cavity_period * 1.4
 
     # pol splitting info
     FF_pol_splitter = .3
@@ -395,7 +395,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         "used_layer" : -3 if buried else -2,
         "thickness"  : 60e-3,
         "refractive index" : 1.645, # 1.6503, #1.645 * (1+0.6461/100 /2),
-        "anisotropy": 0, #-0.6461,
+        "anisotropy": 0.6, #-0.6461,
         "z_rotation": 0} #np.pi/2}
     t0 = time.time()
 
@@ -419,7 +419,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                resolution = 100,
+                                resolution = 50,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
