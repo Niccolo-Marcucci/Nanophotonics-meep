@@ -257,7 +257,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_"
-    sim_name += f"D{D*1e3:.0f}_src{source_pos*1e3:.0f}"
+    sim_name += f"anis{anisotropy:.0f}_tilt{tilt_anisotropy:.0f}"
 
 
     sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -381,6 +381,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     #     for n_eff_h in n_eff_hs :
     #         for D in Ds:
     for anisotropy in np.linspace(0,10, 2):
+        for tilt_anisotropy in [0, np.pi/2]:
                 source_pos=0
                 tuple_list.append( (wavelength,
                                     n_eff_h, n_eff_l,
@@ -388,7 +389,7 @@ if __name__ == "__main__":              # good practise in parallel computing
                                     empty,
                                     source_pos,
                                     anisotropy,
-                                    0 ) )
+                                    tilt_anisotropy ) )
                 j += 1
     mp.verbosity(1)
     # mp.quiet(True)
