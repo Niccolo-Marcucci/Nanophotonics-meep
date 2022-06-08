@@ -380,7 +380,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for source_pos in [0]: # 0, period/4, period/2]:
     #     for n_eff_h in n_eff_hs :
     #         for D in Ds:
-    for anisotropy in np.linspace(0,10, 2):
+    for anisotropy in np.linspace(0.1,5, 20):
         for tilt_anisotropy in [0, np.pi/2]:
                 source_pos=0
                 tuple_list.append( (wavelength,
