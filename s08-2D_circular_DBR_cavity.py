@@ -396,7 +396,6 @@ if __name__ == "__main__":              # good practise in parallel computing
     output = []
     names = []
     t0 = time.time()
-
     try:
         from mpi4py import MPI
     except:
@@ -404,6 +403,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     else:
         non_parallel_conda = False
 
+    non_parallel_conda = True
     if len(sys.argv) > 2:
         if sys.argv[2] == "parallel_grid":
             non_parallel_conda = True
