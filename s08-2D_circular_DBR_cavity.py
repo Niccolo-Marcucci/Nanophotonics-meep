@@ -262,7 +262,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength/n_eff_l
-    sim.eps_averaging = False
+    sim.eps_averaging = True
     sim.init_geometric_objects( eff_index_info = eff_index_info,
                                 resolution = 100,
                                 pattern_type = pattern_type,
