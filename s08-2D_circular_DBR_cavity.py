@@ -248,7 +248,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
 
     date = time.strftime('%y%m%d-%H%M%S')#'211001-121139'#
-    if len(sys.argv) > 1:
+    if len(sys.argv) >= 1:
         sim_prefix = f"{sys.argv[1]}"
     else:
         sim_prefix = f"{date}"
