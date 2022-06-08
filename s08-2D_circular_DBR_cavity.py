@@ -278,10 +278,10 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
 
     sim.init_sim()
-    fig = plt.figure(dpi=150, figsize=(10,10))
-    plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
-    fig.colorbar(plot.images[0])
-    plt.show()
+    # fig = plt.figure(dpi=150, figsize=(10,10))
+    # plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
+    # fig.colorbar(plot.images[0])
+    # plt.show()
     # fig.savefig(f'{sim.name}-xy.jpg')
     # plt.close()
     # raise Exception()1
