@@ -393,9 +393,9 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     used_layer_info = {
         "used_layer" : -3 if buried else -2,
-        "thickness"  : 60e-3,
-        "refractive index" : 1.645, # 1.6503, #1.645 * (1+0.6461/100 /2),
-        "anisotropy": -0.6, #-0.6461,
+        "thickness"  : 55e-3,
+        "refractive index" : 1.723, # 1.6503, #1.645 * (1+0.6461/100 /2),
+        "anisotropy": 0, #-0.6461,
         "z_rotation": 0}#np.pi/2}
     t0 = time.time()
 
@@ -419,7 +419,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                resolution = 50,
+                                resolution = 80,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
