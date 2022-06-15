@@ -89,7 +89,7 @@ class Simulation(mp.Simulation):
         if pattern_type == 'positive':
             grating_index = np.real(eff_index_info["n_eff_l"])
             background_index = np.real(eff_index_info["n_eff_h"])
-            medium_back   = mpo.anysotropic_material(background_index,
+            medium_back   = mpo.anisotropic_material(background_index,
                                                      eff_index_info["anisotropy"],
                                                      rot_angle_3=eff_index_info["tilt_anisotropy"])
             medium_groove = mp.Medium(epsilon = grating_index**2 )
@@ -97,7 +97,7 @@ class Simulation(mp.Simulation):
         elif pattern_type == 'negative':
             grating_index = np.real(eff_index_info["n_eff_h"])
             background_index = np.real(eff_index_info["n_eff_l"])
-            medium_groove   = mpo.anysotropic_material(grating_index,
+            medium_groove   = mpo.anisotropic_material(grating_index,
                                                      eff_index_info["anisotropy"],
                                                      rot_angle_3=eff_index_info["tilt_anisotropy"])
             medium_back = mp.Medium(epsilon = background_index**2 )
@@ -248,7 +248,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
 
     date = time.strftime('%y%m%d-%H%M%S')#'211001-121139'#
-    if len(sys.argv) > 1:
+    if len(sys.argv) >= 1:
         sim_prefix = f"{sys.argv[1]}"
     else:
         sim_prefix = f"{date}"
@@ -257,14 +257,14 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_"
-    sim_name += f"D{D*1e3:.0f}_src{source_pos*1e3:.0f}"
+    sim_name += f"anis{anisotropy:.1f}_tilt{tilt_anisotropy:.1f}"
 
 
     sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength/n_eff_l
-    sim.eps_averaging = False
+    sim.eps_averaging = True
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 100,
+                                resolution = 80,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
@@ -279,12 +279,12 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     sim.init_sim()
     # fig = plt.figure(dpi=150, figsize=(10,10))
-    # plot = sim.plot2D(eps_parameters={"interpolation":'none'})
+    # plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
     # fig.colorbar(plot.images[0])
-    # # plt.show()
+    # plt.show()
     # fig.savefig(f'{sim.name}-xy.jpg')
     # plt.close()
-    # raise Exception()
+    # raise Exception()1
 
 
     # mp.verbosity(0)
@@ -359,13 +359,16 @@ if __name__ == "__main__":              # good practise in parallel computing
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
     Ds = period * np.array([0.45])#np.linspace(0, 3, 100) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
 
+    n_eff_h = 1.157 # n_eff_hs[0]
+    n_eff_l = 1
+    D = 0.661 #Ds[-1]
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
     # element of the tuple represent the inputs.
     empty = True
     tuple_list = [ (wavelength,
-                    n_eff_hs[0], n_eff_l,
-                    Ds[-1], period,
+                    n_eff_h, n_eff_l,
+                    D, period,
                     empty,
                     0,
                     anisotropy,
@@ -373,23 +376,26 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    for source_pos in [0]: # 0, period/4, period/2]:
-        for n_eff_h in n_eff_hs :
-            for D in Ds:
+
+    # for source_pos in [0]: # 0, period/4, period/2]:
+    #     for n_eff_h in n_eff_hs :
+    #         for D in Ds:
+    for anisotropy in np.linspace(0.1,5, 20):
+        for tilt_anisotropy in [0, np.pi/2]:
+                source_pos=0
                 tuple_list.append( (wavelength,
                                     n_eff_h, n_eff_l,
                                     D, period,
                                     empty,
                                     source_pos,
                                     anisotropy,
-                                    0 ) )
-            j += 1
+                                    tilt_anisotropy ) )
+                j += 1
     mp.verbosity(1)
     # mp.quiet(True)
     output = []
     names = []
     t0 = time.time()
-
     try:
         from mpi4py import MPI
     except:
