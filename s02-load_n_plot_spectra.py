@@ -22,9 +22,18 @@ import sys
 import json
 import time
 
-folder = "data/meep_sim_220411-121536_12d7e2bb21"
-sim_prefix = "2D_section_cavity_220411-121536_12d7e2bb21"
+folder = "data/meep_sim_220308-171238_2cb6bfb1fa"
+sim_prefix = "2D_eff_index_cavity_220308-171238_2cb6bfb1fa"
 period = 280
+
+# files = os.listdir("data")
+
+# hashtag ='907626023e'
+
+# for file in files :
+#     if file.find( hashtag ) >= 0:
+#         folder = 'data/' + file
+
 
 files = os.listdir(folder)
 Ds_list = [[]]
@@ -58,8 +67,8 @@ for file in files :
                 sim_filelist[j].append(file)
                 frst_param['list'][j].append(first_parameter)
 
+#%%
 for j, second_parameter in enumerate(scnd_param['list']):
-
     first_parameter = np.array(frst_param['list'][j])
 
     sort_idx = first_parameter.argsort(0)
@@ -79,15 +88,17 @@ for j, second_parameter in enumerate(scnd_param['list']):
 
         # l=np.int((k-1)/3)
         # # resonance_table = [ [ np.round(1/var[2][l]*1e3, 1), np.int(var[3][l]) ]  for l in range(var[2].size) ]
-        # fig = plt.figure(dpi=150,figsize=(10,5))
-        # ax = fig.add_subplot(111)
-        # legend_str = []
-        # ax.plot(wavelength, spectrum)
-        # plt.xlim(550,650)
-        # # plt.ylim(-2,2)
-        # ax.grid(True)
-        # plt.xlabel('Wavelength [nm]')
-        # plt.ylabel('Transmission')
+        #%%
+        fig = plt.figure(dpi=150,figsize=(10,5))
+        ax = fig.add_subplot(111)
+        legend_str = []
+        ax.plot(wavelength, np.log(np.abs(spectrum)), '.')
+        plt.xlim(550,650)
+        # plt.ylim(-2,2)
+        ax.grid(True)
+        plt.xlabel('Wavelength [nm]')
+        plt.ylabel('Transmission')
+        #%%
         # plt.title(f'D = {D}')
         # legend_str.append(f"sourcePos {tuple_list[k][6]*1e3:.0f}")
         # plt.title(f'n_eff_h={tuple_list[k][1]:.2f};   DBR_period={tuple_list[k][4]*1e3:.0f};   D={tuple_list[k][3]/tuple_list[k][2]:.2f}*DBR_period')
@@ -127,7 +138,7 @@ for j, second_parameter in enumerate(scnd_param['list']):
     plt.xlabel('wavelength [nm]')
     plt.ylabel(f'{frst_param["label"]}')
     plt.title(f'Period DBR {period}nm, {scnd_param["label"]} {second_parameter}, eff index 1.1')
-    fig.savefig(f'{folder}/{sim_prefix}{scnd_param["name"]}{second_parameter}_spacer_dependence_DBRperiod{period}.png')
+    # fig.savefig(f'{folder}/{sim_prefix}{scnd_param["name"]}{second_parameter}_spacer_dependence_DBRperiod{period}.png')
 
 
 
