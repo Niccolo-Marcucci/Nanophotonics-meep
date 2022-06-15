@@ -22,21 +22,16 @@ import sys
 import json
 import time
 
-folder = "data/meep_sim_220308-171238_2cb6bfb1fa"
-sim_prefix = "2D_eff_index_cavity_220308-171238_2cb6bfb1fa"
-period = 280
 
-# files = os.listdir("data")
+files = os.listdir("data")
+hashtag ='2cb6bfb1fa'
 
-# hashtag ='907626023e'
-
-# for file in files :
-#     if file.find( hashtag ) >= 0:
-#         folder = 'data/' + file
-
+for file in files :
+    if file.find( hashtag ) >= 0:
+        folder = 'data/' + file
 
 files = os.listdir(folder)
-Ds_list = [[]]
+
 source_positions = []
 frst_param = {'name': '_D',
               'list': [[]],
@@ -44,33 +39,54 @@ frst_param = {'name': '_D',
 scnd_param = {'name': '_src',
               'list': [],
               'label': 'Source Position [nm]'}
+# sim_filelist is a two dimensional list containing all useful files.
+# In other words, each element of the list is a list containing all files with
+# referred to a given value of scnd_param
 sim_filelist = [[]]
 
+i = 0
 for file in files :
-    if file[:len(sim_prefix)] == sim_prefix and file[-4:] == ".mat":
-        if file.find("empty") >= 0:
+    if file[-4:] == ".mat":
+        if file.find("spectra") >= 0:
+            i += 1
             data = mpo.loadmat(folder+'/'+file)
-            spectrum_empty = data['spectra'][0]
-        else :
-            suffix = file[len(sim_prefix):]
-            first_parameter  = suffix[suffix.find( frst_param['name'] )+2:]
-            first_parameter  = int(first_parameter[:first_parameter.find("_")])
-            second_parameter = suffix[suffix.find( scnd_param['name'] )+4:]
-            second_parameter = int(second_parameter[:second_parameter.find('_')])
-            if not any([second_parameter==val for val in scnd_param['list']]):
-                scnd_param['list'].append(second_parameter)
+            wavelength = data["wavelength"][0]
+            if file.find("empty") >= 0:
+                spectrum_empty = data['spectra'][0]
+            else :
+                suffix = file[file.find(hashtag)+len(hashtag):]
+                first_parameter  = suffix[suffix.find( frst_param['name'] )+2:]
+                first_parameter  = int(first_parameter[:first_parameter.find("_")])
+                second_parameter = suffix[suffix.find( scnd_param['name'] )+4:]
+                second_parameter = int(second_parameter[:second_parameter.find('_')])
+                if not any([second_parameter==val for val in scnd_param['list']]):
+                    scnd_param['list'].append(second_parameter)
 
-                sim_filelist[-1].append(file)
-                frst_param['list'][-1].append(first_parameter)
-            else:
-                j = scnd_param['list'].index(second_parameter)
-                sim_filelist[j].append(file)
-                frst_param['list'][j].append(first_parameter)
+                    sim_filelist[-1].append(file)
+                    frst_param['list'][-1].append(first_parameter)
+                else:
+                    j = scnd_param['list'].index(second_parameter)
+                    sim_filelist[j].append(file)
+                    frst_param['list'][j].append(first_parameter)
+
+if i == 0 :
+    raise FileNotFoundError(f"No spectra file was found for hash {hashtag}")
+elif spectrum_empty.size == 1:
+    spectrum_empty = np.ones((wavelength.size,))
+
+period = 280
+
+#%% sort second parameter list
+second_parameter = np.array(scnd_param['list'])
+if second_parameter.size > 1:
+    sort_idx = first_parameter.argsort(0)
+    sim_filelist = [sim_filelist[idx] for idx in sort_idx]
 
 #%%
 for j, second_parameter in enumerate(scnd_param['list']):
     first_parameter = np.array(frst_param['list'][j])
 
+    # sort first parametr
     sort_idx = first_parameter.argsort(0)
     first_parameter = first_parameter[sort_idx]
     sim_filelist[j] = [sim_filelist[j][idx] for idx in sort_idx]
@@ -89,15 +105,15 @@ for j, second_parameter in enumerate(scnd_param['list']):
         # l=np.int((k-1)/3)
         # # resonance_table = [ [ np.round(1/var[2][l]*1e3, 1), np.int(var[3][l]) ]  for l in range(var[2].size) ]
         #%%
-        fig = plt.figure(dpi=150,figsize=(10,5))
-        ax = fig.add_subplot(111)
-        legend_str = []
-        ax.plot(wavelength, np.log(np.abs(spectrum)), '.')
-        plt.xlim(550,650)
-        # plt.ylim(-2,2)
-        ax.grid(True)
-        plt.xlabel('Wavelength [nm]')
-        plt.ylabel('Transmission')
+        # fig = plt.figure(dpi=150,figsize=(10,5))
+        # ax = fig.add_subplot(111)
+        # legend_str = []
+        # ax.plot(wavelength, np.log(np.abs(spectrum)), '.')
+        # plt.xlim(550,650)
+        # # plt.ylim(-2,2)
+        # ax.grid(True)
+        # plt.xlabel('Wavelength [nm]')
+        # plt.ylabel('Transmission')
         #%%
         # plt.title(f'D = {D}')
         # legend_str.append(f"sourcePos {tuple_list[k][6]*1e3:.0f}")
