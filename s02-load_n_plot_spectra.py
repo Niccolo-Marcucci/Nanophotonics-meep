@@ -24,7 +24,7 @@ import time
 
 
 files = os.listdir("data")
-hashtag ='2cb6bfb1fa'
+hashtag ='8a593f9138'#'2cb6bfb1fa'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -33,16 +33,17 @@ for file in files :
 files = os.listdir(folder)
 
 source_positions = []
-frst_param = {'name': '_D',
-              'list': [[]],
-              'label': 'Ds [nm]'}
-scnd_param = {'name': '_src',
+frst_param = {'name': '_anis', # '_D',
               'list': [],
-              'label': 'Source Position [nm]'}
-# sim_filelist is a two dimensional list containing all useful files.
-# In other words, each element of the list is a list containing all files with
-# referred to a given value of scnd_param
-sim_filelist = [[]]
+              'label': 'Anisotropy (%)'} #'Ds [nm]'}
+scnd_param = {'name': '_tilt', # '_src',
+              'list': [],
+              'label': 'Anisotropy tilt angle (rad)'} # 'Source Position [nm]'}
+
+# sim_filelist will be a two dimensional list containing all useful files
+# (same as frst_param["list"]). In other words, each element of the list is a
+# list containing all files with referred to a given value of scnd_param
+sim_filelist = []
 
 i = 0
 for file in files :
@@ -55,15 +56,16 @@ for file in files :
                 spectrum_empty = data['spectra'][0]
             else :
                 suffix = file[file.find(hashtag)+len(hashtag):]
-                first_parameter  = suffix[suffix.find( frst_param['name'] )+2:]
-                first_parameter  = int(first_parameter[:first_parameter.find("_")])
-                second_parameter = suffix[suffix.find( scnd_param['name'] )+4:]
-                second_parameter = int(second_parameter[:second_parameter.find('_')])
+                first_parameter  = suffix[suffix.find( frst_param['name'] ) + len(frst_param['name']):]
+                first_parameter  = float(first_parameter[:first_parameter.find("_")])
+                second_parameter = suffix[suffix.find( scnd_param['name'] ) + len(scnd_param['name']):]
+                second_parameter = float(second_parameter[:second_parameter.find('_')])
                 if not any([second_parameter==val for val in scnd_param['list']]):
+                    # if the same value of second_parameter does not exist creat a new entry
                     scnd_param['list'].append(second_parameter)
 
-                    sim_filelist[-1].append(file)
-                    frst_param['list'][-1].append(first_parameter)
+                    sim_filelist.append([file])
+                    frst_param['list'].append([first_parameter])
                 else:
                     j = scnd_param['list'].index(second_parameter)
                     sim_filelist[j].append(file)
@@ -79,10 +81,11 @@ period = 280
 #%% sort second parameter list
 second_parameter = np.array(scnd_param['list'])
 if second_parameter.size > 1:
-    sort_idx = first_parameter.argsort(0)
+    sort_idx = second_parameter.argsort(0)
     sim_filelist = [sim_filelist[idx] for idx in sort_idx]
 
 #%%
+images = []
 for j, second_parameter in enumerate(scnd_param['list']):
     first_parameter = np.array(frst_param['list'][j])
 
@@ -95,7 +98,7 @@ for j, second_parameter in enumerate(scnd_param['list']):
 
     for k, file in enumerate(sim_filelist[j]) :
         data = mpo.loadmat(folder + '/' + file)
-        spectrum = (data['spectra'][0] )
+        spectrum = np.log10(data['spectra'][0] /spectrum_empty)
         wavelength = data["wavelength"]
         wavelength = wavelength.reshape((wavelength.size,))
         # sort_idx = wavelength.argsort(0)
@@ -131,7 +134,7 @@ for j, second_parameter in enumerate(scnd_param['list']):
         # fig.savefig(f'{names[k]}_spectrum.png')
         # plt.pause(1)
         # plt.close(fig)
-        image.append(np.log10(spectrum))
+        image.append((spectrum))
 
         # fig = plt.figure(10*k,dpi=150,figsize=(10,5))
         # ax = fig.add_subplot(111)
@@ -144,26 +147,26 @@ for j, second_parameter in enumerate(scnd_param['list']):
         # plt.legend(["dielectric_constant", "field_profile"])
         # plt.title(f'n_eff_h={tuple_list[k][1]:.2f};   DBR_period={tuple_list[k][4]*1e3:.0f}; D={tuple_list[k][3]/tuple_list[k][4]:.2f}*DBR_period')
         # fig.savefig(f'{names[k]}_spectrumfield_profile.png')
-
+    fig = plt.figure()
     image = np.array(image)#.transpose()
-    fig = plt.pcolor(wavelength, first_parameter , image)
-    fig = fig.get_figure()
-    fig.set_figheight(6)
+    plt.pcolor(wavelength, first_parameter , image)
+
+    fig.set_figheight(3)
     fig.set_figwidth(12)
-    fig.set_dpi(150)
+    fig.set_dpi(100)
     plt.xlabel('wavelength [nm]')
     plt.ylabel(f'{frst_param["label"]}')
     plt.title(f'Period DBR {period}nm, {scnd_param["label"]} {second_parameter}, eff index 1.1')
+    images.append(image)
     # fig.savefig(f'{folder}/{sim_prefix}{scnd_param["name"]}{second_parameter}_spacer_dependence_DBRperiod{period}.png')
+#%%
+fig = plt.figure()
+image = np.array(images[0] + images[1])#.transpose()
+plt.pcolor(wavelength, first_parameter , image)
 
-
-
-
-    #%%%
-
-    file = "2D_section_cavity_220411-121536_12d7e2bb21_design_TE_N7D_0.07_res150_spectra_t100.0.mat"
-    data = mpo.loadmat(folder +  '/' + file)
-
-    sp = data["spectra"][0]
-    wv = data["wavelength"].reshape( (sp.shape))
-    plt.plot(wv, sp)
+fig.set_figheight(3)
+fig.set_figwidth(12)
+fig.set_dpi(100)
+plt.xlabel('wavelength [nm]')
+plt.ylabel(f'{frst_param["label"]}')
+plt.title(f'Period DBR {period}nm, {scnd_param["label"]} {second_parameter}, eff index 1.1')
