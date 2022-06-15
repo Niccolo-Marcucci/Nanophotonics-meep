@@ -210,10 +210,10 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     c0 = 1
     # wavelength = 0.590
-    wwidth = 0.25
+    wwidth = 0.5
     f=c0/wavelength
 
-    sim_end=500
+    sim_end=300
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -264,7 +264,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = True
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 80,
+                                resolution = 150,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
@@ -359,7 +359,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
     Ds = period * np.array([0.45])#np.linspace(0, 3, 100) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
 
-    n_eff_h = 1.157 # n_eff_hs[0]
+    n_eff_h = 1.158 # n_eff_hs[0]
     n_eff_l = 1
     D = 0.661 #Ds[-1]
     # crete input vector for parallell pool. It has to be a list of tuples,
