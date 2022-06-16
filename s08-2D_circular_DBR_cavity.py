@@ -210,10 +210,10 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     c0 = 1
     # wavelength = 0.590
-    wwidth = 0.5
+    wwidth = 0.3
     f=c0/wavelength
 
-    sim_end=300
+    sim_end=500
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -264,7 +264,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = True
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 150,
+                                resolution = 165,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
@@ -380,7 +380,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for source_pos in [0]: # 0, period/4, period/2]:
     #     for n_eff_h in n_eff_hs :
     #         for D in Ds:
-    for anisotropy in np.linspace(0.1,5, 20):
+    for anisotropy in np.linspace(1, 10, 40):
         for tilt_anisotropy in [0, np.pi/2]:
                 source_pos=0
                 tuple_list.append( (wavelength,
