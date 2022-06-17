@@ -194,12 +194,12 @@ class Simulation(mp.Simulation):
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.02
 
-                nfreq = 1000
+                nfreq = 10000
                 fluxr = mp.FluxRegion(
                     center = mp.Vector3(DL, 0),
                     size = mp.Vector3(0, 0),
                     direction = mp.X)
-                self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
+                self.spectrum_monitors.append(self.add_flux(f, df/2, nfreq, fluxr))#, yee_grid=True))
 
                 # if not self.empty:
                 #     self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
