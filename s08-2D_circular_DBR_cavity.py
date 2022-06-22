@@ -8,13 +8,12 @@ import meep as mp
 import numpy as np
 #import scipy as sp
 #from scipy import optimize as op
-from scipy import interpolate as itp
+from scipy import interpolate as itp, io
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
 # from mpl_toolkits.mplot3d import Axes3D
 import meep_objects as mpo
 import json
-import io
 import sys
 import time
 #from ipywidgets import IntProgress
@@ -92,7 +91,7 @@ class Simulation(mp.Simulation):
             medium_back   = mpo.anisotropic_material(background_index,
                                                      eff_index_info["anisotropy"],
                                                      rot_angle_3=eff_index_info["tilt_anisotropy"])
-            medium_groove = mp.Medium(epsilon = grating_index**2 )
+            medium_groove = mpo.Medium(epsilon = grating_index**2 )
 
         elif pattern_type == 'negative':
             grating_index = np.real(eff_index_info["n_eff_h"])
@@ -100,7 +99,7 @@ class Simulation(mp.Simulation):
             medium_groove   = mpo.anisotropic_material(grating_index,
                                                      eff_index_info["anisotropy"],
                                                      rot_angle_3=eff_index_info["tilt_anisotropy"])
-            medium_back = mp.Medium(epsilon = background_index**2 )
+            medium_back = mpo.Medium(epsilon = background_index**2 )
 
         else :
             raise ValueError(f'patter type "{pattern_type}" is unknown')
@@ -201,8 +200,8 @@ class Simulation(mp.Simulation):
                     direction = mp.X)
                 self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
-                # if not self.empty:
-                #     self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
+                if not self.empty:
+                    self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
@@ -213,7 +212,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.25
     f=c0/wavelength
 
-    sim_end=500
+    sim_end=100
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -248,7 +247,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
 
     date = time.strftime('%y%m%d-%H%M%S')#'211001-121139'#
-    if len(sys.argv) >= 1:
+    if len(sys.argv) > 1:
         sim_prefix = f"{sys.argv[1]}"
     else:
         sim_prefix = f"{date}"
@@ -261,10 +260,11 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
 
     sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
-    sim.extra_space_xy += wavelength/n_eff_l
-    sim.eps_averaging = True
+    sim.extra_space_xy += wavelength#/n_eff_l
+    sim.eps_averaging = False
+    sim.force_complex_fields = True
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 80,
+                                resolution = 100,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
@@ -278,12 +278,12 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
 
     sim.init_sim()
-    # fig = plt.figure(dpi=150, figsize=(10,10))
-    # plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
-    # fig.colorbar(plot.images[0])
-    # plt.show()
-    # fig.savefig(f'{sim.name}-xy.jpg')
-    # plt.close()
+    fig = plt.figure(dpi=150, figsize=(10,10))
+    plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
+    fig.colorbar(plot.images[0])
+    plt.show()
+    fig.savefig(f'{sim.name}-xy.jpg')
+    plt.close()
     # raise Exception()1
 
 
@@ -359,8 +359,20 @@ if __name__ == "__main__":              # good practise in parallel computing
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
     Ds = period * np.array([0.45])#np.linspace(0, 3, 100) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
 
-    n_eff_h = 1.157 # n_eff_hs[0]
+
+    n_eff_h = 1.0549#1.158 # n_eff_hs[0]
     n_eff_l = 1
+
+    #%% load susceptibilities data.
+    # Even though the variable are still called n_eff but they refer to epsilon
+    # mpo.Medium() can handle it
+
+    data = io.loadmat("bsw_lorentz_fit_idx1.000_th0.mat")
+    n_eff_l = [ a for a in data["optimal_fit_2"][0]]
+    data = io.loadmat("bsw_lorentz_fit_idx1.729_th23.mat")
+    n_eff_h = [ a for a in data["optimal_fit_2"][0]]
+
+    #%%
     D = 0.661 #Ds[-1]
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -377,12 +389,12 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     j = 1
 
-    # for source_pos in [0]: # 0, period/4, period/2]:
+    for source_pos in [0]: # 0, period/4, period/2]:
     #     for n_eff_h in n_eff_hs :
     #         for D in Ds:
-    for anisotropy in np.linspace(0.1,5, 20):
-        for tilt_anisotropy in [0, np.pi/2]:
-                source_pos=0
+    # for anisotropy in np.linspace(0,5, 1):
+        for tilt_anisotropy in [0]:#, np.pi/2]:
+    #             source_pos=0
                 tuple_list.append( (wavelength,
                                     n_eff_h, n_eff_l,
                                     D, period,
