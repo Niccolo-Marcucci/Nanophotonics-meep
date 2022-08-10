@@ -213,7 +213,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.3
     f=c0/wavelength
 
-    sim_end=500
+    sim_end=2000
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -264,7 +264,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.extra_space_xy += wavelength/n_eff_l
     sim.eps_averaging = True
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 165,
+                                resolution = 250,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
@@ -278,6 +278,13 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
 
     sim.init_sim()
+    try:
+        fig.colorbar(plot.images[0], cax=ax_colorbar)
+    except:
+        plt.close()
+        print("Only one of the parallel jobs will print the image")
+    else:
+        fig.savefig(f'{sim.name}_section-xy.jpg')
     # fig = plt.figure(dpi=150, figsize=(10,10))
     # plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
     # fig.colorbar(plot.images[0])
