@@ -24,7 +24,7 @@ import time
 
 
 files = os.listdir("data")
-hashtag ='8a593f9138'#'2cb6bfb1fa'
+hashtag ='5cab4c8862'#'e20d2ea866'#'62ef19ee4d'#'4dc3971d95'#'8a593f9138'#'2cb6bfb1fa'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -83,10 +83,10 @@ second_parameter = np.array(scnd_param['list'])
 if second_parameter.size > 1:
     sort_idx = second_parameter.argsort(0)
     sim_filelist = [sim_filelist[idx] for idx in sort_idx]
-
+    scnd_param['list'] = [scnd_param['list'][idx] for idx in sort_idx]
 #%%
 images = []
-for j, second_parameter in enumerate(scnd_param['list']):
+for j, second_parameter in enumerate(scnd_param['list'][:1]):
     first_parameter = np.array(frst_param['list'][j])
 
     # sort first parametr
@@ -98,8 +98,8 @@ for j, second_parameter in enumerate(scnd_param['list']):
 
     for k, file in enumerate(sim_filelist[j]) :
         data = mpo.loadmat(folder + '/' + file)
-        spectrum = np.log10(data['spectra'][0] /spectrum_empty)
-        wavelength = data["wavelength"]
+        spectrum = (data['spectra'][0] /spectrum_empty)
+        wavelength = data["wavelength"][0]
         wavelength = wavelength.reshape((wavelength.size,))
         # sort_idx = wavelength.argsort(0)
         # wavelength = wavelength[sort_idx]
@@ -108,15 +108,15 @@ for j, second_parameter in enumerate(scnd_param['list']):
         # l=np.int((k-1)/3)
         # # resonance_table = [ [ np.round(1/var[2][l]*1e3, 1), np.int(var[3][l]) ]  for l in range(var[2].size) ]
         #%%
-        # fig = plt.figure(dpi=150,figsize=(10,5))
-        # ax = fig.add_subplot(111)
-        # legend_str = []
-        # ax.plot(wavelength, np.log(np.abs(spectrum)), '.')
-        # plt.xlim(550,650)
-        # # plt.ylim(-2,2)
-        # ax.grid(True)
-        # plt.xlabel('Wavelength [nm]')
-        # plt.ylabel('Transmission')
+        fig = plt.figure(dpi=150,figsize=(10,5))
+        ax = fig.add_subplot(111)
+        legend_str = []
+        ax.plot(wavelength, np.log(np.abs(spectrum)), '-')
+        plt.xlim(550,650)
+        # plt.ylim(-2,2)
+        ax.grid(True)
+        plt.xlabel('Wavelength [nm]')
+        plt.ylabel('Transmission')
         #%%
         # plt.title(f'D = {D}')
         # legend_str.append(f"sourcePos {tuple_list[k][6]*1e3:.0f}")
