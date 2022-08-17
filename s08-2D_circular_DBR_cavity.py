@@ -186,9 +186,9 @@ class Simulation(mp.Simulation):
         self.spectrum_monitors = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ey], f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], f, 0, 1,
                                                      center = mp.Vector3(),
-                                                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, 0)) #, yee_grid=True))
+                                                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y-.5*self.extra_space_xy )) #, yee_grid=True))
         else:
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.02
@@ -264,7 +264,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.eps_averaging = False
     sim.force_complex_fields = True
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 100,
+                                resolution = 50,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
                                 outcoupler_parameters = outcoupler_parameters)
@@ -275,21 +275,22 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=True)
 
-    sim.init_sim()
-    # fig = plt.figure(dpi=150, figsize=(10,10))
-    # plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
-    # fig.colorbar(plot.images[0])
-    # plt.show()
-    # fig.savefig(f'{sim.name}-xy.jpg')
-    # plt.close()
     # raise Exception()1
 
 
     # mp.verbosity(0)
     sim.run(until=sim_end)
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
+
+    sim.init_sim()
+    fig = plt.figure(dpi=150, figsize=(10,10))
+    plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
+    fig.colorbar(plot.images[0])
+    plt.show()
+    fig.savefig(f'{sim.name}-xy.jpg')
+    # plt.close()
 
     t = np.round(sim.round_time(), 2)
 
@@ -324,13 +325,16 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     if sim.field_profile != None:
         for j in range(sim.field_profile.nfreqs):
+            data2save[f"field_profile_Hz_{j}"] = sim.get_dft_array(sim.field_profile, mp.Hz, j)
             data2save[f"field_profile_Ey_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ey, j)
+            data2save[f"field_profile_Ex_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ex, j)
         data2save["field_profile_Eps"] = sim.get_array(mp.Dielectric,
                                                        center = sim.field_profile.regions[0].center,
                                                        size = sim.field_profile.regions[0].size)
-        (x, _, _, _) = sim.get_array_metadata(center = sim.field_profile.regions[0].center,
+        (x, y, _, _) = sim.get_array_metadata(center = sim.field_profile.regions[0].center,
                                               size = sim.field_profile.regions[0].size)
         data2save["field_profile_x"] = x
+        data2save["field_profile_y"] = y
 
     spectra = []
     for monitor in sim.spectrum_monitors :
@@ -360,17 +364,17 @@ if __name__ == "__main__":              # good practise in parallel computing
     Ds = period * np.array([0.45])#np.linspace(0, 3, 100) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
 
 
-    n_eff_h = 1.0549#1.158 # n_eff_hs[0]
-    n_eff_l = 1
+    n_eff_h = 1.1452# 0549#1.158 # n_eff_hs[0]
+    n_eff_l = 1.001
 
     #%% load susceptibilities data.
     # Even though the variable are still called n_eff but they refer to epsilon
     # mpo.Medium() can handle it
 
-    data = io.loadmat("bsw_lorentz_fit_idx1.000_th0.mat")
-    n_eff_l = [ a for a in data["optimal_fit_2"][0]]
-    data = io.loadmat("bsw_lorentz_fit_idx1.729_th23.mat")
-    n_eff_h = [ a for a in data["optimal_fit_2"][0]]
+    # data = io.loadmat("bsw_lorentz_fit_idx1.000_th0.mat")
+    # n_eff_l = [ a for a in data["optimal_fit_2"][0]]
+    # data = io.loadmat("bsw_lorentz_fit_idx1.729_th23.mat")
+    # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
     D = 0.661 #Ds[-1]
@@ -387,8 +391,8 @@ if __name__ == "__main__":              # good practise in parallel computing
                     0 )]
     empty = False
 
-    j = 1
-
+    j = 0
+    tuple_list = [ ]
     for source_pos in [0]: # 0, period/4, period/2]:
     #     for n_eff_h in n_eff_hs :
     #         for D in Ds:
