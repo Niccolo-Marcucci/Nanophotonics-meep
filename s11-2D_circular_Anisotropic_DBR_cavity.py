@@ -322,9 +322,15 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.init_sim()
     fig = plt.figure(dpi=150, figsize=(10,10))
     plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
-    fig.colorbar(plot.images[0])
-    plt.show()
-    fig.savefig(f'{sim.name}-xy.jpg')
+    try:
+        fig.colorbar(plot.images[0])
+    except:
+        plt.close()
+        print("Only one of the parallel jobs jobs will print the image")
+    else:
+        fig.savefig(f'{sim.name}-xy.jpg')
+        # plt.show()
+        plt.close()
 
 
     # mp.verbosity(0)
