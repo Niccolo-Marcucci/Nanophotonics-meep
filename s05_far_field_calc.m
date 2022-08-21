@@ -4,7 +4,7 @@ clear all
 
 addpath('Near-to-Far-Field-Transformation')
 
-name = 'polSplitting_220421-103148_design_TE_N7_res100_nearfield_fp00_t50.0.mat';%meep_sim_220403-155345_7cad278a5f/polSplitting_220403-155345_7cad278a5f_design_TE_N7_res100_nearfield_fp00_t50.0.mat';%'polSplitting_220413-182635_design_TE_N7_res100_nearfield_fp00_t50.0.mat';%
+name = 'single_Scatterer_220422-190448_f28bc3dc3f/polSplitting_220422-190448_f28bc3dc3f_design_TE_N7_res100_nearfield_fp00_t50.0.mat';%meep_sim_220403-155345_7cad278a5f/polSplitting_220403-155345_7cad278a5f_design_TE_N7_res100_nearfield_fp00_t50.0.mat';%'polSplitting_220413-182635_design_TE_N7_res100_nearfield_fp00_t50.0.mat';%
 
 fields = load(['data/',name]);
 
@@ -21,11 +21,11 @@ Ey = Ey(2:end,:);
 % Ex = Ex(2:end,2:end);
 
 % if periodic repeat the structure and increase the volume size
-N_rep_x = 5;
-N_rep_y = 15;
-Ex = repmat(Ex, N_rep_x, N_rep_y);
-Ey = repmat(Ey, N_rep_x, N_rep_y);
-volume = volume .* [N_rep_x, N_rep_y, 1] ;
+% N_rep_x = 5;
+% N_rep_y = 15;
+% Ex = repmat(Ex, N_rep_x, N_rep_y);
+% Ey = repmat(Ey, N_rep_x, N_rep_y);
+% volume = volume .* [N_rep_x, N_rep_y, 1] ;
 
 
 N = size(Ex);
@@ -41,7 +41,11 @@ c0 = physconst('lightspeed');
 wavelength = 0.57*1e-6;
 
 freq = c0/wavelength;
-
+%%
+figure()
+s = surf(X, Y, abs(Ey) );
+s.EdgeColor = "None";
+%%
 
 obj_near = Field2D(X, Y, Ex, Ey, freq, 'm');
 obj_near.plotNearField()
