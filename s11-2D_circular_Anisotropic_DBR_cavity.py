@@ -278,9 +278,9 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude": 0.0151,
+        "modulation_amplitude": 0.0124, #0.0151,
         "modulation_theta_shift": 109.5/180*mpo.pi,
-        "spacer_index": 1.1472}
+        "spacer_index": 1.1525}
 
 
     t0 = time.time()
@@ -404,14 +404,9 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     wavelength = .5955# 0.5703#.6088#.5703#.5884#.5893#0.5947#0.5893#.5922, ]
 
-    # n_eff_l = 1
-    # n_eff_hs = [1.1, 1.14, 1.17] #np.linspace(1.01,1.2,100) # [1.1]#1.0543, 1.0985, 1.1405] # 50 75 and 100 nm pmma thickness
-
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
-    # Ds = period * np.array([0.45])#np.linspace(0, 3, 100) #np.array([0, 0.45, 1, 1.5, 2.36])#0.45, 0.9, 2.36])#
 
-
-    n_eff_h = 1.0670# 0549#1.158 # n_eff_hs[0]
+    n_eff_h = 1.0711 # 1.0455#
     n_eff_l = 1.0136
 
     #%% load susceptibilities data.
@@ -439,7 +434,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 0
-    tuple_list = [ ]
+
     for source_pos in [0]: # 0, period/4, period/2]:
     #     for n_eff_h in n_eff_hs :
     #         for D in Ds:
