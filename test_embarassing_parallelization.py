@@ -33,6 +33,7 @@ def run_parallel(x, y):
     sim.run(until=100)
 
 def proxy_fun( tuple_ ):
+    #can be used in Pool() using.map() instead of .starmap()
     run_parallel( *tuple_ )
 
 #%% geometry and simulation parameters
@@ -65,8 +66,9 @@ if __name__ == "__main__":              # good practise in parallel computing
                     run_parallel(*tuple_list[tuple_index])
 
     elif N_jobs == 1 :
-        with ProcessPoolExecutor(6) as parfor:
-          parfor.map(proxy_fun, tuple_list)
+        #with ProcessPoolExecutor(6) as parfor:
+        with Pool(6) as parfor:
+          parfor.starmap(run_parallel, tuple_list)
 
     else:
         # parallel execution using mpirun
