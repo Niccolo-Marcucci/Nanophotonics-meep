@@ -199,9 +199,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * mpo.sin(theta + np.pi/4)**2 * (self.grating_index < self.background_index)
+                local_index = self.grating_index    + mod_tranches * mpo.sin(theta)**2 * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges * mpo.cos( theta  + np.pi/4)**2 * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges * mpo.cos( theta )**2 * (self.grating_index < self.background_index)
 
         return local_index**2
 
@@ -216,7 +216,8 @@ class Simulation(mp.Simulation):
                              src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                              center = source_pos,
                              size = mp.Vector3(),
-                             component = mp.Ex)]
+                             component = mp.Ex,
+                             amplitude = np.exp(1j*np.pi/2))]
 
         self.harminv_instance = None
         self.field_profile = None
@@ -243,7 +244,7 @@ class Simulation(mp.Simulation):
                 self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))
 
                 if not self.empty:
-                    self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
+                    self.harminv_instance = None # mp.Harminv(mp.Ey, mp.Vector3(), f, df)
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
