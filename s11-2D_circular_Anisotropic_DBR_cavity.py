@@ -378,7 +378,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         data2save = {f"resonance_table_t{t}": resonance_table}
 
     if sim.field_profile != None:
-        for j in range(sim.field_profile.nfreqs):
+        for j in range(len(sim.field_profile.freqs)):
             data2save[f"field_profile_Hz_{j}"] = sim.get_dft_array(sim.field_profile, mp.Hz, j)
             data2save[f"field_profile_Ey_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ey, j)
             data2save[f"field_profile_Ex_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ex, j)
