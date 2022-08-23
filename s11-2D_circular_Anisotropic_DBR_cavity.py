@@ -232,16 +232,15 @@ class Simulation(mp.Simulation):
                 DL = self.cavity_r_size + 0.02
 
                 nfreq = 1000
-                fluxr = mp.FluxRegion(
-                    center = mp.Vector3(DL, 0),
-                    size = mp.Vector3(0, 0),
-                    direction = mp.X)
-                self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
-                fluxr = mp.FluxRegion(
-                    center = mp.Vector3(0, DL),
-                    size = mp.Vector3(0, 0),
-                    direction = mp.Y)
-                self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))
+                for angolo in np.linspace(-np.pi/2, np.pi/2,13)[1:]:
+                    DL_x = DL * np.cos(angolo)
+                    DL_y = DL * np.sin(angolo)
+                    direction = mp.X if abs(angolo) < np.pi/4 else mp.Y
+                    fluxr = mp.FluxRegion(
+                        center = mp.Vector3(DL_x, DL_y),
+                        size = mp.Vector3(0, 0),
+                        direction = direction)
+                    self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
                 if not self.empty:
                     self.harminv_instance = None # mp.Harminv(mp.Ey, mp.Vector3(), f, df)
