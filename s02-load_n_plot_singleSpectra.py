@@ -24,7 +24,7 @@ import time
 
 files = os.listdir("data")
 
-hashtag ='b807d7cbe0'#'e20d2ea866'#'d3dc776849'#'907626023e' #37d4a928c2'# '3bdc9c5579'#'d8d203aecf' #''a919609ed6'#'4b4005295f' #
+hashtag ='8e7a902bb3'#'b807d7cbe0'#'e20d2ea866'#'d3dc776849'#'907626023e' #37d4a928c2'# '3bdc9c5579'#'d8d203aecf' #''a919609ed6'#'4b4005295f' #
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -44,9 +44,9 @@ for file in files :
             data = mpo.loadmat(folder+'/'+file)
             wavelength = data["wavelength"][0]
             if file.find("empty") >= 0:
-                spectrum_empty = data['spectra'][0]
+                spectrum_empty = data['spectra']
             else :
-                spectrum = data['spectra'][0]
+                spectrum = data['spectra']
 
 if i == 0 :
     raise FileNotFoundError(f"No spectra file was found for hash {hashtag}")
@@ -57,20 +57,21 @@ period = 280
 #%%
 fig = plt.figure(dpi=150,figsize=(10,5))
 ax = fig.add_subplot(211)
-ax.plot(wavelength, spectrum, wavelength, spectrum_empty)
-# plt.xlim(550,650)
-# plt.ylim(-2,2)
-ax.grid(True)
-plt.xlabel('Wavelength (nm)')
-plt.ylabel('Transmission (a.u.)')
 ax2 = fig.add_subplot(212)
-ax2.plot(wavelength, np.log(spectrum/spectrum_empty))
-# plt.xlim(550,650)
-# plt.ylim(-2,2)
-ax2.grid(True)
-plt.xlabel('Wavelength [nm]')
-plt.ylabel('Transmission')
+for i in range(len(spectrum)):
+    ax.plot(wavelength, spectrum[i], wavelength, spectrum_empty[i])
+    # plt.xlim(550,650)
+    # plt.ylim(-2,2)
+    ax.grid(True)
+    plt.xlabel('Wavelength (nm)')
+    plt.ylabel('Transmission (a.u.)')
+    ax2.plot(wavelength, np.log(spectrum[i]/spectrum_empty[i]))
+    # plt.xlim(550,650)
+    # plt.ylim(-2,2)
+    ax2.grid(True)
+    plt.xlabel('Wavelength [nm]')
+    plt.ylabel('Transmission')
 
-date = time.strftime('%y%m%d-%H%M%S')
-fig.savefig(folder + '/' + date + '_spectrum.png')
-#%%
+    date = time.strftime('%y%m%d-%H%M%S')
+    fig.savefig(folder + '/' + date + '_spectrum.png')
+    #%%
