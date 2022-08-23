@@ -199,7 +199,7 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * mpo.sin(theta)**2 * (self.grating_index > self.background_index)
+                local_index = self.grating_index    + mod_tranches * mpo.sin(theta)**2 * (self.grating_index < self.background_index)
             else:
                 local_index = self.background_index + mod_ridges * mpo.cos( theta )**2 * (self.grating_index < self.background_index)
 
@@ -254,7 +254,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.25
     f=c0/wavelength
 
-    sim_end=2000
+    sim_end=200
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -319,7 +319,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=True)
 
     # raise Exception()1
 
@@ -438,8 +438,8 @@ if __name__ == "__main__":              # good practise in parallel computing
                     0 )]
     empty = False
 
-    j = 1
-
+    j = 0
+    tuple_list = []
     for source_pos in [0]: # 0, period/4, period/2]:
     #     for n_eff_h in n_eff_hs :
     #         for D in Ds:
