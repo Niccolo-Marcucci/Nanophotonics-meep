@@ -170,9 +170,9 @@ class Simulation(mp.Simulation):
                 break
 
         if is_groove:
-            local_index = self.grating_index # + mod_tranches
+            local_index = self.grating_index + mod_tranches
         else:
-            local_index = self.background_index + mod_ridges
+            local_index = self.background_index # + mod_ridges
 
         return local_index**2
 
