@@ -213,13 +213,13 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                             center = source_pos,
                             size = mp.Vector3(),
-                            component = mp.Ey),
-                          mp.Source(
-                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                             center = source_pos,
-                             size = mp.Vector3(),
-                             component = mp.Ex,
-                             amplitude = np.exp(1j*np.pi/2))]
+                            component = mp.Ey)]#,
+                          # mp.Source(
+                          #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                          #    center = source_pos,
+                          #    size = mp.Vector3(),
+                          #    component = mp.Ex,
+                          #    amplitude = np.exp(1j*np.pi/2))]
 
         self.harminv_instance = None
         self.field_profile = None
@@ -243,7 +243,9 @@ class Simulation(mp.Simulation):
                         size = mp.Vector3(0, 0),
                         direction = direction)
                     self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
-
+                self.field_FT = self.add_dft_fields([mp.Ey, mp.Ex], f, df, nfreq,
+                                                    center = mp.Vector3(),
+                                                    size = mp.Vector3()) #, yee_grid=True))
                 if not self.empty:
                     self.harminv_instance = None # mp.Harminv(mp.Ey, mp.Vector3(), f, df)
 
@@ -321,7 +323,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=True)
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
 
     # raise Exception()1
 
@@ -389,15 +391,22 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
                                               size = sim.field_profile.regions[0].size)
         data2save["field_profile_x"] = x
         data2save["field_profile_y"] = y
+        data2save["field_profile_frequencies"] = sim.field_profile.freq
+
 
     spectra = []
     for monitor in sim.spectrum_monitors :
         spectrum_f = np.array(mp.get_flux_freqs(monitor))
         spectra.append(np.array(mp.get_fluxes(monitor)))
 
+    central_FT_x = np.array( [sim.get_dft_array(sim.field_FT, mp.Ex, j) for j in range(len(sim.field_profile.freq))] )
+    central_FT_y = np.array( [sim.get_dft_array(sim.field_FT, mp.Ey, j) for j in range(len(sim.field_profile.freq))] )
+
     if len(spectra) > 0 :
         data2save["wavelength"] = 1/spectrum_f*1e3
         data2save["spectra"] = spectra
+        data2save["FT_x"] = central_FT_x
+        data2save["FT_y"] = central_FT_y
     if len(data2save) > 0:
         mpo.savemat(f'{sim.name}_spectra_t{t}.mat', data2save)
 
