@@ -226,7 +226,7 @@ class Simulation(mp.Simulation):
         self.spectrum_monitors = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], freq = 1/np.array([584.4, 582.4, 578.6, 572.8, 568.6, 564.6, 559.3, 553.3]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], freq = 1/np.array([.5844, .5824, .5786, .5728, .5686, .5646, .5593, .5533]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y-.5*self.extra_space_xy )) #, yee_grid=True))
         else:
