@@ -266,7 +266,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     cavity_parameters = {
         "D": D,
-        "FF": .6,
+        "FF": .5,
         "period": DBR_period,
         "N_rings": 30}
 
