@@ -211,12 +211,12 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                             center = source_pos,
                             size = mp.Vector3(),
-                            component = mp.Ex)]#,
-                         # mp.Source(
-                         #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                         #    center = source_pos,
-                         #    size = mp.Vector3(),
-                         #    component = mp.Ex)]
+                            component = mp.Ey),
+                          mp.Source(
+                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                             center = source_pos,
+                             size = mp.Vector3(),
+                             component = mp.Ex)]
 
         self.harminv_instance = None
         self.field_profile = None
