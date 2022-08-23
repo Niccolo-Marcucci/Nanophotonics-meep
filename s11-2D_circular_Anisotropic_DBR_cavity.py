@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos)
+        self.epsilon_proxy_function = lambda pos: self.circular_undeformed_cavity(pos)
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -158,6 +158,8 @@ class Simulation(mp.Simulation):
         FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
+        mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
+        mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
 
         is_groove = False
         for i in range(N):
@@ -168,9 +170,9 @@ class Simulation(mp.Simulation):
                 break
 
         if is_groove:
-            local_index = self.grating_index
+            local_index = self.grating_index # + mod_tranches
         else:
-            local_index = self.background_index
+            local_index = self.background_index + mod_ridges
 
         return local_index**2
 
@@ -266,7 +268,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     cavity_parameters = {
         "D": D,
-        "FF": .5,
+        "FF": .6,
         "period": DBR_period,
         "N_rings": 30}
 
@@ -424,7 +426,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.661 #Ds[-1]
+    D = 0.550 #Ds[-1]
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
     # element of the tuple represent the inputs.
