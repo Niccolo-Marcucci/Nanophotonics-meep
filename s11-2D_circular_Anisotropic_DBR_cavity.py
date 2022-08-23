@@ -319,7 +319,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=True)
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
 
     # raise Exception()1
 
@@ -438,8 +438,8 @@ if __name__ == "__main__":              # good practise in parallel computing
                     0 )]
     empty = False
 
-    j = 0
-    tuple_list = []
+    j = 1
+    # tuple_list = []
     for source_pos in [0]: # 0, period/4, period/2]:
     #     for n_eff_h in n_eff_hs :
     #         for D in Ds:
