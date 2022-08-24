@@ -391,7 +391,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
                                               size = sim.field_profile.regions[0].size)
         data2save["field_profile_x"] = x
         data2save["field_profile_y"] = y
-        data2save["field_profile_frequencies"] = sim.field_profile.freq
+        data2save["field_profile_frequencies"] = np.array(sim.field_profile.freq)
 
 
     spectra = []
