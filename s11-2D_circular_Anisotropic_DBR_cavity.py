@@ -407,6 +407,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         central_FT_y = np.array( [sim.get_dft_array(sim.field_FT, mp.Ey, j) for j in range(len(sim.field_FT.freq))] )
         data2save["FT_x"] = central_FT_x
         data2save["FT_y"] = central_FT_y
+
     if len(data2save) > 0:
         mpo.savemat(f'{sim.name}_spectra_t{t}.mat', data2save)
 
