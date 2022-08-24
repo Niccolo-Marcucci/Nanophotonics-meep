@@ -399,12 +399,12 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         spectrum_f = np.array(mp.get_flux_freqs(monitor))
         spectra.append(np.array(mp.get_fluxes(monitor)))
 
-    central_FT_x = np.array( [sim.get_dft_array(sim.field_FT, mp.Ex, j) for j in range(len(sim.field_FT.freq))] )
-    central_FT_y = np.array( [sim.get_dft_array(sim.field_FT, mp.Ey, j) for j in range(len(sim.field_FT.freq))] )
 
     if len(spectra) > 0 :
         data2save["wavelength"] = 1/spectrum_f*1e3
         data2save["spectra"] = spectra
+        central_FT_x = np.array( [sim.get_dft_array(sim.field_FT, mp.Ex, j) for j in range(len(sim.field_FT.freq))] )
+        central_FT_y = np.array( [sim.get_dft_array(sim.field_FT, mp.Ey, j) for j in range(len(sim.field_FT.freq))] )
         data2save["FT_x"] = central_FT_x
         data2save["FT_y"] = central_FT_y
     if len(data2save) > 0:
