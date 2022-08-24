@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_undeformed_cavity(pos)
+        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos)
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -170,7 +170,7 @@ class Simulation(mp.Simulation):
                 break
 
         if is_groove:
-            local_index = self.grating_index + mod_tranches
+            local_index = self.grating_index # + mod_tranches
         else:
             local_index = self.background_index # + mod_ridges
 
@@ -213,13 +213,13 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                             center = source_pos,
                             size = mp.Vector3(),
-                            component = mp.Ey)]#,
-                          # mp.Source(
-                          #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                          #    center = source_pos,
-                          #    size = mp.Vector3(),
-                          #    component = mp.Ex,
-                          #    amplitude = np.exp(1j*np.pi/2))]
+                            component = mp.Ey),
+                           mp.Source(
+                              src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                              center = source_pos,
+                              size = mp.Vector3(),
+                              component = mp.Ex)]#,
+                              # amplitude = np.exp(1j*np.pi/2))]
 
         self.harminv_instance = None
         self.field_profile = None
