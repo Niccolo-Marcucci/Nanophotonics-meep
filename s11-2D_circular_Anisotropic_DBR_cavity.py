@@ -201,7 +201,7 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * mpo.sin(theta)**2 * (self.grating_index < self.background_index)
+                local_index = self.grating_index    + mod_tranches * mpo.cos(theta)**2 * (self.grating_index < self.background_index)
             else:
                 local_index = self.background_index + mod_ridges * mpo.cos( theta )**2 * (self.grating_index < self.background_index)
 
@@ -234,10 +234,10 @@ class Simulation(mp.Simulation):
                 DL = self.cavity_r_size + 0.02
 
                 nfreq = 1000
-                for angolo in np.linspace(-np.pi/2, np.pi/2,13)[1:]:
+                for angolo in np.linspace(-np.pi, np.pi,17)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
-                    direction = mp.X if abs(angolo) < np.pi/4 else mp.Y
+                    direction = mp.X if abs(DL_y) < DL * np.cos(np.pi/4) else mp.Y
                     fluxr = mp.FluxRegion(
                         center = mp.Vector3(DL_x, DL_y),
                         size = mp.Vector3(0, 0),
@@ -270,7 +270,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     cavity_parameters = {
         "D": D,
-        "FF": .6,
+        "FF": .5,
         "period": DBR_period,
         "N_rings": 30}
 
@@ -287,9 +287,9 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0238, #0.0151,
-        "modulation_amplitude_tranches": 0.0213,
-        "spacer_index": 1.1525}
+        "modulation_amplitude_ridges": 0.0242, #0.0151,
+        "modulation_amplitude_tranches": 0.0236,
+        "spacer_index": 1.1582}
 
 
     t0 = time.time()
@@ -308,7 +308,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += f"anis{anisotropy:.1f}_tilt{tilt_anisotropy:.1f}"
 
 
-    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
+    sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength#/n_eff_l
     sim.eps_averaging = False
     sim.force_complex_fields = False
@@ -323,7 +323,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=True)
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
 
     # raise Exception()1
 
@@ -419,12 +419,12 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     anisotropy = 0
 
-    wavelength = .5955# 0.5703#.6088#.5703#.5884#.5893#0.5947#0.5893#.5922, ]
+    wavelength = .59075# 0.5703#.6088#.5703#.5884#.5893#0.5947#0.5893#.5922, ]
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
-    n_eff_h = 1.0623 # 1.0455#
-    n_eff_l = 1.0022
+    n_eff_h = 1.0676 # 1.0455#
+    n_eff_l = 1.0044
 
     #%% load susceptibilities data.
     # Even though the variable are still called n_eff but they refer to epsilon
@@ -450,8 +450,9 @@ if __name__ == "__main__":              # good practise in parallel computing
                     0 )]
     empty = False
 
-    j = 0
-    tuple_list = []
+    j = 1
+    # j = 0
+    # tuple_list = []
     for source_pos in [0]: # 0, period/4, period/2]:
     #     for n_eff_h in n_eff_hs :
     #         for D in Ds:
