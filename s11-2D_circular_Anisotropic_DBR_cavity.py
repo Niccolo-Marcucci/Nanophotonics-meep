@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos)
+        self.epsilon_proxy_function = lambda pos: self.circular_undeformed_cavity(pos)
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -186,10 +186,10 @@ class Simulation(mp.Simulation):
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
 
-        if r < D/2 or r > D/2 + N*period - (1-FF)*period:
+        if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
             local_index = self.eff_index_info["spacer_index"]
-        # elif r > D/2 + N*period - (1-FF)*period:
-        #     local_index = self.background_index
+        elif r > D/2 + N*period - (1-FF)*period:
+            local_index = self.background_index
         else:
             is_groove = False
             for i in range(N):
@@ -323,7 +323,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=True)# y=1e-3
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -425,6 +425,8 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     n_eff_h = 1.0676 # 1.0455#
     n_eff_l = 1.0044
+    n_eff_h_v = [ 1.0676, 1.0918]
+    n_eff_l_v = [ 1.0044, 1.0280]
 
     #%% load susceptibilities data.
     # Even though the variable are still called n_eff but they refer to epsilon
@@ -451,14 +453,16 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0
-    tuple_list = []
-    for source_pos in [0]: # 0, period/4, period/2]:
-    #     for n_eff_h in n_eff_hs :
+    # j = 0
+    # tuple_list = []
+    # for source_pos in [0]: # 0, period/4, period/2]:
+    for i in range(len(n_eff_h_v)) :
+        n_eff_h = n_eff_h_v[i]
+        n_eff_l = n_eff_l_v[i]
     #         for D in Ds:
     # for anisotropy in np.linspace(0,5, 1):
         for tilt_anisotropy in [0]:#, np.pi/2]:
-                # source_pos=0
+                source_pos=0
                 tuple_list.append( (wavelength,
                                     n_eff_h, n_eff_l,
                                     D, period,
