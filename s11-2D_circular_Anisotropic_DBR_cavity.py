@@ -258,7 +258,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.25
     f=c0/wavelength
 
-    sim_end=2000
+    sim_end=500
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -313,7 +313,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 50,
+                                resolution = 40,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -323,7 +323,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos, y=1e-3), allow_profile=False)
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
