@@ -261,7 +261,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=500
+    sim_end=3000
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -316,7 +316,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 100,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -358,7 +358,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         resonances_Q = []
         resonances_f = []
         for mode in  sim.harminv_instance.modes :
-            if np.abs(mode.Q) > 100 :
+            if np.abs(mode.Q) > 10 :
                 resonances_Q.append(np.abs(mode.Q))
                 resonances_f.append(mode.freq)
         resonances_Q = np.array(resonances_Q)
