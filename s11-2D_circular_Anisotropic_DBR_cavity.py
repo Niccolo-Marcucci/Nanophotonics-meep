@@ -218,8 +218,8 @@ class Simulation(mp.Simulation):
                               src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                               center = source_pos,
                               size = mp.Vector3(),
-                              component = mp.Ex)]#,
-                              # amplitude = np.exp(1j*np.pi/2))]
+                              component = mp.Ex,
+                              amplitude = 1j)] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
