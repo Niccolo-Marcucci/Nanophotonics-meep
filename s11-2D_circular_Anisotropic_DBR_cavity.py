@@ -453,8 +453,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0
-    tuple_list = []
+    # j = 0
+    # tuple_list = []
     for source_pos in [0]: # 0, period/4, period/2]:
     # for i in range(len(n_eff_h_v)) :
     #     n_eff_h = n_eff_h_v[i]
