@@ -174,6 +174,9 @@ class Simulation(mp.Simulation):
         else:
             local_index = self.background_index # + mod_ridges
 
+        if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
+            local_index = self.eff_index_info["spacer_index"]
+
         return local_index**2
 
     def circular_deformed_cavity(self, pos):
@@ -247,7 +250,7 @@ class Simulation(mp.Simulation):
                                                     center = mp.Vector3(),
                                                     size = mp.Vector3()) #, yee_grid=True))
                 if not self.empty:
-                    self.harminv_instance = None # mp.Harminv(mp.Ey, mp.Vector3(), f, df)
+                    self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
@@ -255,7 +258,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     c0 = 1
     # wavelength = 0.590
-    wwidth = 0.1
+    wwidth = 0.15
     f=c0/wavelength
 
     sim_end=500
@@ -305,7 +308,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_"
-    sim_name += f"{n_eff_l:.4f}_tilt{n_eff_h:.4f}"
+    sim_name += f"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"
 
 
     sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -455,10 +458,10 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 1
     # j = 0
     # tuple_list = []
-    for source_pos in [0]: # 0, period/4, period/2]:
-    # for i in range(len(n_eff_h_v)) :
-    #     n_eff_h = n_eff_h_v[i]
-    #     n_eff_l = n_eff_l_v[i]
+    # for source_pos in [0]: # 0, period/4, period/2]:
+    for i in range(len(n_eff_h_v)) :
+        n_eff_h = n_eff_h_v[i]
+        n_eff_l = n_eff_l_v[i]
     #         for D in Ds:
     # for anisotropy in np.linspace(0,5, 1):
         for tilt_anisotropy in [0]:#, np.pi/2]:
