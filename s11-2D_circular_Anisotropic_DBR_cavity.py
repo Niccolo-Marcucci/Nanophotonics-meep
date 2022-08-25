@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_undeformed_cavity(pos)
+        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos)
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -217,19 +217,19 @@ class Simulation(mp.Simulation):
                             center = source_pos,
                             size = mp.Vector3(),
                             component = mp.Ey),
-                           mp.Source(
-                              src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                              center = source_pos,
-                              size = mp.Vector3(),
-                              component = mp.Ex)]#,
-                              # amplitude = 1j)] # dephased by pi/4
+                         mp.Source(
+                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                            center = source_pos,
+                            size = mp.Vector3(),
+                            component = mp.Ex)]
+                        #    amplitude = 1j)] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
         self.spectrum_monitors = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5835, 5735]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5837,.5811, .5790, .5761, 5734]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y-.5*self.extra_space_xy )) #, yee_grid=True))
         else:
@@ -307,7 +307,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name = "2D_eff_index_"
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
-    sim_name += f"{sim_prefix}_"
+    sim_name += f"{sim_prefix}_Exy_"
     sim_name += f"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"
 
 
@@ -326,7 +326,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=True)# y=1e-3
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -358,7 +358,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         resonances_Q = []
         resonances_f = []
         for mode in  sim.harminv_instance.modes :
-            if np.abs(mode.Q) > 100 :
+            if np.abs(mode.Q) > 10 :
                 resonances_Q.append(np.abs(mode.Q))
                 resonances_f.append(mode.freq)
         resonances_Q = np.array(resonances_Q)
@@ -441,7 +441,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.550 #Ds[-1]
+    D = 0.640 #Ds[-1]
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
     # element of the tuple represent the inputs.
@@ -456,12 +456,12 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0
-    tuple_list = []
-    # for source_pos in [0]: # 0, period/4, period/2]:
-    for i in range(len(n_eff_h_v)) :
-        n_eff_h = n_eff_h_v[i]
-        n_eff_l = n_eff_l_v[i]
+    # j = 0
+    # tuple_list = []
+    for source_pos in [0]: # 0, period/4, period/2]:
+    # for i in range(len(n_eff_h_v)) :
+    #     n_eff_h = n_eff_h_v[i]
+    #     n_eff_l = n_eff_l_v[i]
     #         for D in Ds:
     # for anisotropy in np.linspace(0,5, 1):
         for tilt_anisotropy in [0]:#, np.pi/2]:
