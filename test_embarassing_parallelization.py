@@ -30,7 +30,7 @@ def run_parallel(x, y):
                         sources=sources,
                         resolution=20)
 
-    sim.run(until=100)
+    sim.run(until=1000)
 
 def proxy_fun( tuple_ ):
     #can be used in Pool() using.map() instead of .starmap()
