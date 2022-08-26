@@ -216,12 +216,12 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                             center = source_pos,
                             size = mp.Vector3(),
-                            component = mp.Ex),
+                            component = mp.Ey),
                          mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                             center = source_pos,
                             size = mp.Vector3(),
-                            component = mp.Ex)]
+                            component = mp.Ey)]
                         #    amplitude = 1j)] # dephased by pi/4
 
         self.harminv_instance = None
@@ -307,7 +307,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name = "2D_eff_index_"
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
-    sim_name += f"{sim_prefix}_Ex_"
+    sim_name += f"{sim_prefix}_Ey_"
     sim_name += f"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"
 
 
@@ -486,7 +486,6 @@ if __name__ == "__main__":              # good practise in parallel computing
     else:
         non_parallel_conda = False
 
-    bash_parallel_run = False
     if len(sys.argv) > 2:
         if sys.argv[2] == "parallel_grid":
             non_parallel_conda = True
@@ -538,14 +537,6 @@ if __name__ == "__main__":              # good practise in parallel computing
     else:
         # mp.reset_meep()
         comm = MPI.COMM_WORLD
-        print()
-        print()
-        print()
-        print(sys.argv)
-        print()
-        print()
-        print()
-        print()
         N_jobs = int(sys.argv[-1])
         print(f'number of processor is {mp.count_processors()}')
         j = mp.divide_parallel_processes(N_jobs)
