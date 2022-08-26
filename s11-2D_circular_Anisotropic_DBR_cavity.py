@@ -486,6 +486,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     else:
         non_parallel_conda = False
 
+    bash_parallel_run = False
     if len(sys.argv) > 2:
         if sys.argv[2] == "parallel_grid":
             non_parallel_conda = True
