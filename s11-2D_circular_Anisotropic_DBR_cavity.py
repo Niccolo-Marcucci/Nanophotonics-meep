@@ -538,7 +538,14 @@ if __name__ == "__main__":              # good practise in parallel computing
     else:
         # mp.reset_meep()
         comm = MPI.COMM_WORLD
+        print()
+        print()
+        print()
         print(sys.argv)
+        print()
+        print()
+        print()
+        print()
         N_jobs = int(sys.argv[-1])
         print(f'number of processor is {mp.count_processors()}')
         j = mp.divide_parallel_processes(N_jobs)
