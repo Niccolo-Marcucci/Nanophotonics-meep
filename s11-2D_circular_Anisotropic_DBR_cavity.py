@@ -221,7 +221,7 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                             center = source_pos,
                             size = mp.Vector3(),
-                            component = mp.Ey)]
+                            component = mp.Ex)]
                         #    amplitude = 1j)] # dephased by pi/4
 
         self.harminv_instance = None
@@ -229,7 +229,7 @@ class Simulation(mp.Simulation):
         self.spectrum_monitors = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5838,.5734]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5837,.5811, .5790, .5761, 5734]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y-.5*self.extra_space_xy )) #, yee_grid=True))
         else:
@@ -290,9 +290,9 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0242, #0.0151,
-        "modulation_amplitude_tranches": 0.0236,
-        "spacer_index": 1.1582}
+        "modulation_amplitude_ridges": 0.0243, #0.0151,
+        "modulation_amplitude_tranches": 0.0260,
+        "spacer_index": 1.1655}
 
 
     t0 = time.time()
@@ -307,7 +307,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name = "2D_eff_index_"
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
-    sim_name += f"{sim_prefix}_Ey_"
+    sim_name += f"{sim_prefix}_Exy_"
     sim_name += f"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"
 
 
@@ -326,7 +326,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=True)# y=1e-3
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -422,12 +422,12 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     anisotropy = 0
 
-    wavelength = .59075# 0.5703#.6088#.5703#.5884#.5893#0.5947#0.5893#.5922, ]
+    wavelength = .5845# 0.5703#.6088#.5703#.5884#.5893#0.5947#0.5893#.5922, ]
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
-    n_eff_h = 1.0676 # 1.0455#
-    n_eff_l = 1.0044
+    n_eff_h = 1.0749 # 1.0455#
+    n_eff_l = 1.0084
     n_eff_h_v = [ 1.0676, 1.0918]
     n_eff_l_v = [ 1.0044, 1.0280]
 
@@ -441,7 +441,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.550 #Ds[-1]
+    D = 0.640 #Ds[-1]
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
     # element of the tuple represent the inputs.
@@ -456,8 +456,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0
-    tuple_list = []
+    # j = 0
+    # tuple_list = []
     for source_pos in [0]: # 0, period/4, period/2]:
     # for i in range(len(n_eff_h_v)) :
     #     n_eff_h = n_eff_h_v[i]
