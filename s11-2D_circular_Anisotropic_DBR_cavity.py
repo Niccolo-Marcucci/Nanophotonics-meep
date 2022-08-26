@@ -290,9 +290,9 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0243, #0.0151,
-        "modulation_amplitude_tranches": 0.0260,
-        "spacer_index": 1.1655}
+        "modulation_amplitude_ridges": 0.0238, #0.0151,
+        "modulation_amplitude_tranches": 0.0207,
+        "spacer_index": 1.1506}
 
 
     t0 = time.time()
@@ -426,8 +426,8 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
-    n_eff_h = 1.0749 # 1.0455#
-    n_eff_l = 1.0084
+    n_eff_h = 1.0606 # 1.0455#
+    n_eff_l = 1.0016
     n_eff_h_v = [ 1.0676, 1.0918]
     n_eff_l_v = [ 1.0044, 1.0280]
 
