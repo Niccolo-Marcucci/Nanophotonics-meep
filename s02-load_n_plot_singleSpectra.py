@@ -24,7 +24,7 @@ import time
 
 files = os.listdir("data")
 
-hashtag ='dfd6bda95f'#'c1fb7980de'#'ea41558aef'#'9d1fb112fe'#'ecdc360e87'
+hashtag ='4852d2aa01'#'48fadb37f8'#'95835595ac'#'b1e7feefb2'#'18d828d473'#4f4de6ce2f'#'fd6bda95f'#ecdc360e87'#9d1fb112fe'#d'c1fb7980de'#'ea41558aef'#'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -35,6 +35,7 @@ print()
 print()
 files = os.listdir(folder)
 lista_spectra = []
+titles = []
 spectrum_empty = np.zeros(1)
 i = 0
 for file in files :
@@ -46,13 +47,14 @@ for file in files :
             wavelength = data["wavelength"][0]
             if file.find("empty") >= 0:
                 spectrum_empty = data['spectra']
-                FT_x_empty = data['FT_x']
-                FT_y_empty = data['FT_y']
+                FT_x_empty = data['FT_x'][0]
+                FT_y_empty = data['FT_y'][0]
             else :
+                titles.append(file)
                 spectrum = data['spectra']
                 lista_spectra.append(data['spectra'])
-                FT_x = data['FT_x']
-                FT_y = data['FT_y']
+                FT_x = data['FT_x'][0]
+                FT_y = data['FT_y'][0]
                 print(data['resonance_table_t500.0'])
 
 if i == 0 :
@@ -64,20 +66,30 @@ period = 280
 #%%
 fig = plt.figure(dpi=150,figsize=(10,6))
 ax1 = fig.add_subplot(211)
+plt.title("dipolo lungo XY")#, monitor a 0-90")#file
 ax2 = fig.add_subplot(212)
 
-sp_centre =  abs(FT_y[0])/abs(FT_y_empty[0])+ abs(FT_x[0])/abs(FT_x_empty[0])
-for spectrum in lista_spectra:
+sp0 = np.zeros(wavelength.shape)
+for i in range(len(spectrum_empty)):#
+    sp0 += abs(spectrum_empty[i])
+#%%
+sp_centre =  np.abs(FT_x)**2/abs(FT_x_empty)**2 # + np.abs(FT_y)**2/abs(FT_y_empty)**2#+
+for spectrum in lista_spectra[:]:
     sp = np.zeros(wavelength.shape)
-    for i in range(len(spectrum)):
-        sp += spectrum[i]/spectrum_empty[i]/len(spectrum)
+    for i in [15,7,3,11] : #range(len(spectrum)):#[3,11] : #
+        sp += abs(spectrum[i])/sp0#/spectrum_empty[i]/len(spectrum)
 
     # sp = sp/max(sp)
     # sp_centre = sp_centre/max(sp_centre)
-    ax1.plot(wavelength, sp)#, wavelength,sp_centre)
+    ax1.plot(wavelength, sp)
 
-    ax2.plot(wavelength, np.log(sp))#, wavelength, np.log(sp_centre))
+    ax2.plot(wavelength, np.log(sp))
+    plt.draw()
+    # ax1.plot(wavelength, sp_centre)
+    # ax2.plot(wavelength, np.log(sp_centre))
 
+# plt.legend(titles)
+#%%
 for ax in [ax1, ax2]:
     ax.grid(True)
     ax.minorticks_on()
@@ -86,8 +98,7 @@ for ax in [ax1, ax2]:
     ax.set_xlabel('Wavelength [nm]')
 ax1.set_ylabel('Transmission')
 ax2.set_ylabel('Transmission - log scale')
-
-# date = time.strftime('%y%m%d-%H%M%S')
-# fig.savefig(folder + '/' + date + '_spectrum.png')
+date = time.strftime('%y%m%d-%H%M%S')
+fig.savefig(folder + '/' + date + '_spectrum.png')
 
 # plt.legend()
