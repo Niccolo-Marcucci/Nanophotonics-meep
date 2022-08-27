@@ -24,7 +24,7 @@ import time
 
 files = os.listdir("data")
 
-hashtag = '0c42451c69'#'a11477a295'#'fd2bf58b8e'
+hashtag = 'ea4cee1b00'#'e0a93ada1f'#'9650cc56f4'#'481fcc91a3'#'0c42451c69'#'a11477a295'#'fd2bf58b8e'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -54,7 +54,7 @@ for file in files :
                 id_y = np.argmin( abs(y))
                 fig = plt.figure()
                 plt.pcolormesh(X,Y,np.flip(np.transpose(np.log(np.abs(Ey)**2 + np.abs(Ex)**2)),axis=0))
-                plt.axis('equal')
+                plt.axis('image')
                 plt.title(f"{freqs[i]} nm")
                 fig.savefig(folder + f'/{file[:-4]}_{date}_mode{i}.png')
 
