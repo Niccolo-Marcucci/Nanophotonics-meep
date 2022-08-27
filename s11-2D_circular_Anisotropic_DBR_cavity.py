@@ -290,9 +290,9 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0238, #0.0151,
-        "modulation_amplitude_tranches": 0.0207,
-        "spacer_index": 1.1506}
+        "modulation_amplitude_ridges": 0.0242, #0.0151,
+        "modulation_amplitude_tranches": 0.0236,
+        "spacer_index": 1.1582}
 
 
     t0 = time.time()
@@ -308,7 +308,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"
+    sim_name += f"D{D*1e3:.0f}"#"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"
 
 
     sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -422,12 +422,12 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     anisotropy = 0
 
-    wavelength = .5845# 0.5703#.6088#.5703#.5884#.5893#0.5947#0.5893#.5922, ]
+    wavelength = .59075
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
-    n_eff_h = 1.0606 # 1.0455#
-    n_eff_l = 1.0016
+    n_eff_h = 1.0676 # 1.0455#
+    n_eff_l = 1.0044
     n_eff_h_v = [ 1.0676, 1.0918]
     n_eff_l_v = [ 1.0044, 1.0280]
 
@@ -441,7 +441,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.640 #Ds[-1]
+    D = 0.640 #
+    Ds =  np.arange(560,630,10)*1e-3
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
     # element of the tuple represent the inputs.
@@ -458,11 +459,11 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 1
     # j = 0
     # tuple_list = []
-    for source_pos in [0]: # 0, period/4, period/2]:
+    # for source_pos in [0]: # 0, period/4, period/2]:
     # for i in range(len(n_eff_h_v)) :
     #     n_eff_h = n_eff_h_v[i]
     #     n_eff_l = n_eff_l_v[i]
-    #         for D in Ds:
+    for D in Ds:
     # for anisotropy in np.linspace(0,5, 1):
         for tilt_anisotropy in [0]:#, np.pi/2]:
                 source_pos=0
