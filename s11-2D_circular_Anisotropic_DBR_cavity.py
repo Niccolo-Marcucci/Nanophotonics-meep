@@ -290,9 +290,9 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0242, #0.0151,
-        "modulation_amplitude_tranches": 0.0236,
-        "spacer_index": 1.1582}
+        "modulation_amplitude_ridges": 0.0241, #0.0151,
+        "modulation_amplitude_tranches": 0.0277,
+        "spacer_index": 1.1706}
 
 
     t0 = time.time()
@@ -326,7 +326,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=True)# y=1e-3
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -431,8 +431,8 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
-    n_eff_h = 1.0676 # 1.0455#
-    n_eff_l = 1.0044
+    n_eff_h = 1.0804 # 1.0455#
+    n_eff_l = 1.0118
     n_eff_h_v = [ 1.0676, 1.0918]
     n_eff_l_v = [ 1.0044, 1.0280]
 
@@ -446,7 +446,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.610 #
+    D = 0.560 #
     Ds =  np.arange(560,630,10)*1e-3
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -462,8 +462,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0
-    tuple_list = []
+    # j = 0
+    # tuple_list = []
     for source_pos in [0]: # 0, period/4, period/2]:
     # for i in range(len(n_eff_h_v)) :
     #     n_eff_h = n_eff_h_v[i]
