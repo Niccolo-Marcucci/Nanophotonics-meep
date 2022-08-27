@@ -261,7 +261,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=500
+    sim_end=200
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -326,7 +326,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=True)# y=1e-3
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -346,7 +346,12 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
 
     # mp.verbosity(0)
-    sim.run(until=sim_end)
+    step_functions = []
+    if sim.harminv_instance != None :
+        step_functions.append( mp.after_sources(sim.harminv_instance) )
+
+    sim.run(*step_functions, until=sim_end)
+
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
     # plt.close()
