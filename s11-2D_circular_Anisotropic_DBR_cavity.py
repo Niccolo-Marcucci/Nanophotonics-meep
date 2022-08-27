@@ -261,7 +261,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=300
+    sim_end=500
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
