@@ -24,7 +24,7 @@ import time
 
 files = os.listdir("data")
 
-hashtag ='b807d7cbe0'#'e20d2ea866'#'d3dc776849'#'907626023e' #37d4a928c2'# '3bdc9c5579'#'d8d203aecf' #''a919609ed6'#'4b4005295f' #
+hashtag ='4852d2aa01'#'48fadb37f8'#'95835595ac'#'b1e7feefb2'#'18d828d473'#4f4de6ce2f'#'fd6bda95f'#ecdc360e87'#9d1fb112fe'#d'c1fb7980de'#'ea41558aef'#'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -34,19 +34,28 @@ print(folder)
 print()
 print()
 files = os.listdir(folder)
-
+lista_spectra = []
+titles = []
 spectrum_empty = np.zeros(1)
 i = 0
 for file in files :
     if file[-4:] == ".mat":
         if file.find("spectra") >= 0:
             i += 1
+            print(file)
             data = mpo.loadmat(folder+'/'+file)
             wavelength = data["wavelength"][0]
             if file.find("empty") >= 0:
-                spectrum_empty = data['spectra'][0]
+                spectrum_empty = data['spectra']
+                FT_x_empty = data['FT_x'][0]
+                FT_y_empty = data['FT_y'][0]
             else :
-                spectrum = data['spectra'][0]
+                titles.append(file)
+                spectrum = data['spectra']
+                lista_spectra.append(data['spectra'])
+                FT_x = data['FT_x'][0]
+                FT_y = data['FT_y'][0]
+                print(data['resonance_table_t500.0'])
 
 if i == 0 :
     raise FileNotFoundError(f"No spectra file was found for hash {hashtag}")
@@ -55,22 +64,41 @@ elif spectrum_empty.size == 1:
 period = 280
 
 #%%
-fig = plt.figure(dpi=150,figsize=(10,5))
-ax = fig.add_subplot(211)
-ax.plot(wavelength, spectrum, wavelength, spectrum_empty)
-# plt.xlim(550,650)
-# plt.ylim(-2,2)
-ax.grid(True)
-plt.xlabel('Wavelength (nm)')
-plt.ylabel('Transmission (a.u.)')
+fig = plt.figure(dpi=150,figsize=(10,6))
+ax1 = fig.add_subplot(211)
+plt.title("dipolo lungo XY")#, monitor a 0-90")#file
 ax2 = fig.add_subplot(212)
-ax2.plot(wavelength, np.log(spectrum/spectrum_empty))
-# plt.xlim(550,650)
-# plt.ylim(-2,2)
-ax2.grid(True)
-plt.xlabel('Wavelength [nm]')
-plt.ylabel('Transmission')
 
+sp0 = np.zeros(wavelength.shape)
+for i in range(len(spectrum_empty)):#
+    sp0 += abs(spectrum_empty[i])
+#%%
+sp_centre =  np.abs(FT_x)**2/abs(FT_x_empty)**2 # + np.abs(FT_y)**2/abs(FT_y_empty)**2#+
+for spectrum in lista_spectra[:]:
+    sp = np.zeros(wavelength.shape)
+    for i in [15,7,3,11] : #range(len(spectrum)):#[3,11] : #
+        sp += abs(spectrum[i])/sp0#/spectrum_empty[i]/len(spectrum)
+
+    # sp = sp/max(sp)
+    # sp_centre = sp_centre/max(sp_centre)
+    ax1.plot(wavelength, sp)
+
+    ax2.plot(wavelength, np.log(sp))
+    plt.draw()
+    # ax1.plot(wavelength, sp_centre)
+    # ax2.plot(wavelength, np.log(sp_centre))
+
+# plt.legend(titles)
+#%%
+for ax in [ax1, ax2]:
+    ax.grid(True)
+    ax.minorticks_on()
+    ax.grid(True, 'minor','x')
+    ax.set_xlim(540, 640)
+    ax.set_xlabel('Wavelength [nm]')
+ax1.set_ylabel('Transmission')
+ax2.set_ylabel('Transmission - log scale')
 date = time.strftime('%y%m%d-%H%M%S')
 fig.savefig(folder + '/' + date + '_spectrum.png')
-#%%
+
+# plt.legend()
