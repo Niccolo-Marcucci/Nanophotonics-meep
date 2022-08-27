@@ -250,7 +250,7 @@ class Simulation(mp.Simulation):
                                                     center = mp.Vector3(),
                                                     size = mp.Vector3()) #, yee_grid=True))
                 if not self.empty:
-                    self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
+                    self.harminv_instance = mp.Harminv(mp.Ex, mp.Vector3(), f, df)
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
@@ -261,7 +261,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=500
+    sim_end=300
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
