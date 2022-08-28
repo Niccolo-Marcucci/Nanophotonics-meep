@@ -453,7 +453,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # element of the tuple represent the inputs.
     empty = True
     tuple_list = [(wavelength,
-                    n_eff_h_v[0], n_eff_l[0],
+                    n_eff_h_v[0], n_eff_l_v[0],
                     D, period,
                     empty,
                     0,
