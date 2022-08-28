@@ -160,6 +160,7 @@ class Simulation(mp.Simulation):
         N = self.cavity_parameters["N_rings"]
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
+        p_neff_590 = [0.002615039148879, 0.987682356171988]
 
         is_groove = False
         for i in range(N):
@@ -175,7 +176,33 @@ class Simulation(mp.Simulation):
             local_index = self.background_index # + mod_ridges
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
-            local_index = self.eff_index_info["spacer_index"]
+            # local_index = self.eff_index_info["spacer_index"]
+
+            z_min = -50.8
+            z_max = 4.2
+
+            cx = -0.036534813993066
+            dx = -0.000863123917501
+            cy = -0.017852564790660
+            dy = -0.000271692473046
+            cr = 0.240698051877619
+            dr = -0.001865488137078
+
+            r2 = np.sqrt((pos.x - np.polyval([dx,cx],z_max))**2 + (pos.y - np.polyval([dy,cy],z_max))**2)
+            if r > .325:
+                Z = z_min
+            elif r2 < np.polyval([dr,cr],z_max):
+                Z = z_max
+            else:
+                A = dr**2 + dy**2 - dr**2
+                B = 2*( cx*dx + cy*dy -cr*dr - pos.x*dx - pos.y*dy )
+                C = (pos.x-cx)**2 + (pos.y-cy)**2 - cr**2
+                Z = (-B + np.sqrt( B**2 - 4*A*C )) / (2*A)
+
+            if Z<-50.8:
+                Z = -50.8
+
+            local_index = np.polyval(p_neff_590, Z+60.8)
 
         return local_index**2
 
@@ -261,7 +288,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=500
+    sim_end=1
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -326,7 +353,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=True)# y=1e-3
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -342,7 +369,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         fig.savefig(f'{sim.name}-xy.jpg')
         # plt.show()
-        plt.close()
+        # plt.close()
 
 
     # mp.verbosity(0)
@@ -431,10 +458,11 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
-    n_eff_h = 1.0804 # 1.0455#
-    n_eff_l = 1.0118
-    n_eff_h_v = [ n_eff_h, 1.1045]
-    n_eff_l_v = [ n_eff_l, 1.0395]
+    p_neff_590 = [0.002615039148879, 0.987682356171988]
+    n_eff_h = np.polyval(p_neff_590, -27.4+60.8) #1.0804 # 1.0455#
+    n_eff_l = np.polyval(p_neff_590, 10) #nm
+    n_eff_h_v = [ n_eff_h ]#, 1.1045]
+    n_eff_l_v = [ n_eff_l ]#, 1.0395]
 
     #%% load susceptibilities data.
     # Even though the variable are still called n_eff but they refer to epsilon
