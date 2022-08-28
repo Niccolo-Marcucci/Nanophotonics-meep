@@ -304,13 +304,13 @@ class Simulation(mp.Simulation):
             mp.Source(
                 src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                 # dipole
-                center = mp.Vector3(),
+                center = mp.Vector3(z=self.used_layer_info["thickness"]/2),
                 size = mp.Vector3(),
                 component = mp.Ey),
             mp.Source(
                 src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                 # dipole
-                center = mp.Vector3(),
+                center = mp.Vector3(z=self.used_layer_info["thickness"]/2),
                 size = mp.Vector3(),
                 component = mp.Ex)]
             # plane wave
