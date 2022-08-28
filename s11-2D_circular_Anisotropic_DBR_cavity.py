@@ -288,7 +288,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=1
+    sim_end=500
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -474,7 +474,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.560 #
+    D = 0.640 #
     Ds =  np.arange(560,630,10)*1e-3
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -513,6 +513,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     # mp.quiet(True)
     output = []
     names = []
+
+    tuple_list.reverse()
     t0 = time.time()
     try:
         from mpi4py import MPI
