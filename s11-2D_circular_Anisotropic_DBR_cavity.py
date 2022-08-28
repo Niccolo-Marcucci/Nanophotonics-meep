@@ -343,7 +343,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 50,
+                                resolution = 40,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -513,7 +513,6 @@ if __name__ == "__main__":              # good practise in parallel computing
     # mp.quiet(True)
     output = []
     names = []
-
     tuple_list.reverse()
     t0 = time.time()
     try:
