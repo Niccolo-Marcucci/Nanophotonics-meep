@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos)
+        self.epsilon_proxy_function = lambda pos: self.circular_undeformed_cavity(pos)
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -204,7 +204,7 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index   # + mod_tranches * mpo.cos(theta)**2 * (self.grating_index < self.background_index)
+                local_index = self.grating_index    + mod_tranches * mpo.cos(theta)**2 * (self.grating_index < self.background_index)
             else:
                 local_index = self.background_index + mod_ridges * mpo.cos( theta )**2 * (self.grating_index < self.background_index)
 
