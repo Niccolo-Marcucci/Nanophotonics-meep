@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_undeformed_cavity(pos)
+        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos)
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -160,6 +160,7 @@ class Simulation(mp.Simulation):
         N = self.cavity_parameters["N_rings"]
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
+
         p_neff_590 = [0.002615039148879, 0.987682356171988]
 
         is_groove = False
@@ -178,33 +179,35 @@ class Simulation(mp.Simulation):
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
             # local_index = self.eff_index_info["spacer_index"]
 
-            z_min = -50.8
-            z_max = 4.2
-
-            cx = -0.036534813993066
-            dx = -0.000863123917501
-            cy = -0.017852564790660
-            dy = -0.000271692473046
-            cr = 0.240698051877619
-            dr = -0.001865488137078
-
-            r2 = np.sqrt((pos.x - np.polyval([dx,cx],z_max))**2 + (pos.y - np.polyval([dy,cy],z_max))**2)
-            if r > .325:
-                Z = z_min
-            elif r2 < np.polyval([dr,cr],z_max):
-                Z = z_max
-            else:
-                A = dr**2 + dy**2 - dr**2
-                B = 2*( cx*dx + cy*dy -cr*dr - pos.x*dx - pos.y*dy )
-                C = (pos.x-cx)**2 + (pos.y-cy)**2 - cr**2
-                Z = (-B + np.sqrt( B**2 - 4*A*C )) / (2*A)
-
-            if Z<-50.8:
-                Z = -50.8
-
+            Z = self.weird_cone( pos)
             local_index = np.polyval(p_neff_590, Z+60.8)
 
         return local_index**2
+
+    def weird_cone(self, pos):
+        r = pos.norm()
+        z_min = -50.8
+        z_max = 4.2
+
+        cx = -0.036534813993066
+        dx = -0.000863123917501
+        cy = -0.017852564790660
+        dy = -0.000271692473046
+        cr =  0.240698051877619
+        dr = -0.001865488137078
+
+        r2 = np.sqrt((pos.x - np.polyval([dx,cx],z_max))**2 + (pos.y - np.polyval([dy,cy],z_max))**2)
+        if r > .325:
+            Z = z_min
+        elif r2 < np.polyval([dr,cr],z_max):
+            Z = z_max
+        else:
+            A = dr**2 + dy**2 - dr**2
+            B = 2*( cx*dx + cy*dy -cr*dr - pos.x*dx - pos.y*dy )
+            C = (pos.x-cx)**2 + (pos.y-cy)**2 - cr**2
+            Z = (-B + np.sqrt( B**2 - 4*A*C )) / (2*A)
+
+        return Z if Z>-50.8 else -50.8
 
     def circular_deformed_cavity(self, pos):
         r = pos.norm()
@@ -217,9 +220,12 @@ class Simulation(mp.Simulation):
         mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
-            local_index = self.eff_index_info["spacer_index"]
-        # elif r > D/2 + N*period - (1-FF)*period:
-        #     local_index = self.background_index
+            # local_index = self.eff_index_info["spacer_index"]
+            Z = self.weird_cone( pos)
+            local_index = np.polyval(p_neff_590, Z+60.8)
+        elif r > D/2 + N*period - (1-FF)*period:
+            local_index = np.polyval(p_neff_590, 65)
+            # local_index = self.background_index
         else:
             is_groove = False
             for i in range(N):
@@ -231,9 +237,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * mpo.cos(theta)**2 * (self.grating_index < self.background_index)
+                local_index = self.grating_index    + mod_tranches * mpo.cos(theta + 1.91288)**2 * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges * mpo.cos( theta )**2 * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges   * mpo.cos(theta + 1.91288)**2 * (self.grating_index < self.background_index)
 
         return local_index**2
 
@@ -317,8 +323,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0241, #0.0151,
-        "modulation_amplitude_tranches": 0.0277,
+        "modulation_amplitude_ridges": 0.0148,#0.0241, #
+        "modulation_amplitude_tranches": 0, #0.0277,
         "spacer_index": 1.1706}
 
 
@@ -459,7 +465,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
     p_neff_590 = [0.002615039148879, 0.987682356171988]
-    n_eff_h = np.polyval(p_neff_590, -27.4+60.8) #1.0804 # 1.0455#
+    n_eff_h = np.polyval(p_neff_590, 10+22.8397) #1.0804 # 1.0455#
     n_eff_l = np.polyval(p_neff_590, 10) #nm
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
