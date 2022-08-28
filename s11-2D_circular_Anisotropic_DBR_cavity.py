@@ -204,7 +204,7 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * mpo.cos(theta)**2 * (self.grating_index < self.background_index)
+                local_index = self.grating_index   # + mod_tranches * mpo.cos(theta)**2 * (self.grating_index < self.background_index)
             else:
                 local_index = self.background_index + mod_ridges * mpo.cos( theta )**2 * (self.grating_index < self.background_index)
 
@@ -290,8 +290,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0107, # 0.0241,
-        "modulation_amplitude_tranches": 0, # 0.0277,
+        "modulation_amplitude_ridges": 0.0241, #0.0151,
+        "modulation_amplitude_tranches": 0.0277,
         "spacer_index": 1.1706}
 
 
@@ -308,7 +308,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"D{D*1e3:.0f}"#"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"
+    sim_name += f"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#"D{D*1e3:.0f}"#
 
 
     sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -431,10 +431,10 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
-    n_eff_h = 1.0696 #804
+    n_eff_h = 1.0804 # 1.0455#
     n_eff_l = 1.0118
-    n_eff_h_v = [ 1.0676, 1.0918]
-    n_eff_l_v = [ 1.0044, 1.0280]
+    n_eff_h_v = [ n_eff_h, 1.1045]
+    n_eff_l_v = [ n_eff_l, 1.0395]
 
     #%% load susceptibilities data.
     # Even though the variable are still called n_eff but they refer to epsilon
@@ -453,21 +453,22 @@ if __name__ == "__main__":              # good practise in parallel computing
     # element of the tuple represent the inputs.
     empty = True
     tuple_list = [(wavelength,
-                    n_eff_h, n_eff_l,
+                    n_eff_h_v[0], n_eff_l[0],
                     D, period,
                     empty,
                     0,
                     anisotropy,
                     0 )]
+
     empty = False
 
     j = 1
     # j = 0
     # tuple_list = []
-    for source_pos in [0]: # 0, period/4, period/2]:
-    # for i in range(len(n_eff_h_v)) :
-    #     n_eff_h = n_eff_h_v[i]
-    #     n_eff_l = n_eff_l_v[i]
+    # for source_pos in [0]: # 0, period/4, period/2]:
+    for i in range(len(n_eff_h_v)) :
+        n_eff_h = n_eff_h_v[i]
+        n_eff_l = n_eff_l_v[i]
     # for D in Ds:
     # for anisotropy in np.linspace(0,5, 1):
         for tilt_anisotropy in [0]:#, np.pi/2]:
