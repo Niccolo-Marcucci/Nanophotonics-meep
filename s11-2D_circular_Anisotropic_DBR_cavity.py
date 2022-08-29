@@ -238,9 +238,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * (1-mpo.sin(theta)**6)  * (self.grating_index < self.background_index)
+                local_index = self.grating_index    + mod_tranches * (1-mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges   * (1-mpo.sin(theta)**6)  * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges   * (1-mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
 
         return local_index**2
 
@@ -324,9 +324,9 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0241,   # 0.0106, #
-        "modulation_amplitude_tranches": 0.0277, # 0.0066, #
-        "spacer_index": 1.1706}
+        "modulation_amplitude_ridges": 0.0242,   # 0.0106, #
+        "modulation_amplitude_tranches": 0.0236, # 0.0066, #
+        "spacer_index": 1.1582}
 
 
     t0 = time.time()
@@ -466,8 +466,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
     p_neff_590 = [0.002615039148879, 0.987682356171988]
-    n_eff_h = 1.0804 # np.polyval(p_neff_590, -27.3040+60.8) # 1.0455#
-    n_eff_l = 1.0118 # np.polyval(p_neff_590, -52.1929+60.8) #nm
+    n_eff_h = 1.0676 # np.polyval(p_neff_590, -27.3040+60.8) # 1.0455#
+    n_eff_l = 1.0044 # np.polyval(p_neff_590, -52.1929+60.8) #nm
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
 
@@ -481,7 +481,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.560 #
+    D = 0.640 #
     Ds =  np.arange(560,630,10)*1e-3
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
