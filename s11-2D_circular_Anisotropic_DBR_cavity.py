@@ -238,7 +238,7 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * (mpo.cos(theta)**4)  * (self.grating_index < self.background_index)
+                local_index = self.grating_index    #+ mod_tranches * (mpo.cos(theta)**4)  * (self.grating_index < self.background_index)
             else:
                 local_index = self.background_index + mod_ridges   * (mpo.cos(theta)**4)  * (self.grating_index < self.background_index)
 
