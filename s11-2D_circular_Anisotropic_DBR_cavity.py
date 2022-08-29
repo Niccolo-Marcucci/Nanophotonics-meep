@@ -221,7 +221,7 @@ class Simulation(mp.Simulation):
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
             # local_index = self.eff_index_info["spacer_index"]
-            Z = self.weird_cone( pos)
+            Z = self.weird_cone(pos)
             local_index = np.polyval(p_neff_590, Z+60.8)
         elif r > D/2 + N*period - (1-FF)*period:
             local_index = np.polyval(p_neff_590, 65)
@@ -255,7 +255,7 @@ class Simulation(mp.Simulation):
                             center = source_pos,
                             size = mp.Vector3(),
                             component = mp.Ex)]
-                        #    amplitude = 1j)] # dephased by pi/4
+                            amplitude = 1j)] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
