@@ -226,7 +226,7 @@ class Simulation(mp.Simulation):
             # local_index = np.polyval(p_neff_590, Z+60.8)
         elif r > D/2 + N*period - (1-FF)*period:
             # local_index = np.polyval(p_neff_590, 65)
-            local_index = self.background_index
+            local_index = self.eff_index_info["spacer_index"]
         else:
             is_groove = False
             for i in range(N):
@@ -238,9 +238,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * (1 - mpo.sin(theta)**4)  * (self.grating_index < self.background_index)
+                local_index = self.grating_index    + mod_tranches * (mpo.cos(theta)**4)  * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges   * (1 - mpo.sin(theta)**4)  * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges   * (mpo.cos(theta)**4)  * (self.grating_index < self.background_index)
 
         return local_index**2
 
@@ -360,7 +360,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=True)# y=1e-3
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -498,8 +498,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0
-    tuple_list = []
+    # j = 0
+    # tuple_list = []
     # for source_pos in [0]: # 0, period/4, period/2]:
     for i in range(len(n_eff_h_v)) :
         n_eff_h = n_eff_h_v[i]
