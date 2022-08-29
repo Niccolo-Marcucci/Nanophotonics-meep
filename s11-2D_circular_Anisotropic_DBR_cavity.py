@@ -177,10 +177,10 @@ class Simulation(mp.Simulation):
             local_index = self.background_index # + mod_ridges
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
-            # local_index = self.eff_index_info["spacer_index"]
+            local_index = self.eff_index_info["spacer_index"]
 
-            Z = self.weird_cone( pos)
-            local_index = np.polyval(p_neff_590, Z+60.8)
+            # Z = self.weird_cone( pos)
+            # local_index = np.polyval(p_neff_590, Z+60.8)
 
         return local_index**2
 
@@ -218,14 +218,15 @@ class Simulation(mp.Simulation):
         N = self.cavity_parameters["N_rings"]
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
+        p_neff_590 = [0.002615039148879, 0.987682356171988]
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
-            # local_index = self.eff_index_info["spacer_index"]
-            Z = self.weird_cone(pos)
-            local_index = np.polyval(p_neff_590, Z+60.8)
+            local_index = self.eff_index_info["spacer_index"]
+            # Z = self.weird_cone(pos)
+            # local_index = np.polyval(p_neff_590, Z+60.8)
         elif r > D/2 + N*period - (1-FF)*period:
-            local_index = np.polyval(p_neff_590, 65)
-            # local_index = self.background_index
+            # local_index = np.polyval(p_neff_590, 65)
+            local_index = self.background_index
         else:
             is_groove = False
             for i in range(N):
@@ -237,9 +238,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * mpo.cos(theta + np.pi)**2 * (self.grating_index < self.background_index)
+                local_index = self.grating_index    + mod_tranches * (1 - mpo.sin(theta)**4)  * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges   * mpo.cos(theta + np.pi*2/3)**2 * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges   * (1 - mpo.sin(theta)**4)  * (self.grating_index < self.background_index)
 
         return local_index**2
 
@@ -254,8 +255,8 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                             center = source_pos,
                             size = mp.Vector3(),
-                            component = mp.Ex,
-                            amplitude = 1j)] # dephased by pi/4
+                            component = mp.Ex)]
+                            # amplitude = 1j)] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
@@ -323,8 +324,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0106,#0.0241, #
-        "modulation_amplitude_tranches": 0.0066, #0.0277,
+        "modulation_amplitude_ridges": 0.0241,   # 0.0106, #
+        "modulation_amplitude_tranches": 0.0277, # 0.0066, #
         "spacer_index": 1.1706}
 
 
@@ -349,7 +350,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 100,
+                                resolution = 40,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -375,7 +376,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         fig.savefig(f'{sim.name}-xy.jpg')
         # plt.show()
-        # plt.close()
+        plt.close()
 
 
     # mp.verbosity(0)
@@ -465,8 +466,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
     p_neff_590 = [0.002615039148879, 0.987682356171988]
-    n_eff_h = np.polyval(p_neff_590, -27.3040+60.8) #1.0804 # 1.0455#
-    n_eff_l = np.polyval(p_neff_590, -52.1929+60.8) #nm
+    n_eff_h = 1.0804 # np.polyval(p_neff_590, -27.3040+60.8) # 1.0455#
+    n_eff_l = 1.0118 # np.polyval(p_neff_590, -52.1929+60.8) #nm
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
 
@@ -480,7 +481,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.640 #
+    D = 0.560 #
     Ds =  np.arange(560,630,10)*1e-3
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
