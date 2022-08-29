@@ -237,9 +237,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * mpo.cos(theta + 1.91288)**2 * (self.grating_index < self.background_index)
+                local_index = self.grating_index    + mod_tranches * mpo.cos(theta + np.pi)**2 * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges   * mpo.cos(theta + 1.91288)**2 * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges   * mpo.cos(theta + np.pi*2/3)**2 * (self.grating_index < self.background_index)
 
         return local_index**2
 
@@ -323,8 +323,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0148,#0.0241, #
-        "modulation_amplitude_tranches": 0, #0.0277,
+        "modulation_amplitude_ridges": 0.0106,#0.0241, #
+        "modulation_amplitude_tranches": 0.0066, #0.0277,
         "spacer_index": 1.1706}
 
 
@@ -349,7 +349,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 100,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -465,8 +465,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
     p_neff_590 = [0.002615039148879, 0.987682356171988]
-    n_eff_h = np.polyval(p_neff_590, 10+22.8397) #1.0804 # 1.0455#
-    n_eff_l = np.polyval(p_neff_590, 10) #nm
+    n_eff_h = np.polyval(p_neff_590, -27.3040+60.8) #1.0804 # 1.0455#
+    n_eff_l = np.polyval(p_neff_590, -52.1929+60.8) #nm
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
 
