@@ -307,7 +307,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     wwidth = 0
     f=c0/wavelength
 
-    sim_end=50
+    sim_end=200
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -502,7 +502,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.640 #
+    D = 0.590 #
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -519,8 +519,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0           # resets  tiple list (insted of commenting all previous lines)
-    tuple_list = []
+    # j = 0           # resets  tiple list (insted of commenting all previous lines)
+    # tuple_list = []
 
     for wavelength in np.linspace(.565, .615, 200):
         n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
