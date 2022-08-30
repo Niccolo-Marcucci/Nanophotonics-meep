@@ -386,8 +386,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         plt.close()
         print("Only one of the parallel jobs jobs will print the image")
     else:
-	if mp.am_really_master():
-	    fig.savefig(f'{sim.name}-xy.jpg')
+        if mp.am_really_master():
+            fig.savefig(f'{sim.name}-xy.jpg')
         # plt.show()
         plt.close()
 
