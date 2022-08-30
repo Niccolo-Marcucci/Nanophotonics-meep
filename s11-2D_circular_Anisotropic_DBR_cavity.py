@@ -161,6 +161,8 @@ class Simulation(mp.Simulation):
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
 
+        p_neff_590 = [0.002615039148879, 0.987682356171988]
+
         is_groove = False
         for i in range(N):
             groove_start = D/2 + i*period
@@ -177,7 +179,35 @@ class Simulation(mp.Simulation):
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
             local_index = self.eff_index_info["spacer_index"]
 
+            # Z = self.weird_cone( pos)
+            # local_index = np.polyval(p_neff_590, Z+60.8)
+
         return local_index**2
+
+    def weird_cone(self, pos):
+        r = pos.norm()
+        z_min = -50.8
+        z_max = 4.2
+
+        cx = -0.036534813993066
+        dx = -0.000863123917501
+        cy = -0.017852564790660
+        dy = -0.000271692473046
+        cr =  0.240698051877619
+        dr = -0.001865488137078
+
+        r2 = np.sqrt((pos.x - np.polyval([dx,cx],z_max))**2 + (pos.y - np.polyval([dy,cy],z_max))**2)
+        if r > .325:
+            Z = z_min
+        elif r2 < np.polyval([dr,cr],z_max):
+            Z = z_max
+        else:
+            A = dr**2 + dy**2 - dr**2
+            B = 2*( cx*dx + cy*dy -cr*dr - pos.x*dx - pos.y*dy )
+            C = (pos.x-cx)**2 + (pos.y-cy)**2 - cr**2
+            Z = (-B + np.sqrt( B**2 - 4*A*C )) / (2*A)
+
+        return Z if Z>-50.8 else -50.8
 
     def circular_deformed_cavity(self, pos):
         r = pos.norm()
@@ -188,11 +218,15 @@ class Simulation(mp.Simulation):
         N = self.cavity_parameters["N_rings"]
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
+        p_neff_590 = [0.002615039148879, 0.987682356171988]
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
             local_index = self.eff_index_info["spacer_index"]
-        # elif r > D/2 + N*period - (1-FF)*period:
-        #     local_index = self.background_index
+            # Z = self.weird_cone(pos)
+            # local_index = np.polyval(p_neff_590, Z+60.8)
+        elif r > D/2 + N*period - (1-FF)*period:
+            # local_index = np.polyval(p_neff_590, 65)
+            local_index = self.eff_index_info["spacer_index"]
         else:
             is_groove = False
             for i in range(N):
@@ -204,9 +238,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * mpo.cos(theta)**2 * (self.grating_index < self.background_index)
+                local_index = self.grating_index    + mod_tranches * (1-mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges * mpo.cos( theta )**2 * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges   * (1- mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
 
         return local_index**2
 
@@ -222,21 +256,21 @@ class Simulation(mp.Simulation):
                             center = source_pos,
                             size = mp.Vector3(),
                             component = mp.Ex)]
-                        #    amplitude = 1j)] # dephased by pi/4
+                            # amplitude = 1j)] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
         self.spectrum_monitors = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5911, .5883, .5858,.5830,.5802]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5915, .5825]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y-.5*self.extra_space_xy )) #, yee_grid=True))
         else:
             if self.cavity_r_size > 0 :
-                DL = self.cavity_r_size + 0.02
+                DL = self.cavity_r_size + 0.05
 
-                nfreq = 1000
+                nfreq = 1000 if df != 0 else 1
                 for angolo in np.linspace(-np.pi, np.pi,17)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
@@ -250,18 +284,18 @@ class Simulation(mp.Simulation):
                                                     center = mp.Vector3(),
                                                     size = mp.Vector3()) #, yee_grid=True))
                 if not self.empty:
-                    self.harminv_instance = mp.Harminv(mp.Ex, mp.Vector3(), f, df)
+                    self.harminv_instance = None #mp.Harminv(mp.Ex, mp.Vector3(), f, df)
 
 #%% function for parallel computing
-def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
+def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, n_eff_mod_l = 0, n_eff_mod_h = 0):
     # import meep as mp
 
     c0 = 1
     # wavelength = 0.590
-    wwidth = 0.15
+    wwidth = 0
     f=c0/wavelength
 
-    sim_end=2000
+    sim_end=50
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -290,9 +324,9 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0241, #0.0151,
-        "modulation_amplitude_tranches": 0.0277,
-        "spacer_index": 1.1706}
+        "modulation_amplitude_ridges": n_eff_mod_h,
+        "modulation_amplitude_tranches": n_eff_mod_l,
+        "spacer_index": n_eff_spacer}
 
 
     t0 = time.time()
@@ -308,7 +342,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"D{D*1e3:.0f}"#"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"
+    sim_name += f"D{D*1e3:.0f}_wv{1/f*1e3:.1f}"#"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#
 
 
     sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -316,7 +350,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 200,
+                                resolution = 40,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -326,7 +360,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=True)# y=1e-3
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -431,14 +465,19 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
-    n_eff_h = 1.0804 # 1.0455#
-    n_eff_l = 1.0118
-    n_eff_h_v = [ 1.0676, 1.0918]
-    n_eff_l_v = [ 1.0044, 1.0280]
-
+    thicknesses = [2, 15, 31, 40, 65]
+    data = io.loadmat("Lumerical-Objects/multilayer_design/designs/TE_N7_dispersion_azoPPA_1.615.mat")
+    n_eff = itp.RegularGridInterpolator((data["d"][0], data["lambda"][0]), data["n_eff"])
+    n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
+    n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
+    n_eff_h_v = [ n_eff_h ]#, 1.1045]
+    n_eff_l_v = [ n_eff_l ]#, 1.0395]
+    n_eff_mod_l = n_eff([15e-9, wavelength*1e-6])[0] - n_eff_l
+    n_eff_mod_h = n_eff([40e-9, wavelength*1e-6])[0] - n_eff_h
+    n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
     #%% load susceptibilities data.
-    # Even though the variable are still called n_eff but they refer to epsilon
-    # mpo.Medium() can handle it
+    # Even though the variable are still called n_eff, they refer
+    # to epsilon susceptibilities. mpo.Medium() can handle it
 
     # data = io.loadmat("bsw_lorentz_fit_idx1.000_th0.mat")
     # n_eff_l = [ a for a in data["optimal_fit_2"][0]]
@@ -446,44 +485,54 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.560 #
-    Ds =  np.arange(560,630,10)*1e-3
+    D = 0.640 #
+
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
     # element of the tuple represent the inputs.
     empty = True
     tuple_list = [(wavelength,
-                    n_eff_h, n_eff_l,
+                    n_eff_h_v[0], n_eff_l_v[0], n_eff_spacer,
                     D, period,
                     empty,
                     0,
-                    anisotropy,
-                    0 )]
+                    n_eff_mod_l,
+                    n_eff_mod_h )]
+
     empty = False
 
     j = 1
-    j = 0
+    j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
-    for source_pos in [0]: # 0, period/4, period/2]:
+
+    for wavelength in np.linspace(.565, .615, 50):
+        i=0
+        n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
+        n_eff_l      = n_eff([ 2e-9, wavelength*1e-6])[0]
+        n_eff_mod_l  = n_eff([15e-9, wavelength*1e-6])[0] - n_eff([ 2e-9, wavelength*1e-6])[0]
+        n_eff_mod_h  = n_eff([40e-9, wavelength*1e-6])[0] - n_eff([31e-9, wavelength*1e-6])[0]
+        n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
+    # for source_pos in [0]: # 0, period/4, period/2]:
     # for i in range(len(n_eff_h_v)) :
-    #     n_eff_h = n_eff_h_v[i]
-    #     n_eff_l = n_eff_l_v[i]
+        # n_eff_h = n_eff_h_v[i]
+        # n_eff_l = n_eff_l_v[i]
     # for D in Ds:
     # for anisotropy in np.linspace(0,5, 1):
         for tilt_anisotropy in [0]:#, np.pi/2]:
                 source_pos=0
                 tuple_list.append( (wavelength,
-                                    n_eff_h, n_eff_l,
+                                    n_eff_h, n_eff_l, n_eff_spacer,
                                     D, period,
                                     empty,
                                     source_pos,
-                                    anisotropy,
-                                    tilt_anisotropy ) )
+                                    n_eff_mod_l,
+                                    n_eff_mod_h ) )
                 j += 1
     mp.verbosity(1)
     # mp.quiet(True)
     output = []
     names = []
+    tuple_list.reverse()
     t0 = time.time()
     try:
         from mpi4py import MPI
