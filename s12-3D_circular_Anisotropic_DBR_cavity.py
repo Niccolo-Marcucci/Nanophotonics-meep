@@ -391,7 +391,7 @@ class Simulation(mp.Simulation):
 if __name__ == "__main__":              # good practise in parallel computing
     c0 = 1
     wavelength = 0.590
-    wwidth = .2
+    wwidth = .15
     f = c0 / wavelength
 
     fmax = c0 / (wavelength - wwidth/2)
@@ -408,7 +408,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     out_grating_type = 'only'         # 'spiral' or 'polSplitting' or 'only'
 
     # cavity info
-    N_cavity = 25
+    N_cavity = 20
     cavity_period = .280 # wavelength / n_eff_FF0d5 / 2
     D_cavity = .560 # cavity_period * 1.4
 
@@ -490,7 +490,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                resolution = 100,
+                                resolution = 80,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
