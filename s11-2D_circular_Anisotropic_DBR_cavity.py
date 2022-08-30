@@ -295,8 +295,8 @@ def save_fields(sim):
     for i, monitor in enumerate(sim.spectrum_monitors):
         sim.Ex[i].append( sim.get_array(mp.Ex, center = monitor.regions[0].center, size = monitor.regions[0].size) )
         sim.Ey[i].append( sim.get_array(mp.Ey, center = monitor.regions[0].center, size = monitor.regions[0].size) )
-    sim.Ex[i+1].append( sim.get_array(mp.Ex, center = sim.field_FT.center, size = monitor.regions[0].size) )
-    sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.center, size = monitor.regions[0].size) )
+    sim.Ex[i+1].append( sim.get_array(mp.Ex, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
+    sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, n_eff_mod_l = 0, n_eff_mod_h = 0):
