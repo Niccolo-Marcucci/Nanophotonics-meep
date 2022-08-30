@@ -304,7 +304,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
     c0 = 1
     # wavelength = 0.590
-    wwidth = 0
+    wwidth = 0.15
     f=c0/wavelength
 
     sim_end=200
