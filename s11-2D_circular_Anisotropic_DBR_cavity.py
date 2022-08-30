@@ -519,8 +519,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0           # resets  tiple list (insted of commenting all previous lines)
-    tuple_list = []
+    # j = 0           # resets  tiple list (insted of commenting all previous lines)
+    # tuple_list = []
 
     # for wavelength in np.linspace(.580, .590,    2):
     #     n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
