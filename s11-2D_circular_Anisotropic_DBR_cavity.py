@@ -240,7 +240,7 @@ class Simulation(mp.Simulation):
             if is_groove:
                 local_index = self.grating_index    + mod_tranches * (1-mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index #+ mod_ridges   * ( mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges   * (1- mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
 
         return local_index**2
 
@@ -466,7 +466,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
     thicknesses = [2, 15, 31, 40, 65]
-    data = io.loadmat("TE_N7_dispersion_azoPPA_1.615.mat")
+    data = io.loadmat("Lumerical-Objects/multilayer_design/designs/TE_N7_dispersion_azoPPA_1.615.mat")
     n_eff = itp.RegularGridInterpolator((data["d"][0], data["lambda"][0]), data["n_eff"])
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
     n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
@@ -476,8 +476,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     n_eff_mod_h = n_eff([40e-9, wavelength*1e-6])[0] - n_eff_h
     n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
     #%% load susceptibilities data.
-    # Even though the variable are still called n_eff but they refer to epsilon
-    # mpo.Medium() can handle it
+    # Even though the variable are still called n_eff, they refer
+    # to epsilon susceptibilities. mpo.Medium() can handle it
 
     # data = io.loadmat("bsw_lorentz_fit_idx1.000_th0.mat")
     # n_eff_l = [ a for a in data["optimal_fit_2"][0]]
@@ -486,7 +486,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     #%%
     D = 0.640 #
-    Ds =  np.arange(560,630,10)*1e-3
+
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
     # element of the tuple represent the inputs.
