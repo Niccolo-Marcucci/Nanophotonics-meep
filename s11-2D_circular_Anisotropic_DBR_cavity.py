@@ -240,7 +240,7 @@ class Simulation(mp.Simulation):
             if is_groove:
                 local_index = self.grating_index    + mod_tranches * (1-mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges   * ( mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
+                local_index = self.background_index #+ mod_ridges   * ( mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
 
         return local_index**2
 
@@ -284,7 +284,7 @@ class Simulation(mp.Simulation):
                                                     center = mp.Vector3(),
                                                     size = mp.Vector3()) #, yee_grid=True))
                 if not self.empty:
-                    self.harminv_instance = mp.Harminv(mp.Ex, mp.Vector3(), f, df)
+                    self.harminv_instance = None #mp.Harminv(mp.Ex, mp.Vector3(), f, df)
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
@@ -324,8 +324,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0.0052,   # 0.0106, #
-        "modulation_amplitude_tranches": 0.0089, # 0.0066, #
+        "modulation_amplitude_ridges": 0,
+        "modulation_amplitude_tranches": 0.0129,
         "spacer_index": 1.1582}
 
 
@@ -466,7 +466,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
     p_neff_590 = [0.002615039148879, 0.987682356171988]
-    n_eff_h = 1.0783 # np.polyval(p_neff_590, -27.3040+60.8) # 1.0455#
+    n_eff_h = 1.0835 # np.polyval(p_neff_590, -27.3040+60.8) # 1.0455#
     n_eff_l = 1.0118 # np.polyval(p_neff_590, -52.1929+60.8) #nm
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
