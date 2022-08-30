@@ -290,9 +290,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                z_lim = th_tranches + mod_tranches * mpo.cos(theta)**2
+                z_lim = th_tranches + mod_tranches * (1 - mpo.sin(theta)**8)
             else:
-                z_lim = th_ridges   + mod_ridges   * mpo.cos(theta)**2
+                z_lim = th_ridges   + mod_ridges   * (1 - mpo.sin(theta)**8)
 
         if z > z_lim - self.used_layer_info["thickness"]/2:
             return mp.Medium(index=1)
@@ -391,7 +391,7 @@ class Simulation(mp.Simulation):
 if __name__ == "__main__":              # good practise in parallel computing
     c0 = 1
     wavelength = 0.590
-    wwidth = .15
+    wwidth = .2
     f = c0 / wavelength
 
     fmax = c0 / (wavelength - wwidth/2)
@@ -408,9 +408,9 @@ if __name__ == "__main__":              # good practise in parallel computing
     out_grating_type = 'only'         # 'spiral' or 'polSplitting' or 'only'
 
     # cavity info
-    N_cavity = 30
+    N_cavity = 25
     cavity_period = .280 # wavelength / n_eff_FF0d5 / 2
-    D_cavity = .640 # cavity_period * 1.4
+    D_cavity = .560 # cavity_period * 1.4
 
     # pol splitting info
     FF_pol_splitter = .3
@@ -485,8 +485,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     # sim_name += f"_{parameter_to_loop}"
 
     sim = Simulation(sim_name)
-    sim.extra_space_xy += wavelength/n_eff_l
-    sim.eps_averaging = True
+    sim.extra_space_xy += .3 # wavelength/n_eff_l
+    sim.eps_averaging = False
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
@@ -588,7 +588,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
 
-    sim.run(*step_functions, until=300)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
+    sim.run(*step_functions, until=200)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
