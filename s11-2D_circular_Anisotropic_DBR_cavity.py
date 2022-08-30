@@ -268,9 +268,9 @@ class Simulation(mp.Simulation):
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y-.5*self.extra_space_xy )) #, yee_grid=True))
         else:
             if self.cavity_r_size > 0 :
-                DL = self.cavity_r_size + 0.02
+                DL = self.cavity_r_size + 0.05
 
-                nfreq = 1000
+                nfreq = 1000 if df != 0 else 1
                 for angolo in np.linspace(-np.pi, np.pi,17)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
@@ -324,8 +324,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
         "n_eff_l" : n_eff_l,
         "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
-        "modulation_amplitude_ridges": 0,
-        "modulation_amplitude_tranches": 0.0129,
+        "modulation_amplitude_ridges": 0.0161,
+        "modulation_amplitude_tranches": 0.0215,
         "spacer_index": 1.1582}
 
 
@@ -466,8 +466,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
     p_neff_590 = [0.002615039148879, 0.987682356171988]
-    n_eff_h = 1.0835 # np.polyval(p_neff_590, -27.3040+60.8) # 1.0455#
-    n_eff_l = 1.0118 # np.polyval(p_neff_590, -52.1929+60.8) #nm
+    n_eff_h = 1.0702 # np.polyval(p_neff_590, -27.3040+60.8) # 1.0455#
+    n_eff_l = 1.0044 # np.polyval(p_neff_590, -52.1929+60.8) #nm
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
 
