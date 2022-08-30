@@ -261,6 +261,8 @@ class Simulation(mp.Simulation):
         self.harminv_instance = None
         self.field_profile = None
         self.spectrum_monitors = []
+        self.Ex = []
+        self.Ey = []
 
         if  allow_profile :
             self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5915, .5825]),#f, 0, 1,
@@ -269,7 +271,6 @@ class Simulation(mp.Simulation):
         else:
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
-
                 nfreq = 1000 if df != 0 else 1
                 for angolo in np.linspace(-np.pi, np.pi,17)[1:]:
                     DL_x = DL * np.cos(angolo)
@@ -280,11 +281,22 @@ class Simulation(mp.Simulation):
                         size = mp.Vector3(0, 0),
                         direction = direction)
                     self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
+                    self.Ex.append([])
+                    self.Ey.append([])
                 self.field_FT = self.add_dft_fields([mp.Ey, mp.Ex], f, df, nfreq,
                                                     center = mp.Vector3(),
-                                                    size = mp.Vector3()) #, yee_grid=True))
+                                                    size = mp.Vector3())
+                self.Ex.append([])
+                self.Ey.append([])
                 if not self.empty:
                     self.harminv_instance = None #mp.Harminv(mp.Ex, mp.Vector3(), f, df)
+
+def save_fields(sim):
+    for i, monitor in enumerate(sim.spectrum_monitors):
+        sim.Ex[i].append( sim.get_array(mp.Ex, center = monitor.regions[0].center, size = monitor.regions[0].size) )
+        sim.Ey[i].append( sim.get_array(mp.Ey, center = monitor.regions[0].center, size = monitor.regions[0].size) )
+    sim.Ex[i+1].append( sim.get_array(mp.Ex, center = sim.field_FT.center, size = monitor.regions[0].size) )
+    sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.center, size = monitor.regions[0].size) )
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, n_eff_mod_l = 0, n_eff_mod_h = 0):
@@ -295,7 +307,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     wwidth = 0
     f=c0/wavelength
 
-    sim_end=200
+    sim_end=50
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -322,8 +334,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     eff_index_info = {
         "n_eff_h" : n_eff_h,
         "n_eff_l" : n_eff_l,
-        "anisotropy" : anisotropy,
-        "tilt_anisotropy" : tilt_anisotropy,
+        "anisotropy" : 0,
+        "tilt_anisotropy" : 0,
         "modulation_amplitude_ridges": n_eff_mod_h,
         "modulation_amplitude_tranches": n_eff_mod_l,
         "spacer_index": n_eff_spacer}
@@ -385,6 +397,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
     sim.run(*step_functions, until=sim_end)
+    if df == 0 and len(sim.spectrum_monitors) > 0:
+        sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
 
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
@@ -441,6 +455,9 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         spectrum_f = np.array(mp.get_flux_freqs(monitor))
         spectra.append(np.array(mp.get_fluxes(monitor)))
 
+    if df == 0:
+        data2save["E_x"] = sim.Ex
+        data2save["E_y"] = sim.Ey
 
     if len(spectra) > 0 :
         data2save["wavelength"] = 1/spectrum_f*1e3
@@ -461,11 +478,10 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     anisotropy = 0
 
-    wavelength = .59075
+    wavelength = .580
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
-    thicknesses = [2, 15, 31, 40, 65]
     data = io.loadmat("Lumerical-Objects/multilayer_design/designs/TE_N7_dispersion_azoPPA_1.615.mat")
     n_eff = itp.RegularGridInterpolator((data["d"][0], data["lambda"][0]), data["n_eff"])
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
@@ -506,18 +522,22 @@ if __name__ == "__main__":              # good practise in parallel computing
     tuple_list = []
 
     for wavelength in np.linspace(.565, .615, 200):
-        i=0
         n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
         n_eff_l      = n_eff([ 2e-9, wavelength*1e-6])[0]
         n_eff_mod_l  = n_eff([15e-9, wavelength*1e-6])[0] - n_eff([ 2e-9, wavelength*1e-6])[0]
         n_eff_mod_h  = n_eff([40e-9, wavelength*1e-6])[0] - n_eff([31e-9, wavelength*1e-6])[0]
         n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
+
     # for source_pos in [0]: # 0, period/4, period/2]:
+
     # for i in range(len(n_eff_h_v)) :
-        # n_eff_h = n_eff_h_v[i]
-        # n_eff_l = n_eff_l_v[i]
+    #     n_eff_h = n_eff_h_v[i]
+    #     n_eff_l = n_eff_l_v[i]
+
     # for D in Ds:
+
     # for anisotropy in np.linspace(0,5, 1):
+
         for tilt_anisotropy in [0]:#, np.pi/2]:
                 source_pos=0
                 tuple_list.append( (wavelength,
