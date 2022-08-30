@@ -24,7 +24,7 @@ import time
 
 files = os.listdir("data")
 
-hashtag ='4852d2aa01'#'48fadb37f8'#'95835595ac'#'b1e7feefb2'#'18d828d473'#4f4de6ce2f'#'fd6bda95f'#ecdc360e87'#9d1fb112fe'#d'c1fb7980de'#'ea41558aef'#'
+hashtag ='57b83ce603'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -55,11 +55,12 @@ for file in files :
                 lista_spectra.append(data['spectra'])
                 FT_x = data['FT_x'][0]
                 FT_y = data['FT_y'][0]
-                print(data['resonance_table_t500.0'])
+                # print(data['resonance_table_t500.0'])
 
 if i == 0 :
     raise FileNotFoundError(f"No spectra file was found for hash {hashtag}")
-elif spectrum_empty.size == 1:
+
+if spectrum_empty.size == 1:
     spectrum_empty = np.ones((wavelength.size,))
 period = 280
 
@@ -71,20 +72,20 @@ ax2 = fig.add_subplot(212)
 
 sp0 = np.zeros(wavelength.shape)
 for i in range(len(spectrum_empty)):#
-    sp0 += abs(spectrum_empty[i])
+    sp0 += abs(spectrum_empty[i])/len(spectrum_empty)
 #%%
-sp_centre =  np.abs(FT_x)**2/abs(FT_x_empty)**2 # + np.abs(FT_y)**2/abs(FT_y_empty)**2#+
+# sp_centre =  np.abs(FT_x)**2/abs(FT_x_empty)**2 # + np.abs(FT_y)**2/abs(FT_y_empty)**2#+
 for spectrum in lista_spectra[:]:
     sp = np.zeros(wavelength.shape)
-    for i in [15,7,3,11] : #range(len(spectrum)):#[3,11] : #
-        sp += abs(spectrum[i])/sp0#/spectrum_empty[i]/len(spectrum)
+    for i in [15,7,3,11] : #range(len(spectrum)): # [7,15] : ##
+        sp = abs(spectrum[i])/sp0#/spectrum_empty[i]/len(spectrum)
 
     # sp = sp/max(sp)
     # sp_centre = sp_centre/max(sp_centre)
-    ax1.plot(wavelength, sp)
+        ax1.plot(wavelength, sp)
 
-    ax2.plot(wavelength, np.log(sp))
-    plt.draw()
+        ax2.plot(wavelength, np.log(sp))
+        plt.draw()
     # ax1.plot(wavelength, sp_centre)
     # ax2.plot(wavelength, np.log(sp_centre))
 

@@ -24,7 +24,7 @@ import time
 
 files = os.listdir("data")
 
-hashtag = 'ea4cee1b00'#'e0a93ada1f'#'9650cc56f4'#'481fcc91a3'#'0c42451c69'#'a11477a295'#'fd2bf58b8e'
+hashtag = '7a720bfd2'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -46,7 +46,7 @@ for file in files :
             y = data['field_profile_y'][0]
             eps = np.flip(np.transpose(data['field_profile_Eps']))
             X,Y = np.meshgrid(x,y)
-            freqs = 1/ data['field_profile_frequencies'][0]*1e3 # np.array([.5844, .5824, .5786, .5728, .5686, .5646, .5593, .5533])*1e3
+            freqs = 1/ data['field_profile_frequencies'][0]*1e3
             for i in range (len(freqs)):
                 Ey = data[f'field_profile_Ey_{i}']
                 Ex = data[f'field_profile_Ex_{i}']
@@ -60,6 +60,9 @@ for file in files :
 
             fig = plt.figure()
             plt.plot(x, np.sqrt(eps[id_x, :]), y, np.sqrt(eps[:, id_y]))
+            plt.legend(['x','y'])
             fig = plt.figure()
             plt.pcolormesh(X,Y,(eps),cmap='gnuplot')
             plt.axis('image')
+            # ax = fig.add_subplot(111, projection='3d')
+            # ax.plot_surface(X,Y,(eps),cmap='gnuplot')

@@ -300,12 +300,19 @@ class Simulation(mp.Simulation):
             return  mp.Medium(index=self.used_layer_info["refractive index"])
 
     def init_sources_and_monitors(self, f, df, allow_farfield=True) :
-        self.sources = [ mp.Source(
-            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-            # dipole
-            center = mp.Vector3(),
-            size = mp.Vector3(),
-            component = mp.Ey)]
+        self.sources = [
+            mp.Source(
+                src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                # dipole
+                center = mp.Vector3(),
+                size = mp.Vector3(),
+                component = mp.Ey),
+            mp.Source(
+                src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                # dipole
+                center = mp.Vector3(),
+                size = mp.Vector3(),
+                component = mp.Ex)]
             # plane wave
             # center = mp.Vector3(z=self.top_air_gap/2), # mp.Vector3(),
             # size = mp.Vector3(self.domain_x, self.domain_y),
@@ -384,7 +391,7 @@ class Simulation(mp.Simulation):
 if __name__ == "__main__":              # good practise in parallel computing
     c0 = 1
     wavelength = 0.590
-    wwidth = .10
+    wwidth = .15
     f = c0 / wavelength
 
     fmax = c0 / (wavelength - wwidth/2)
@@ -479,11 +486,11 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim = Simulation(sim_name)
     sim.extra_space_xy += wavelength/n_eff_l
-    sim.eps_averaging = False
+    sim.eps_averaging = True
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                resolution = 50,
+                                resolution = 100,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
@@ -546,7 +553,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         print("Only one of the parallel jobs jobs will print the image")
     else:
         fig.savefig(f'{sim.name}_section-xy.jpg')
-        # plt.close()
+        plt.close()
 
     # sim.output_epsilon(f'{sim.name}_eps')
     # eps_data = sim.get_epsilon()
@@ -561,7 +568,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # # mlab.show()
 
     #%%
-    raise RuntimeError("comment this line to run til the end")
+    # raise RuntimeError("comment this line to run til the end")
     def print_time(sim):
         print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 
@@ -581,7 +588,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
 
-    sim.run(*step_functions, until=500)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
+    sim.run(*step_functions, until=300)#_after_sources=mp.stop_when_fields_decayed(1, mp.Ez, mp.Vector3(), 1e-1))
     # sim.run(until_after_sources=mp.stop_when_dft_decayed(minimum_run_time=10))
 
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
@@ -630,6 +637,10 @@ if __name__ == "__main__":              # good practise in parallel computing
     if len(spectra) > 0 :
         data2save["wavelength"] = 1/spectrum_f*1e3
         data2save["spectra"] = spectra
+        central_FT_x = np.array( [sim.get_dft_array(sim.field_FT, mp.Ex, j) for j in range(len(sim.field_FT.freq))] )
+        central_FT_y = np.array( [sim.get_dft_array(sim.field_FT, mp.Ey, j) for j in range(len(sim.field_FT.freq))] )
+        data2save["FT_x"] = central_FT_x
+        data2save["FT_y"] = central_FT_y
 
     if len(data2save) > 0:
         mpo.savemat(f'{sim.name}_spectra_t{t}.mat', data2save)
