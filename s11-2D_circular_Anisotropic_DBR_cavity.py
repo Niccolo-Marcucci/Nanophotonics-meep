@@ -267,7 +267,7 @@ class Simulation(mp.Simulation):
         if  allow_profile :
             self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5915, .5825]),#f, 0, 1,
                                                      center = mp.Vector3(),
-                                                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y-.5*self.extra_space_xy )) #, yee_grid=True))
+                                                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
@@ -295,8 +295,8 @@ def save_fields(sim):
     for i, monitor in enumerate(sim.spectrum_monitors):
         sim.Ex[i].append( sim.get_array(mp.Ex, center = monitor.regions[0].center, size = monitor.regions[0].size) )
         sim.Ey[i].append( sim.get_array(mp.Ey, center = monitor.regions[0].center, size = monitor.regions[0].size) )
-    sim.Ex[i+1].append( sim.get_array(mp.Ex, center = sim.field_FT.center, size = monitor.regions[0].size) )
-    sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.center, size = monitor.regions[0].size) )
+    sim.Ex[i+1].append( sim.get_array(mp.Ex, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
+    sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, n_eff_mod_l = 0, n_eff_mod_h = 0):
@@ -304,10 +304,10 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
     c0 = 1
     # wavelength = 0.590
-    wwidth = 0
+    wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=50
+    sim_end=400
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -386,7 +386,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         plt.close()
         print("Only one of the parallel jobs jobs will print the image")
     else:
-        fig.savefig(f'{sim.name}-xy.jpg')
+        if mp.am_really_master():
+            fig.savefig(f'{sim.name}-xy.jpg')
         # plt.show()
         plt.close()
 
@@ -396,7 +397,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     if sim.harminv_instance != None :
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
-    sim.run(*step_functions, until=sim_end)
+    sim.run(*step_functions, until_after_sources=mp.stop_when_fields_decayed(5, mp.Ey, mp.Vector3(), 1e-4))#=sim_end)
     if df == 0 and len(sim.spectrum_monitors) > 0:
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
 
@@ -501,7 +502,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.640 #
+    D = 0.560 #
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -518,21 +519,21 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0           # resets  tiple list (insted of commenting all previous lines)
-    tuple_list = []
+    # j = 0           # resets  tiple list (insted of commenting all previous lines)
+    # tuple_list = []
 
-    for wavelength in np.linspace(.580, .590,    2):
-        n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
-        n_eff_l      = n_eff([ 2e-9, wavelength*1e-6])[0]
-        n_eff_mod_l  = n_eff([15e-9, wavelength*1e-6])[0] - n_eff([ 2e-9, wavelength*1e-6])[0]
-        n_eff_mod_h  = n_eff([40e-9, wavelength*1e-6])[0] - n_eff([31e-9, wavelength*1e-6])[0]
-        n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
+    # for wavelength in np.linspace(.580, .590,    2):
+    #     n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
+    #     n_eff_l      = n_eff([ 2e-9, wavelength*1e-6])[0]
+    #     n_eff_mod_l  = n_eff([15e-9, wavelength*1e-6])[0] - n_eff([ 2e-9, wavelength*1e-6])[0]
+    #     n_eff_mod_h  = n_eff([40e-9, wavelength*1e-6])[0] - n_eff([31e-9, wavelength*1e-6])[0]
+    #     n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
 
     # for source_pos in [0]: # 0, period/4, period/2]:
 
-    # for i in range(len(n_eff_h_v)) :
-    #     n_eff_h = n_eff_h_v[i]
-    #     n_eff_l = n_eff_l_v[i]
+    for i in range(len(n_eff_h_v)) :
+        n_eff_h = n_eff_h_v[i]
+        n_eff_l = n_eff_l_v[i]
 
     # for D in Ds:
 
