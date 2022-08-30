@@ -292,10 +292,10 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
     c0 = 1
     # wavelength = 0.590
-    wwidth = 0
+    wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=50
+    sim_end=200
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -322,7 +322,6 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     eff_index_info = {
         "n_eff_h" : n_eff_h,
         "n_eff_l" : n_eff_l,
-        "anisotropy" : anisotropy,
         "tilt_anisotropy" : tilt_anisotropy,
         "modulation_amplitude_ridges": n_eff_mod_h,
         "modulation_amplitude_tranches": n_eff_mod_l,
@@ -461,11 +460,10 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     anisotropy = 0
 
-    wavelength = .59075
+    wavelength = .580
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
-    thicknesses = [2, 15, 31, 40, 65]
     data = io.loadmat("Lumerical-Objects/multilayer_design/designs/TE_N7_dispersion_azoPPA_1.615.mat")
     n_eff = itp.RegularGridInterpolator((data["d"][0], data["lambda"][0]), data["n_eff"])
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
@@ -502,22 +500,26 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0           # resets  tiple list (insted of commenting all previous lines)
-    tuple_list = []
+    # j = 0           # resets  tiple list (insted of commenting all previous lines)
+    # tuple_list = []
 
-    for wavelength in np.linspace(.565, .615, 50):
-        i=0
-        n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
-        n_eff_l      = n_eff([ 2e-9, wavelength*1e-6])[0]
-        n_eff_mod_l  = n_eff([15e-9, wavelength*1e-6])[0] - n_eff([ 2e-9, wavelength*1e-6])[0]
-        n_eff_mod_h  = n_eff([40e-9, wavelength*1e-6])[0] - n_eff([31e-9, wavelength*1e-6])[0]
-        n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
+    # for wavelength in np.linspace(.580, .615,    5):
+    #     n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
+    #     n_eff_l      = n_eff([ 2e-9, wavelength*1e-6])[0]
+    #     n_eff_mod_l  = n_eff([15e-9, wavelength*1e-6])[0] - n_eff([ 2e-9, wavelength*1e-6])[0]
+    #     n_eff_mod_h  = n_eff([40e-9, wavelength*1e-6])[0] - n_eff([31e-9, wavelength*1e-6])[0]
+    #     n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
+
     # for source_pos in [0]: # 0, period/4, period/2]:
-    # for i in range(len(n_eff_h_v)) :
-        # n_eff_h = n_eff_h_v[i]
-        # n_eff_l = n_eff_l_v[i]
+
+    for i in range(len(n_eff_h_v)) :
+        n_eff_h = n_eff_h_v[i]
+        n_eff_l = n_eff_l_v[i]
+
     # for D in Ds:
+
     # for anisotropy in np.linspace(0,5, 1):
+
         for tilt_anisotropy in [0]:#, np.pi/2]:
                 source_pos=0
                 tuple_list.append( (wavelength,
