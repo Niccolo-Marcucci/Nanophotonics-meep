@@ -398,7 +398,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
     sim.run(*step_functions, until=sim_end)
-    if df == 0 and len(sim.spectrum_monitors) > 0:
+    if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
 
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
