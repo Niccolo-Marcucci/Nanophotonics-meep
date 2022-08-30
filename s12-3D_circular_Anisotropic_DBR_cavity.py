@@ -277,7 +277,10 @@ class Simulation(mp.Simulation):
         mod_ridges   = self.cavity_parameters["modulation_amplitude_ridges"]
         mod_tranches = self.cavity_parameters["modulation_amplitude_tranches"]
 
-        if r < D/2 or r > D/2 + N*period - (1-FF)*period:
+        if r < D/2 :
+            # z_lim = self.used_layer_info["thickness"]
+            z_lim = self.weird_cone( pos) + 60.8
+        elif r > D/2 + N*period - (1-FF)*period:
             z_lim = self.used_layer_info["thickness"]
         else:
             is_groove = False
@@ -298,6 +301,31 @@ class Simulation(mp.Simulation):
             return mp.Medium(index=1)
         else:
             return  mp.Medium(index=self.used_layer_info["refractive index"])
+
+    def weird_cone(self, pos):
+        r = pos.norm()
+        z_min = -50.8
+        z_max = 4.2
+
+        cx = -0.036534813993066
+        dx = -0.000863123917501
+        cy = -0.017852564790660
+        dy = -0.000271692473046
+        cr =  0.240698051877619
+        dr = -0.001865488137078
+
+        r2 = np.sqrt((pos.x - np.polyval([dx,cx],z_max))**2 + (pos.y - np.polyval([dy,cy],z_max))**2)
+        if r > .325:
+            Z = z_min
+        elif r2 < np.polyval([dr,cr],z_max):
+            Z = z_max
+        else:
+            A = dr**2 + dy**2 - dr**2
+            B = 2*( cx*dx + cy*dy -cr*dr - pos.x*dx - pos.y*dy )
+            C = (pos.x-cx)**2 + (pos.y-cy)**2 - cr**2
+            Z = (-B + np.sqrt( B**2 - 4*A*C )) / (2*A)
+
+        return Z if Z>-50.8 else -50.8
 
     def init_sources_and_monitors(self, f, df, allow_farfield=True) :
         self.sources = [

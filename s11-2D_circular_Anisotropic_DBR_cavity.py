@@ -267,7 +267,7 @@ class Simulation(mp.Simulation):
         if  allow_profile :
             self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5915, .5825]),#f, 0, 1,
                                                      center = mp.Vector3(),
-                                                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y-.5*self.extra_space_xy )) #, yee_grid=True))
+                                                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
@@ -304,7 +304,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
     c0 = 1
     # wavelength = 0.590
-    wwidth = 0.2
+    wwidth = 0.15
     f=c0/wavelength
 
     sim_end=400
@@ -397,7 +397,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     if sim.harminv_instance != None :
         step_functions.append( mp.after_sources(sim.harminv_instance) )
 
-    sim.run(*step_functions, until=sim_end)
+    sim.run(*step_functions, until_after_sources=mp.stop_when_fields_decayed(5, mp.Ey, mp.Vector3(), 1e-4))#=sim_end)
     if df == 0 and len(sim.spectrum_monitors) > 0:
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
 
