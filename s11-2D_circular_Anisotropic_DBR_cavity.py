@@ -322,7 +322,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     eff_index_info = {
         "n_eff_h" : n_eff_h,
         "n_eff_l" : n_eff_l,
-        "tilt_anisotropy" : tilt_anisotropy,
+        "anisotropy" : 0,
+        "tilt_anisotropy" : 0,
         "modulation_amplitude_ridges": n_eff_mod_h,
         "modulation_amplitude_tranches": n_eff_mod_l,
         "spacer_index": n_eff_spacer}
