@@ -332,13 +332,13 @@ class Simulation(mp.Simulation):
             mp.Source(
                 src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                 # dipole
-                center = mp.Vector3(z=self.used_layer_info["thickness"]/2),
+                center = mp.Vector3(z=-self.used_layer_info["thickness"]/2),
                 size = mp.Vector3(),
                 component = mp.Ey),
             mp.Source(
                 src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                 # dipole
-                center = mp.Vector3(z=self.used_layer_info["thickness"]/2),
+                center = mp.Vector3(z=-self.used_layer_info["thickness"]/2),
                 size = mp.Vector3(),
                 component = mp.Ex)]
             # plane wave
@@ -355,7 +355,7 @@ class Simulation(mp.Simulation):
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
 
-        elif self.cavity_r_size > 0 :
+        if self.cavity_r_size > 0 :
             DL = self.cavity_r_size + 0.02
 
             nfreq = 1000
@@ -416,7 +416,7 @@ class Simulation(mp.Simulation):
 if __name__ == "__main__":              # good practise in parallel computing
     c0 = 1
     wavelength = 0.590
-    wwidth = .15
+    wwidth = .2
     f = c0 / wavelength
 
     fmax = c0 / (wavelength - wwidth/2)
@@ -433,7 +433,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     out_grating_type = 'only'         # 'spiral' or 'polSplitting' or 'only'
 
     # cavity info
-    N_cavity = 20
+    N_cavity = 30
     cavity_period = .280 # wavelength / n_eff_FF0d5 / 2
     D_cavity = .560 # cavity_period * 1.4
 
@@ -515,7 +515,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     sim.init_geometric_objects( multilayer_file = f"./Lumerical-Objects/multilayer_design/designs/{file}",
                                 used_layer_info = used_layer_info,
-                                resolution = 80,
+                                resolution = 100,
                                 use_BB = False,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters,
