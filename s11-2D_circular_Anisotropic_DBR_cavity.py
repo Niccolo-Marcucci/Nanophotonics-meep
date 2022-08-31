@@ -245,17 +245,17 @@ class Simulation(mp.Simulation):
         return local_index**2
 
 
-    def init_sources_and_monitors(self, f, df, source_pos, allow_profile=False) :
+    def init_sources_and_monitors(self, f, df, source_pos, source_tilt, allow_profile=False) :
         self.sources = [ mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                             center = source_pos,
                             size = mp.Vector3(),
-                            component = mp.Ey),
+                            component = mp.Ey * np.cos(source_tilt)),
                          mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                             center = source_pos,
                             size = mp.Vector3(),
-                            component = mp.Ex)]
+                            component = mp.Ex * np.sin(source_tilt))]
                             # amplitude = 1j)] # dephased by pi/4
 
         self.harminv_instance = None
@@ -267,7 +267,7 @@ class Simulation(mp.Simulation):
         if  allow_profile :
             self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5915, .5825]),#f, 0, 1,
                                                      center = mp.Vector3(),
-                                                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y-.5*self.extra_space_xy )) #, yee_grid=True))
+                                                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
@@ -299,7 +299,7 @@ def save_fields(sim):
     sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
 
 #%% function for parallel computing
-def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, n_eff_mod_l = 0, n_eff_mod_h = 0):
+def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0):
     # import meep as mp
 
     c0 = 1
@@ -307,7 +307,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=200
+    sim_end=400
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -354,7 +354,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"D{D*1e3:.0f}_wv{1/f*1e3:.1f}"#"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#
+    sim_name += f"angle{source_tilt*180*np.pi:.2f}_wv{1/f*1e3:.1f}"#"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#
 
 
     sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -372,7 +372,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0), allow_profile=False)# y=1e-3
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0),
+                                         source_tilt=source_tilt, allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -502,7 +503,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.590 #
+    D = 0.560 #
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -522,12 +523,13 @@ if __name__ == "__main__":              # good practise in parallel computing
     # j = 0           # resets  tiple list (insted of commenting all previous lines)
     # tuple_list = []
 
-    for wavelength in np.linspace(.565, .615, 200):
-        n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
-        n_eff_l      = n_eff([ 2e-9, wavelength*1e-6])[0]
-        n_eff_mod_l  = n_eff([15e-9, wavelength*1e-6])[0] - n_eff([ 2e-9, wavelength*1e-6])[0]
-        n_eff_mod_h  = n_eff([40e-9, wavelength*1e-6])[0] - n_eff([31e-9, wavelength*1e-6])[0]
-        n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
+    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,16)[1:]:
+        for wavelength in np.linspace(.565, .615, 200):
+            n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
+            n_eff_l      = n_eff([ 2e-9, wavelength*1e-6])[0]
+            n_eff_mod_l  = n_eff([15e-9, wavelength*1e-6])[0] - n_eff([ 2e-9, wavelength*1e-6])[0]
+            n_eff_mod_h  = n_eff([40e-9, wavelength*1e-6])[0] - n_eff([31e-9, wavelength*1e-6])[0]
+            n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
 
     # for source_pos in [0]: # 0, period/4, period/2]:
 
@@ -539,16 +541,15 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # for anisotropy in np.linspace(0,5, 1):
 
-        for tilt_anisotropy in [0]:#, np.pi/2]:
-                source_pos=0
-                tuple_list.append( (wavelength,
-                                    n_eff_h, n_eff_l, n_eff_spacer,
-                                    D, period,
-                                    empty,
-                                    source_pos,
-                                    n_eff_mod_l,
-                                    n_eff_mod_h ) )
-                j += 1
+            source_pos=0
+            tuple_list.append( (wavelength,
+                                n_eff_h, n_eff_l, n_eff_spacer,
+                                D, period,
+                                empty,
+                                source_pos, source_tilt,
+                                n_eff_mod_l,
+                                n_eff_mod_h ) )
+            j += 1
     mp.verbosity(1)
     # mp.quiet(True)
     output = []
