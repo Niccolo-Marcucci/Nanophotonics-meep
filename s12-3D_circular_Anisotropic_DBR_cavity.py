@@ -277,7 +277,10 @@ class Simulation(mp.Simulation):
         mod_ridges   = self.cavity_parameters["modulation_amplitude_ridges"]
         mod_tranches = self.cavity_parameters["modulation_amplitude_tranches"]
 
-        if r < D/2 or r > D/2 + N*period - (1-FF)*period:
+        if r < D/2 :
+            z_lim = self.used_layer_info["thickness"]
+            # z_lim = self.weird_cone( pos) + 60.8
+        elif r > D/2 + N*period - (1-FF)*period:
             z_lim = self.used_layer_info["thickness"]
         else:
             is_groove = False
@@ -298,6 +301,31 @@ class Simulation(mp.Simulation):
             return mp.Medium(index=1)
         else:
             return  mp.Medium(index=self.used_layer_info["refractive index"])
+
+    def weird_cone(self, pos):
+        r = pos.norm()
+        z_min = -50.8
+        z_max = 4.2
+
+        cx = -0.036534813993066
+        dx = -0.000863123917501
+        cy = -0.017852564790660
+        dy = -0.000271692473046
+        cr =  0.240698051877619
+        dr = -0.001865488137078
+
+        r2 = np.sqrt((pos.x - np.polyval([dx,cx],z_max))**2 + (pos.y - np.polyval([dy,cy],z_max))**2)
+        if r > .325:
+            Z = z_min
+        elif r2 < np.polyval([dr,cr],z_max):
+            Z = z_max
+        else:
+            A = dr**2 + dy**2 - dr**2
+            B = 2*( cx*dx + cy*dy -cr*dr - pos.x*dx - pos.y*dy )
+            C = (pos.x-cx)**2 + (pos.y-cy)**2 - cr**2
+            Z = (-B + np.sqrt( B**2 - 4*A*C )) / (2*A)
+
+        return Z if Z>-50.8 else -50.8
 
     def init_sources_and_monitors(self, f, df, allow_farfield=True) :
         self.sources = [
@@ -322,15 +350,12 @@ class Simulation(mp.Simulation):
         self.harminv_instance = None
         self.spectrum_monitors = []
 
-        if self.outcou_r_size > 0 and allow_farfield :
-            nearfield = mp.Near2FarRegion(
-                center = mp.Vector3(0, 0, self.top_air_gap - 0.03),
-                size = mp.Vector3(self.domain_x-.5*self.extra_space_xy, self.domain_y-.5*self.extra_space_xy, 0),
-                direction = mp.Z)
+        if  allow_farfield:
+            self.nearfield_monitor = self.add_dft_fields([mp.Ey, mp.Ex, mp.Hz], 1/np.array([.5862, .5803]),#f, 0, 1,
+                                                     center = mp.Vector3(),
+                                                     size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
 
-            self.nearfield_monitor = self.add_near2far(f, 0.03, 5, nearfield)#, yee_grid=True))
-
-        if self.cavity_r_size > 0 :
+        elif self.cavity_r_size > 0 :
             DL = self.cavity_r_size + 0.02
 
             nfreq = 1000
@@ -343,7 +368,7 @@ class Simulation(mp.Simulation):
                     size = mp.Vector3(0, 0,0),
                     direction = direction)
                 self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
-            self.field_FT = self.add_dft_fields([mp.Ey, mp.Ex], f, df, nfreq,
+            self.field_FT = self.add_dft_fields([mp.Ey, mp.Ex, mp.Hz], f, df, nfreq,
                                                     center = mp.Vector3(),
                                                     size = mp.Vector3()) #, yee_grid=True))
             fluxr = mp.FluxRegion(
@@ -503,7 +528,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         else:
             sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, allow_farfield=False) #(not sim.empty) )
+    sim.init_sources_and_monitors(f, df, allow_farfield=True) #(not sim.empty) )
     mp.verbosity(2)
     # mpo.create_openscad(sim,1000)
     # sim.init_sim()
@@ -596,11 +621,14 @@ if __name__ == "__main__":              # good practise in parallel computing
     t = np.round(sim.round_time(), 2)
 
     if sim.nearfield_monitor != None :
-        for i in range( sim.nearfield_monitor.nfreqs):
-            ex_near, ey_near = [sim.get_dft_array(sim.nearfield_monitor, field, i) for field in [mp.Ex, mp.Ey]]
-            mpo.savemat(f'{sim.name}_nearfield_fp{i:02}_t{t}.mat', {'Ex': ex_near, 'Ey': ey_near,
-                                                           'Lx': sim.nearfield_monitor.regions[0].size.x,
-                                                           'Ly': sim.nearfield_monitor.regions[0].size.y})
+        for i in range(len(sim.nearfield_monitor.freq)):
+            ex_near, ey_near, hz_near = [sim.get_dft_array(sim.nearfield_monitor, field, i) for field in [mp.Ex, mp.Ey, mp.Hz]]
+            (x, y, _, _) = sim.get_array_metadata(center = sim.nearfield_monitor.regions[0].center,
+                                                  size = sim.nearfield_monitor.regions[0].size)
+            mpo.savemat(f'{sim.name}_nearfield_fp{i:02}_t{t}.mat', {'Ex': ex_near, 'Ey': ey_near, 'Hz': hz_near,
+                                                                    'x':x,'y':y, 'f': sim.nearfield_monitor.freq[i],
+                                                                    'Lx': sim.nearfield_monitor.regions[0].size.x,
+                                                                    'Ly': sim.nearfield_monitor.regions[0].size.y})
     data2save = {}
     if sim.harminv_instance != None :
         resonances_Q = []
