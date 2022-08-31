@@ -368,7 +368,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 100,
+                                resolution = 80,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
