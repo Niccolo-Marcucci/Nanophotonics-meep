@@ -250,13 +250,14 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                             center = source_pos,
                             size = mp.Vector3(),
-                            component = mp.Ey * np.cos(source_tilt)),
+                            component = mp.Ey,
+                            amplitude = np.cos(source_tilt)),
                          mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                             center = source_pos,
                             size = mp.Vector3(),
-                            component = mp.Ex * np.sin(source_tilt))]
-                            # amplitude = 1j)] # dephased by pi/4
+                            component = mp.Ex,
+                            amplitude = np.sin(source_tilt))] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
@@ -307,7 +308,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=400
+    sim_end=500
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -523,8 +524,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     # j = 0           # resets  tiple list (insted of commenting all previous lines)
     # tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,16)[1:]:
-        for wavelength in np.linspace(.565, .615, 200):
+    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,32)[1:]:
+        for wavelength in np.linspace(.550, .630, 200):
             n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
             n_eff_l      = n_eff([ 2e-9, wavelength*1e-6])[0]
             n_eff_mod_l  = n_eff([15e-9, wavelength*1e-6])[0] - n_eff([ 2e-9, wavelength*1e-6])[0]
