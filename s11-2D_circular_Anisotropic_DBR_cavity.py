@@ -161,8 +161,6 @@ class Simulation(mp.Simulation):
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
 
-        p_neff_590 = [0.002615039148879, 0.987682356171988]
-
         is_groove = False
         for i in range(N):
             groove_start = D/2 + i*period
@@ -225,9 +223,9 @@ class Simulation(mp.Simulation):
         n_eff_wv = self.eff_index_info["n_eff_wv"]
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
-            # local_index = self.eff_index_info["spacer_index"]
-            Z = self.weird_cone(pos)
-            local_index = n_eff_wv(Z+60.8)
+            local_index = self.eff_index_info["spacer_index"]
+            # Z = self.weird_cone(pos)
+            # local_index = n_eff_wv(Z+60.8)
         elif r > D/2 + N*period - (1-FF)*period:
             # local_index = np.polyval(p_neff_590, 65)
             local_index = self.eff_index_info["spacer_index"]
@@ -270,7 +268,7 @@ class Simulation(mp.Simulation):
         self.Ey = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5915, .5825]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5816, .5871]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
@@ -368,7 +366,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 100,
+                                resolution = 40,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -379,7 +377,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         sim.empty = False
 
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0),
-                                         source_tilt=source_tilt, allow_profile=False)# y=1e-3
+                                         source_tilt=source_tilt, allow_profile=True)# y=1e-3
 
     # raise Exception()1
 
@@ -529,8 +527,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     # j = 0           # resets  tiple list (insted of commenting all previous lines)
     # tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,5)[1:]:
-        for wavelength in np.linspace(.565, .615, 150):
+    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,13)[1:]:
+        for wavelength in np.linspace(.5816, .5871, 2):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : np.asscalar(n_eff_tmp(th))
