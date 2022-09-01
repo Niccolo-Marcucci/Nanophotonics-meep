@@ -507,7 +507,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.640 #
+     D = 0.560 #
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -524,8 +524,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    # j = 0           # resets  tiple list (insted of commenting all previous lines)
-    # tuple_list = []
+    j = 0           # resets  tiple list (insted of commenting all previous lines)
+    tuple_list = []
 
     for source_tilt in np.linspace(-np.pi/2,+np.pi/2,13)[1:]:
         for wavelength in np.linspace(.5816, .5871, 2):
