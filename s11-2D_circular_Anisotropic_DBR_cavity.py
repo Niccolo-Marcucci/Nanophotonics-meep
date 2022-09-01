@@ -143,7 +143,7 @@ class Simulation(mp.Simulation):
         # print( [self.cell_size.x / self.
 
         with open(f'{self.name}.json', 'w') as fp:
-            data2save = {"eff_index_info": eff_index_info,
+            data2save = {"eff_index_info": {key: eff_index_info[key] for key in eff_index_info.keys() if type(eff_index_info[key])!=type(lambda x:x)},
                          "pattern_type": pattern_type,
                          "resolution": self.resolution}
 
@@ -189,10 +189,14 @@ class Simulation(mp.Simulation):
         z_min = -50.8
         z_max = 4.2
 
-        cx = -0.036534813993066
-        dx = -0.000863123917501
-        cy = -0.017852564790660
-        dy = -0.000271692473046
+        cx = -0.040663333644853125
+        dx = -0.000904875514572101
+        cy = 0
+        dy = 0
+        # cx = -0.036534813993066
+        # dx = -0.000863123917501
+        # cy = -0.017852564790660
+        # dy = -0.000271692473046
         cr =  0.240698051877619
         dr = -0.001865488137078
 
@@ -202,7 +206,7 @@ class Simulation(mp.Simulation):
         elif r2 < np.polyval([dr,cr],z_max):
             Z = z_max
         else:
-            A = dr**2 + dy**2 - dr**2
+            A = dx**2 + dy**2 - dr**2
             B = 2*( cx*dx + cy*dy -cr*dr - pos.x*dx - pos.y*dy )
             C = (pos.x-cx)**2 + (pos.y-cy)**2 - cr**2
             Z = (-B + np.sqrt( B**2 - 4*A*C )) / (2*A)
@@ -218,12 +222,12 @@ class Simulation(mp.Simulation):
         N = self.cavity_parameters["N_rings"]
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
-        p_neff_590 = [0.002615039148879, 0.987682356171988]
+        n_eff_wv = self.eff_index_info["n_eff_wv"]
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
-            local_index = self.eff_index_info["spacer_index"]
-            # Z = self.weird_cone(pos)
-            # local_index = np.polyval(p_neff_590, Z+60.8)
+            # local_index = self.eff_index_info["spacer_index"]
+            Z = self.weird_cone(pos)
+            local_index = n_eff_wv(Z+60.8)
         elif r > D/2 + N*period - (1-FF)*period:
             # local_index = np.polyval(p_neff_590, 65)
             local_index = self.eff_index_info["spacer_index"]
@@ -300,7 +304,7 @@ def save_fields(sim):
     sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
 
 #%% function for parallel computing
-def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0):
+def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff_wv=None):
     # import meep as mp
 
     c0 = 1
@@ -308,7 +312,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=500
+    sim_end=400
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -339,7 +343,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "tilt_anisotropy" : 0,
         "modulation_amplitude_ridges": n_eff_mod_h,
         "modulation_amplitude_tranches": n_eff_mod_l,
-        "spacer_index": n_eff_spacer}
+        "spacer_index": n_eff_spacer,
+        "n_eff_wv": n_eff_wv}
 
 
     t0 = time.time()
@@ -355,7 +360,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"angle{source_tilt*180*np.pi:.2f}_wv{1/f*1e3:.1f}"#"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#
+    sim_name += f"angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#
 
 
     sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -363,7 +368,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 100,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -388,10 +393,10 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         plt.close()
         print("Only one of the parallel jobs jobs will print the image")
     else:
-        if mp.am_really_master():
-            fig.savefig(f'{sim.name}-xy.jpg')
-        # plt.show()
-        plt.close()
+        # if mp.am_really_master():
+        #     fig.savefig(f'{sim.name}-xy.jpg')
+        plt.show()
+        # plt.close()
 
 
     # mp.verbosity(0)
@@ -504,7 +509,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.560 #
+    D = 0.640 #
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -524,14 +529,16 @@ if __name__ == "__main__":              # good practise in parallel computing
     # j = 0           # resets  tiple list (insted of commenting all previous lines)
     # tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,32)[1:]:
-        for wavelength in np.linspace(.550, .630, 200):
-            n_eff_h      = n_eff([31e-9, wavelength*1e-6])[0]
-            n_eff_l      = n_eff([ 2e-9, wavelength*1e-6])[0]
-            n_eff_mod_l  = n_eff([15e-9, wavelength*1e-6])[0] - n_eff([ 2e-9, wavelength*1e-6])[0]
-            n_eff_mod_h  = n_eff([40e-9, wavelength*1e-6])[0] - n_eff([31e-9, wavelength*1e-6])[0]
-            n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
-
+    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,5)[1:]:
+        for wavelength in np.linspace(.565, .615, 150):
+            th = np.linspace(0,70,50)
+            n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
+            n_eff_wv = lambda th : np.asscalar(n_eff_tmp(th))
+            n_eff_h      = n_eff_wv(31)
+            n_eff_l      = n_eff_wv(2)
+            n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)
+            n_eff_mod_h  = n_eff_wv(40) - n_eff_wv(31)
+            n_eff_spacer = n_eff_wv(65)
     # for source_pos in [0]: # 0, period/4, period/2]:
 
     # for i in range(len(n_eff_h_v)) :
@@ -549,7 +556,7 @@ if __name__ == "__main__":              # good practise in parallel computing
                                 empty,
                                 source_pos, source_tilt,
                                 n_eff_mod_l,
-                                n_eff_mod_h ) )
+                                n_eff_mod_h, n_eff_wv ) )
             j += 1
     mp.verbosity(1)
     # mp.quiet(True)
