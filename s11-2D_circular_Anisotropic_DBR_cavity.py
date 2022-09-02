@@ -57,7 +57,7 @@ class Simulation(mp.Simulation):
                     dimensions = dimensions,
                     symmetries = symmetries,
                     filename_prefix = sim_name,
-                    force_complex_fields = False,
+                    force_complex_fields = False,k_point=mp.Vector3(),
                     eps_averaging = False)
 
     @property
@@ -218,6 +218,7 @@ class Simulation(mp.Simulation):
         FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
+        tilt  = self.cavity_parameters["tilt"]
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
@@ -240,26 +241,26 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index    + mod_tranches * (1-mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
+                local_index = self.grating_index    + mod_tranches * (1-mpo.sin(theta +tilt)**8)  * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges   * (1- mpo.sin(theta)**8)  * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges   * (1- mpo.sin(theta+tilt)**8)  * (self.grating_index < self.background_index)
 
         return local_index**2
 
 
     def init_sources_and_monitors(self, f, df, source_pos, source_tilt, allow_profile=False) :
         self.sources = [ mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df,is_integrated=True),
                             center = source_pos,
-                            size = mp.Vector3(),
+                            size = mp.Vector3(y = self.cell_size.y),
                             component = mp.Ey,
-                            amplitude = np.cos(source_tilt)),
-                         mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                            center = source_pos,
-                            size = mp.Vector3(),
-                            component = mp.Ex,
-                            amplitude = np.sin(source_tilt))] # dephased by pi/4
+                            amplitude = 1)]#np.cos(source_tilt))]
+                         # mp.Source(
+                         #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                         #    center = source_pos,
+                         #    size = mp.Vector3(),
+                         #    component = mp.Ex,
+                         #    amplitude = np.sin(source_tilt))] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
@@ -324,7 +325,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "D": D,
         "FF": .5,
         "period": DBR_period,
-        "N_rings": 30}
+        "N_rings": 30,
+        "tilt": source_tilt}
 
     outcoupler_parameters = {
         "type": 'spiral',
@@ -376,8 +378,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=source_pos,y=0),
-                                         source_tilt=source_tilt, allow_profile=True)# y=1e-3
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=-sim.cavity_r_size - 0.2,y=0),
+                                         source_tilt=source_tilt, allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -528,7 +530,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     tuple_list = []
 
     for source_tilt in np.linspace(-np.pi/2,+np.pi/2,13)[1:]:
-        for wavelength in np.linspace(.5816, .5871, 2):
+        for wavelength in np.linspace(.5816, .5871, 150):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : np.asscalar(n_eff_tmp(th))
