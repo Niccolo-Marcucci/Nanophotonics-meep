@@ -526,11 +526,11 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0           # resets  tiple list (insted of commenting all previous lines)
-    tuple_list = []
+    # j = 0           # resets  tiple list (insted of commenting all previous lines)
+    # tuple_list = []
 
     for source_tilt in np.linspace(-np.pi/2,+np.pi/2,13)[1:]:
-        for wavelength in np.linspace(.5816, .5871, 150):
+        for wavelength in np.linspace(.565, .615, 150):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : np.asscalar(n_eff_tmp(th))
