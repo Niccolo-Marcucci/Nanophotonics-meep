@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos)
+        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos)
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -413,7 +413,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         if mp.am_really_master():
             fig.savefig(f'{sim.name}-xy.jpg')
-        # plt.show()
+        plt.show()
         plt.close()
 
     # mp.verbosity(0)
@@ -513,7 +513,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     r = data["R"][0]
     theta = data["theta"][0]
-    Z = data["Z"] + 50.8
+    Z = data["Z"] + 60.8
     theta = np.concatenate((theta, -theta[0:1]))
     Z = np.concatenate((Z[r<9,:], Z[r<9,0:1]),axis=1)
     r = r[r<9]
@@ -523,7 +523,8 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # R, THT = np.meshgrid(r,theta)
     # plt.figure()
-    # plt.pcolor(R,THT, Z.transpose())
+    # ax = plt.subplot(111,projection='3d')
+    # ax.plot_surface(R,THT, Z.transpose())
     # raise
 
     Z_f = lambda rr, tht: Z_interp((rr,tht))
