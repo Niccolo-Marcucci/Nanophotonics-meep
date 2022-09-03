@@ -267,17 +267,17 @@ class Simulation(mp.Simulation):
 
     def init_sources_and_monitors(self, f, df, source_pos, source_tilt, allow_profile=False) :
         self.sources = [ mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df,is_integrated=True),
+                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,is_integrated=True),
                             center = source_pos,
-                            size = mp.Vector3(y = self.cell_size.y/10),
+                            size = mp.Vector3(y = 0), #self.cell_size.y/10),
                             component = mp.Ey,
-                            amplitude = 1)]#np.cos(source_tilt))]
-                         # mp.Source(
-                         #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                         #    center = source_pos,
-                         #    size = mp.Vector3(),
-                         #    component = mp.Ex,
-                         #    amplitude = np.sin(source_tilt))] # dephased by pi/4
+                            amplitude = np.cos(source_tilt)),
+                          mp.Source(
+                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                             center = source_pos,
+                             size = mp.Vector3(),
+                             component = mp.Ex,
+                             amplitude = np.sin(source_tilt))] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
