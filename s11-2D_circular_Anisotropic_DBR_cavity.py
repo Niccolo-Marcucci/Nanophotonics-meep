@@ -413,9 +413,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         if mp.am_really_master():
             fig.savefig(f'{sim.name}-xy.jpg')
-        plt.show()
-        # plt.close()
-    raise
+        # plt.show()
+        plt.close()
 
     # mp.verbosity(0)
     step_functions = []
