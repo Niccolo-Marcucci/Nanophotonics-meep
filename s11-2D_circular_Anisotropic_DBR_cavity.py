@@ -396,7 +396,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=-sim.cavity_r_size - 0.2,y=0),
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=0,y=0),
                                          source_tilt=source_tilt, allow_profile=False)# y=1e-3
 
     # raise Exception()1
