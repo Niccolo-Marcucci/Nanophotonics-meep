@@ -286,7 +286,7 @@ class Simulation(mp.Simulation):
         self.Ey = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5816, .5871]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5825]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
@@ -397,7 +397,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         sim.empty = False
 
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=-sim.cavity_r_size - 0.2,y=0),
-                                         source_tilt=source_tilt, allow_profile=False)# y=1e-3
+                                         source_tilt=source_tilt, allow_profile=True)# y=1e-3
 
     # raise Exception()1
 
