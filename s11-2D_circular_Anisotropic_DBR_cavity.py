@@ -57,7 +57,7 @@ class Simulation(mp.Simulation):
                     dimensions = dimensions,
                     symmetries = symmetries,
                     filename_prefix = sim_name,
-                    force_complex_fields = False,k_point=mp.Vector3(),
+                    force_complex_fields = False,
                     eps_averaging = False)
 
     @property
@@ -143,7 +143,7 @@ class Simulation(mp.Simulation):
         # print( [self.cell_size.x / self.
 
         with open(f'{self.name}.json', 'w') as fp:
-            data2save = {"eff_index_info": {key: eff_index_info[key] for key in eff_index_info.keys() if type(eff_index_info[key])!=type(lambda x:x)},
+            data2save = {"eff_index_info": {key: eff_index_info[key] for key in eff_index_info.keys() if type(eff_index_info[key]) != type(lambda x:x) },
                          "pattern_type": pattern_type,
                          "resolution": self.resolution}
 
@@ -247,6 +247,23 @@ class Simulation(mp.Simulation):
 
         return local_index**2
 
+    def imported_structure(self, pos):
+        Z_f = self.eff_index_info["Z_f"]
+        n_eff_wv = self.eff_index_info["n_eff_wv"]
+        r = pos.norm()
+        theta = mpo.atan2(pos.y, pos.x)/np.pi*180 - np.pi/72
+        theta = theta if theta > -np.pi else theta + np.pi*2
+
+        if r > 8.7 or r < 0.15:
+            local_index = self.eff_index_info["spacer_index"]
+        else:
+            Z = Z_f(r, theta).item()
+            Z = Z if Z > 0 else 0
+            Z = Z if Z < 65 else 65
+            local_index = n_eff_wv(Z)
+            # print(r,theta)
+
+        return local_index**2
 
     def init_sources_and_monitors(self, f, df, source_pos, source_tilt, allow_profile=False) :
         self.sources = [ mp.Source(
@@ -303,7 +320,7 @@ def save_fields(sim):
     sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
 
 #%% function for parallel computing
-def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff_wv=None):
+def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff_wv=None, Z_f=None):
     # import meep as mp
 
     c0 = 1
@@ -344,7 +361,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "modulation_amplitude_ridges": n_eff_mod_h,
         "modulation_amplitude_tranches": n_eff_mod_l,
         "spacer_index": n_eff_spacer,
-        "n_eff_wv": n_eff_wv}
+        "n_eff_wv": n_eff_wv,
+        "Z_f": Z_f}
 
 
     t0 = time.time()
@@ -393,11 +411,11 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         plt.close()
         print("Only one of the parallel jobs jobs will print the image")
     else:
-        # if mp.am_really_master():
-        #     fig.savefig(f'{sim.name}-xy.jpg')
+        if mp.am_really_master():
+            fig.savefig(f'{sim.name}-xy.jpg')
         plt.show()
         # plt.close()
-
+    raise
 
     # mp.verbosity(0)
     step_functions = []
@@ -492,6 +510,24 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     data = io.loadmat("Lumerical-Objects/multilayer_design/designs/TE_N7_dispersion_azoPPA_1.615.mat")
     n_eff = itp.RegularGridInterpolator((data["d"][0], data["lambda"][0]), data["n_eff"])
+    data = io.loadmat("16_29_50_WR_cavity_and_outcoupler_pos_280_D661_FF0d4_Ndbr30_Nout10_charge0_x1_15nm_1025C_RADIAL_compression.mat")
+
+    r = data["R"][0]
+    theta = data["theta"][0]
+    Z = data["Z"] + 50.8
+    theta = np.concatenate((theta, -theta[0:1]))
+    Z = np.concatenate((Z[r<9,:], Z[r<9,0:1]),axis=1)
+    r = r[r<9]
+    Z = Z[r>.1,:]
+    r = r[r>.1]
+    Z_interp = itp.RegularGridInterpolator((r, theta), Z)
+
+    # R, THT = np.meshgrid(r,theta)
+    # plt.figure()
+    # plt.pcolor(R,THT, Z.transpose())
+    # raise
+
+    Z_f = lambda rr, tht: Z_interp((rr,tht))
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
     n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
@@ -529,11 +565,11 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,13)[1:]:
-        for wavelength in np.linspace(.5816, .5871, 150):
+    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,2)[1:]:
+        for wavelength in np.linspace(.580, .5871, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
-            n_eff_wv = lambda th : np.asscalar(n_eff_tmp(th))
+            n_eff_wv = lambda th : n_eff_tmp(th).item()
             n_eff_h      = n_eff_wv(31)
             n_eff_l      = n_eff_wv(2)
             n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)
@@ -556,7 +592,7 @@ if __name__ == "__main__":              # good practise in parallel computing
                                 empty,
                                 source_pos, source_tilt,
                                 n_eff_mod_l,
-                                n_eff_mod_h, n_eff_wv ) )
+                                n_eff_mod_h, n_eff_wv, Z_f ) )
             j += 1
     mp.verbosity(1)
     # mp.quiet(True)
