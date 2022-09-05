@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos)#circular_deformed_cavity(pos) #
+        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos) #imported_structure(pos)#
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -85,7 +85,7 @@ class Simulation(mp.Simulation):
         self.eff_index_info = eff_index_info
         self.cavity_r_size = (cavity_parameters["D"]/2 + cavity_parameters["period"] * cavity_parameters["N_rings"]) * (cavity_parameters["N_rings"]>0)
 
-        self.domain_x = self.domain_y = 30. # 2*(self.cavity_r_size + self.extra_space_xy)
+        self.domain_x = self.domain_y = 2*(self.cavity_r_size + self.extra_space_xy) # 30. #
 
         if pattern_type == 'positive':
             self.grating_index = np.real(eff_index_info["n_eff_l"])
@@ -250,11 +250,11 @@ class Simulation(mp.Simulation):
     def imported_structure(self, pos):
         Z_f = self.eff_index_info["Z_f"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
-        # r = pos.norm()
+        r = pos.norm()
         # theta = mpo.atan2(pos.y, pos.x)/np.pi*180 - np.pi/72
         # theta = theta if theta > -np.pi else theta + np.pi*2
 
-        if abs(pos.x) > 14.65 or abs(pos.y) > 14.65: # or r < 0.15:
+        if  r > 8.6 :  # abs(pos.x) > 14.65 or abs(pos.y) > 14.65: # or
             local_index = self.eff_index_info["spacer_index"]
         else:
             # Z = Z_f(r, theta).item()
@@ -310,6 +310,7 @@ class Simulation(mp.Simulation):
                                                     size = mp.Vector3())
                 self.Ex.append([])
                 self.Ey.append([])
+                self.Ez.append([])
                 if not self.empty:
                     self.harminv_instance = None #mp.Harminv(mp.Ex, mp.Vector3(), f, df)
 
@@ -317,8 +318,10 @@ def save_fields(sim):
     for i, monitor in enumerate(sim.spectrum_monitors):
         sim.Ex[i].append( sim.get_array(mp.Ex, center = monitor.regions[0].center, size = monitor.regions[0].size) )
         sim.Ey[i].append( sim.get_array(mp.Ey, center = monitor.regions[0].center, size = monitor.regions[0].size) )
+        sim.Ez[i].append( sim.get_array(mp.Ez, center = monitor.regions[0].center, size = monitor.regions[0].size) )
     sim.Ex[i+1].append( sim.get_array(mp.Ex, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
     sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
+    sim.Ez[i+1].append( sim.get_array(mp.Ez, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff_wv=None, Z_f=None):
@@ -404,16 +407,12 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
 
     sim.init_sim()
-    fig = plt.figure(dpi=150, figsize=(10,10))
-    plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
-    try:
+    if mp.am_really_master():
+        fig = plt.figure(dpi=150, figsize=(10,10))
+        plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
+
         fig.colorbar(plot.images[0])
-    except:
-        plt.close()
-        print("Only one of the parallel jobs jobs will print the image")
-    else:
-        if mp.am_really_master():
-            fig.savefig(f'{sim.name}-xy.jpg')
+        fig.savefig(f'{sim.name}-xy.jpg')
         plt.show()
         # plt.close()
 
