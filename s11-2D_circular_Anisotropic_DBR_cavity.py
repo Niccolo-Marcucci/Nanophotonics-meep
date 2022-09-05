@@ -303,7 +303,7 @@ class Simulation(mp.Simulation):
                         center = mp.Vector3(DL_x, DL_y),
                         size = mp.Vector3(0, 0),
                         direction = direction)
-                    # self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
+                    self.spectrum_monitors.append(self.add_flux(f, 0, nfreq, fluxr))#, yee_grid=True))
                     self.Ex.append([])
                     self.Ey.append([])
                     self.Ez.append([])
