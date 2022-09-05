@@ -309,7 +309,7 @@ class Simulation(mp.Simulation):
                     self.Ez.append([])
                 self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
                                                     center = mp.Vector3(),
-                                                    size = mp.Vector3())
+                                                    size = mp.Vector3(self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
                 self.Ex.append([])
                 self.Ey.append([])
                 self.Ez.append([])
