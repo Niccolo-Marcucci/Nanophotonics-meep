@@ -85,7 +85,7 @@ class Simulation(mp.Simulation):
         self.eff_index_info = eff_index_info
         self.cavity_r_size = (cavity_parameters["D"]/2 + cavity_parameters["period"] * cavity_parameters["N_rings"]) * (cavity_parameters["N_rings"]>0)
 
-        self.domain_x = self.domain_y = 2*(self.cavity_r_size + self.extra_space_xy)
+        self.domain_x = self.domain_y = 15. # 2*(self.cavity_r_size + self.extra_space_xy)
 
         if pattern_type == 'positive':
             self.grating_index = np.real(eff_index_info["n_eff_l"])
@@ -254,7 +254,7 @@ class Simulation(mp.Simulation):
         theta = mpo.atan2(pos.y, pos.x)/np.pi*180 - np.pi/72
         theta = theta if theta > -np.pi else theta + np.pi*2
 
-        if r > 8.7: # or r < 0.15:
+        if pos.x > 14.65 or pos.y > 14.65: # or r < 0.15:
             local_index = self.eff_index_info["spacer_index"]
         else:
             # Z = Z_f(r, theta).item()
@@ -387,7 +387,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 10,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
