@@ -466,6 +466,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     if sim.field_profile != None:
         for j in range(len(sim.field_profile.freq)):
             data2save[f"field_profile_Hz_{j}"] = sim.get_dft_array(sim.field_profile, mp.Hz, j)
+            data2save[f"field_profile_Ez_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ez, j)
             data2save[f"field_profile_Ey_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ey, j)
             data2save[f"field_profile_Ex_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ex, j)
         data2save["field_profile_Eps"] = sim.get_array(mp.Dielectric,
