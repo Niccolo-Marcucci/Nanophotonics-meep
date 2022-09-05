@@ -254,10 +254,11 @@ class Simulation(mp.Simulation):
         theta = mpo.atan2(pos.y, pos.x)/np.pi*180 - np.pi/72
         theta = theta if theta > -np.pi else theta + np.pi*2
 
-        if r > 8.7 or r < 0.15:
+        if r > 8.7: # or r < 0.15:
             local_index = self.eff_index_info["spacer_index"]
         else:
-            Z = Z_f(r, theta).item()
+            # Z = Z_f(r, theta).item()
+            Z = Z_f(pos.x, pos.y).item()
             Z = Z if Z > 0 else 0
             Z = Z if Z < 65 else 65
             local_index = n_eff_wv(Z)
@@ -386,7 +387,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 50,
+                                resolution = 40,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -413,7 +414,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         if mp.am_really_master():
             fig.savefig(f'{sim.name}-xy.jpg')
-        # plt.show()
+        plt.show()
         # plt.close()
 
     # mp.verbosity(0)
@@ -509,18 +510,23 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     data = io.loadmat("Lumerical-Objects/multilayer_design/designs/TE_N7_dispersion_azoPPA_1.615.mat")
     n_eff = itp.RegularGridInterpolator((data["d"][0], data["lambda"][0]), data["n_eff"])
-    data = io.loadmat("16_29_50_WR_cavity_and_outcoupler_pos_280_D661_FF0d4_Ndbr30_Nout10_charge0_x1_15nm_1025C_RADIAL_compression.mat")
+    # data = io.loadmat("16_29_50_WR_cavity_and_outcoupler_pos_280_D661_FF0d4_Ndbr30_Nout10_charge0_x1_15nm_1025C_RADIAL_compression.mat")
 
-    r = data["R"][0]
-    theta = data["theta"][0]
-    Z = data["Z"] + 60.8
-    theta = np.concatenate((theta, -theta[0:1]))
-    Z = np.concatenate((Z[r<9,:], Z[r<9,0:1]),axis=1)
-    r = r[r<9]
-    Z = Z[r>.1,:]
-    r = r[r>.1]
-    Z_interp = itp.RegularGridInterpolator((r, theta), Z)
+    # r = data["R"][0]
+    # theta = data["theta"][0]
+    # Z = data["Z"] + 60.8
+    # theta = np.concatenate((theta, -theta[0:1]))
+    # Z = np.concatenate((Z[r<9,:], Z[r<9,0:1]),axis=1)
+    # r = r[r<9]
+    # Z = Z[r>.1,:]
+    # r = r[r>.1]
+    # Z_interp = itp.RegularGridInterpolator((r, theta), Z)
 
+    data = io.loadmat("topo_resampled2.mat")
+    x = data["xx"][0]
+    y = data["yy"][0]
+    Z = data["topod"] + 60.8
+    Z_interp = itp.RegularGridInterpolator((x, y), Z)
     # R, THT = np.meshgrid(r,theta)
     # plt.figure()
     # ax = plt.subplot(111,projection='3d')
