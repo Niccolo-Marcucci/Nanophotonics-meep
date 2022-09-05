@@ -582,7 +582,7 @@ if __name__ == "__main__":              # good practise in parallel computing
             n_eff_l      = n_eff_wv(2)
             n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)
             n_eff_mod_h  = n_eff_wv(40) - n_eff_wv(31)
-            n_eff_spacer = n_eff_wv(65)
+            n_eff_spacer = n_eff_wv(62)
     # for source_pos in [0]: # 0, period/4, period/2]:
 
     # for i in range(len(n_eff_h_v)) :
