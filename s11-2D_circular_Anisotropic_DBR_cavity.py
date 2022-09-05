@@ -294,7 +294,7 @@ class Simulation(mp.Simulation):
         else:
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
-                nfreq = 1#1000 if df != 0 else 1
+                nfreq = 1000 if df != 0 else 1
                 for angolo in np.linspace(-np.pi, np.pi,17)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
@@ -313,6 +313,7 @@ class Simulation(mp.Simulation):
                 self.Ex.append([])
                 self.Ey.append([])
                 self.Ez.append([])
+
                 if not self.empty:
                     self.harminv_instance = None #mp.Harminv(mp.Ex, mp.Vector3(), f, df)
 
@@ -415,8 +416,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
         fig.colorbar(plot.images[0])
         fig.savefig(f'{sim.name}-xy.jpg')
-        plt.show()
-        # plt.close()
+        # plt.show()
+        plt.close()
 
     # mp.verbosity(0)
     step_functions = []
@@ -485,6 +486,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     if len(sim.Ex) > 0:
         data2save["E_x"] = sim.Ex
         data2save["E_y"] = sim.Ey
+        data2save["E_z"] = sim.Ez
 
     if len(spectra) > 0 :
         data2save["wavelength"] = 1/spectrum_f*1e3
