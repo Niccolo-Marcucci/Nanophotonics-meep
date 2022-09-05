@@ -271,13 +271,13 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,is_integrated=True),
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y/10),
-                            component = mp.Ey,
+                            component = mp.Ez,
                             amplitude = np.cos(source_tilt)),
                           mp.Source(
                              src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                              center = source_pos,
                              size = mp.Vector3(),
-                             component = mp.Ex,
+                             component = mp.Ez,
                              amplitude = np.sin(source_tilt))] # dephased by pi/4
 
         self.harminv_instance = None
@@ -287,7 +287,7 @@ class Simulation(mp.Simulation):
         self.Ey = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.590]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ez], 1/np.array([.590]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
@@ -305,7 +305,7 @@ class Simulation(mp.Simulation):
                     self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
                     self.Ex.append([])
                     self.Ey.append([])
-                self.field_FT = self.add_dft_fields([mp.Ey, mp.Ex], f, df, nfreq,
+                self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
                                                     center = mp.Vector3(),
                                                     size = mp.Vector3())
                 self.Ex.append([])
@@ -573,7 +573,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(0,+np.pi/2,3):
+    for source_tilt in np.linspace(0,+np.pi/2,1):
         for wavelength in np.linspace(.585, .5871, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
