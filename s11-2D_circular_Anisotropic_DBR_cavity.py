@@ -322,6 +322,7 @@ def save_fields(sim):
         sim.Ex[i].append( sim.get_array(mp.Ex, center = monitor.regions[0].center, size = monitor.regions[0].size) )
         sim.Ey[i].append( sim.get_array(mp.Ey, center = monitor.regions[0].center, size = monitor.regions[0].size) )
         sim.Ez[i].append( sim.get_array(mp.Hz, center = monitor.regions[0].center, size = monitor.regions[0].size) )
+    monitor = sim.field_FT
     sim.Ex[i+1].append( sim.get_array(mp.Ex, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
     sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
     sim.Ez[i+1].append( sim.get_array(mp.Hz, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
@@ -393,7 +394,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 10,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
