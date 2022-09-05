@@ -542,7 +542,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
     n_eff_mod_l = n_eff([15e-9, wavelength*1e-6])[0] - n_eff_l
     n_eff_mod_h = n_eff([39e-9, wavelength*1e-6])[0] - n_eff_h
-    n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
+    n_eff_spacer = n_eff([62e-9, wavelength*1e-6])[0]
     #%% load susceptibilities data.
     # Even though the variable are still called n_eff, they refer
     # to epsilon susceptibilities. mpo.Medium() can handle it
