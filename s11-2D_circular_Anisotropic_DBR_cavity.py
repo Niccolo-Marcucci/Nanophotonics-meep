@@ -285,6 +285,7 @@ class Simulation(mp.Simulation):
         self.spectrum_monitors = []
         self.Ex = []
         self.Ey = []
+        self.Ez = []
 
         if  allow_profile :
             self.field_profile = self.add_dft_fields([mp.Ez], 1/np.array([.590]),#f, 0, 1,
