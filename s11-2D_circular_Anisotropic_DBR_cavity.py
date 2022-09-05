@@ -294,7 +294,7 @@ class Simulation(mp.Simulation):
         else:
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
-                nfreq = 0#1000 if df != 0 else 1
+                nfreq = 1#1000 if df != 0 else 1
                 for angolo in np.linspace(-np.pi, np.pi,17)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
