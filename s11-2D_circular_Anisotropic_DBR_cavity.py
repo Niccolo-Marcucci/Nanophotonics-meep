@@ -85,7 +85,7 @@ class Simulation(mp.Simulation):
         self.eff_index_info = eff_index_info
         self.cavity_r_size = (cavity_parameters["D"]/2 + cavity_parameters["period"] * cavity_parameters["N_rings"]) * (cavity_parameters["N_rings"]>0)
 
-        self.domain_x = self.domain_y = 15. # 2*(self.cavity_r_size + self.extra_space_xy)
+        self.domain_x = self.domain_y = 30. # 2*(self.cavity_r_size + self.extra_space_xy)
 
         if pattern_type == 'positive':
             self.grating_index = np.real(eff_index_info["n_eff_l"])
@@ -250,11 +250,11 @@ class Simulation(mp.Simulation):
     def imported_structure(self, pos):
         Z_f = self.eff_index_info["Z_f"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
-        r = pos.norm()
-        theta = mpo.atan2(pos.y, pos.x)/np.pi*180 - np.pi/72
-        theta = theta if theta > -np.pi else theta + np.pi*2
+        # r = pos.norm()
+        # theta = mpo.atan2(pos.y, pos.x)/np.pi*180 - np.pi/72
+        # theta = theta if theta > -np.pi else theta + np.pi*2
 
-        if pos.x > 14.65 or pos.y > 14.65: # or r < 0.15:
+        if abs(pos.x) > 14.65 or abs(pos.y) > 14.65: # or r < 0.15:
             local_index = self.eff_index_info["spacer_index"]
         else:
             # Z = Z_f(r, theta).item()
