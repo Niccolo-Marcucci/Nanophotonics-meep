@@ -307,9 +307,9 @@ class Simulation(mp.Simulation):
                     self.Ex.append([])
                     self.Ey.append([])
                     self.Ez.append([])
-                # self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
-                #                                     center = mp.Vector3(),
-                #                                     size = mp.Vector3())
+                self.field_FT = self.add_dft_fields([mp.Ez], f, 0, nfreq,
+                                                    center = mp.Vector3(),
+                                                    size = mp.Vector3())
                 self.Ex.append([])
                 self.Ey.append([])
                 self.Ez.append([])
@@ -415,7 +415,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
         fig.colorbar(plot.images[0])
         fig.savefig(f'{sim.name}-xy.jpg')
-        plt.show()
+        # plt.show()
         # plt.close()
 
     # mp.verbosity(0)
