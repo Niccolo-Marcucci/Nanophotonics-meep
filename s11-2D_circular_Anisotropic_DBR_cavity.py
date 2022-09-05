@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos)
+        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos)#circular_deformed_cavity(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -343,7 +343,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "FF": .5,
         "period": DBR_period,
         "N_rings": 30,
-        "tilt": source_tilt}
+        "tilt": 0 } #source_tilt}
 
     outcoupler_parameters = {
         "type": 'spiral',
@@ -386,7 +386,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 50,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -414,13 +414,13 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         if mp.am_really_master():
             fig.savefig(f'{sim.name}-xy.jpg')
         # plt.show()
-        plt.close()
+        # plt.close()
 
     # mp.verbosity(0)
     step_functions = []
     if sim.harminv_instance != None :
         step_functions.append( mp.after_sources(sim.harminv_instance) )
-
+    step_functions.append((save_fields))
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
@@ -480,7 +480,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         spectrum_f = np.array(mp.get_flux_freqs(monitor))
         spectra.append(np.array(mp.get_fluxes(monitor)))
 
-    if df == 0:
+    if len(sim.Ex) > 0:
         data2save["E_x"] = sim.Ex
         data2save["E_y"] = sim.Ey
 
@@ -533,7 +533,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
     n_eff_mod_l = n_eff([15e-9, wavelength*1e-6])[0] - n_eff_l
-    n_eff_mod_h = n_eff([40e-9, wavelength*1e-6])[0] - n_eff_h
+    n_eff_mod_h = n_eff([39e-9, wavelength*1e-6])[0] - n_eff_h
     n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
     #%% load susceptibilities data.
     # Even though the variable are still called n_eff, they refer
@@ -565,7 +565,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi/2,+np.pi/3*2,2)[1:]:
+    for source_tilt in np.linspace(0,+np.pi/2,3):
         for wavelength in np.linspace(.585, .5871, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
