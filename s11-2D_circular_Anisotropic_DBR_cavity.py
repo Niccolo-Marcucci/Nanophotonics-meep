@@ -294,7 +294,7 @@ class Simulation(mp.Simulation):
         else:
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
-                nfreq = 1000 if df != 0 else 1
+                nfreq = 0#1000 if df != 0 else 1
                 for angolo in np.linspace(-np.pi, np.pi,17)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
@@ -303,11 +303,11 @@ class Simulation(mp.Simulation):
                         center = mp.Vector3(DL_x, DL_y),
                         size = mp.Vector3(0, 0),
                         direction = direction)
-                    self.spectrum_monitors.append(self.add_flux(f, 0, nfreq, fluxr))#, yee_grid=True))
+                    self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
                     self.Ex.append([])
                     self.Ey.append([])
                     self.Ez.append([])
-                self.field_FT = self.add_dft_fields([mp.Ez], f, 0, nfreq,
+                self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
                                                     center = mp.Vector3(),
                                                     size = mp.Vector3())
                 self.Ex.append([])
@@ -415,7 +415,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
         fig.colorbar(plot.images[0])
         fig.savefig(f'{sim.name}-xy.jpg')
-        # plt.show()
+        plt.show()
         # plt.close()
 
     # mp.verbosity(0)
