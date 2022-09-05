@@ -318,7 +318,7 @@ class Simulation(mp.Simulation):
                     self.harminv_instance = None #mp.Harminv(mp.Ex, mp.Vector3(), f, df)
 
 def save_fields(sim):
-    i=0
+    i=-1
     for i, monitor in enumerate(sim.spectrum_monitors):
         sim.Ex[i].append( sim.get_array(mp.Ex, center = monitor.regions[0].center, size = monitor.regions[0].size) )
         sim.Ey[i].append( sim.get_array(mp.Ey, center = monitor.regions[0].center, size = monitor.regions[0].size) )
