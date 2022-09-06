@@ -271,13 +271,13 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,is_integrated=True),
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y/10),
-                            component = mp.Hz,
+                            component = mp.Ez,
                             amplitude = np.cos(source_tilt)),
                           mp.Source(
                              src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
                              center = source_pos,
                              size = mp.Vector3(),
-                             component = mp.Hz,
+                             component = mp.Ez,
                              amplitude = np.sin(source_tilt))] # dephased by pi/4
 
         self.harminv_instance = None
@@ -322,11 +322,11 @@ def save_fields(sim):
     for i, monitor in enumerate(sim.spectrum_monitors):
         sim.Ex[i].append( sim.get_array(mp.Ex, center = monitor.regions[0].center, size = monitor.regions[0].size) )
         sim.Ey[i].append( sim.get_array(mp.Ey, center = monitor.regions[0].center, size = monitor.regions[0].size) )
-        sim.Ez[i].append( sim.get_array(mp.Hz, center = monitor.regions[0].center, size = monitor.regions[0].size) )
+        sim.Ez[i].append( sim.get_array(mp.Ez, center = monitor.regions[0].center, size = monitor.regions[0].size) )
     monitor = sim.field_FT
     sim.Ex[i+1].append( sim.get_array(mp.Ex, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
     sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
-    sim.Ez[i+1].append( sim.get_array(mp.Hz, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
+    sim.Ez[i+1].append( sim.get_array(mp.Ez, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff_wv=None, Z_f=None):
