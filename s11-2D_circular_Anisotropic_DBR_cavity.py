@@ -538,7 +538,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     data = io.loadmat("topo_resampled2.mat")
     x = data["xx"][0]
     y = data["yy"][0]
-    Z = data["topod"] + 65.8
+    Z = data["topod"] + 60.8
     Z_interp = itp.RegularGridInterpolator((y, x), Z)
     # raise
 
