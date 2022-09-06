@@ -245,7 +245,7 @@ class Simulation(mp.Simulation):
             else:
                 local_index = self.background_index + mod_ridges   * (1- mpo.sin(theta+tilt)**8)  * (self.grating_index < self.background_index)
 
-        local_index += np.random.rand(1)*0.01
+        local_index += np.random.rand(1)*0.05
         return local_index**2
 
     def imported_structure(self, pos):
