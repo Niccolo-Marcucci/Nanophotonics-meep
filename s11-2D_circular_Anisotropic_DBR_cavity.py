@@ -585,7 +585,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi,+np.pi/2,13)[1:]:
+    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,13)[1:]:
         for wavelength in np.linspace(.585, .5871, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
