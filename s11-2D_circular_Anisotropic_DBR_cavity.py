@@ -276,7 +276,7 @@ class Simulation(mp.Simulation):
         self.sources = [ mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df,is_integrated=True),#,
                             center = source_pos,
-                            size = mp.Vector3(y =self.cell_size.y),# 0), #
+                            size = mp.Vector3(y = 0), #self.cell_size.y),#
                             component = mp.Ey,
                             amplitude = np.cos(source_tilt)),
                          mp.Source(
@@ -411,7 +411,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=-sim.cavity_r_size - 0.1),
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(), #x=-sim.cavity_r_size - 0.1),
                                          source_tilt=source_tilt, allow_profile=False)# y=1e-3
 
     # raise Exception()1
