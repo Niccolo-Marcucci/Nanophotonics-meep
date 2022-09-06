@@ -274,17 +274,17 @@ class Simulation(mp.Simulation):
 
     def init_sources_and_monitors(self, f, df, source_pos, source_tilt, allow_profile=False) :
         self.sources = [ mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,is_integrated=True),
+                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df,is_integrated=True),#,
                             center = source_pos,
-                            size = mp.Vector3(y = 0), #self.cell_size.y/10),
-                            component = mp.Ez,
-                            amplitude = np.cos(source_tilt)),
-                          mp.Source(
-                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                             center = source_pos,
-                             size = mp.Vector3(),
-                             component = mp.Ez,
-                             amplitude = np.sin(source_tilt))] # dephased by pi/4
+                            size = mp.Vector3(y =self.cell_size.y),# 0), #
+                            component = mp.Ey,
+                            amplitude = 1)]#np.cos(source_tilt))
+                          # mp.Source(
+                          #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                          #    center = source_pos,
+                          #    size = mp.Vector3(),
+                          #    component = mp.Ez,
+                          #    amplitude = np.sin(source_tilt))] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
@@ -313,7 +313,7 @@ class Simulation(mp.Simulation):
                     self.Ex.append([])
                     self.Ey.append([])
                     self.Ez.append([])
-                self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
+                self.field_FT = self.add_dft_fields([mp.Hz], f, df, nfreq,
                                                     center = mp.Vector3(),
                                                     size = mp.Vector3())#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
                 self.Ex.append([])
@@ -358,7 +358,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "FF": .5,
         "period": DBR_period,
         "N_rings": 30,
-        "tilt": 0 } #source_tilt}
+        "tilt": source_tilt}
 
     outcoupler_parameters = {
         "type": 'spiral',
@@ -411,8 +411,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=0,y=0),
-                                         source_tilt=source_tilt, allow_profile=True)# y=1e-3
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=-sim.cavity_r_size - 0.1),
+                                         source_tilt=source_tilt, allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -431,7 +431,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     step_functions = []
     if sim.harminv_instance != None :
         step_functions.append( mp.after_sources(sim.harminv_instance) )
-    # step_functions.append((save_fields))
+    step_functions.append((save_fields))
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
@@ -585,7 +585,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(0,+np.pi/2,1):
+    for source_tilt in np.linspace(-np.pi,+np.pi/2,13)[1:]:
         for wavelength in np.linspace(.585, .5871, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
