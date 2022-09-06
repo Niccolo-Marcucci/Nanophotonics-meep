@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos)#circular_deformed_cavity(pos) #
+        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos) # imported_structure(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -245,6 +245,7 @@ class Simulation(mp.Simulation):
             else:
                 local_index = self.background_index + mod_ridges   * (1- mpo.sin(theta+tilt)**8)  * (self.grating_index < self.background_index)
 
+        local_index += np.random.rand(1)*0.01
         return local_index**2
 
     def imported_structure(self, pos):
