@@ -231,21 +231,26 @@ class Simulation(mp.Simulation):
             # local_index = np.polyval(p_neff_590, 65)
             local_index = self.eff_index_info["spacer_index"]
         else:
-            is_groove = False
-            for i in range(N):
-                groove_start = D/2 + i*period
-                groove_end   = D/2 + i*period + FF*period
-                if r > groove_start and r <= groove_end:
-                    is_groove = True
-                    break
+            tranch = self.grating_index    + mod_tranches * (1-mpo.sin(theta +tilt)**8)
+            ridge  = self.background_index + mod_ridges   * (1-mpo.sin(theta +tilt)**8)
+            amplitude = ridge - tranch
+            local_index = tranch + amplitude *.5*(1 - np.sin(2*np.pi/period * (r - D/2)))
 
-            # modulate only the higher effective index part
-            if is_groove:
-                local_index = self.grating_index    + mod_tranches * (1-mpo.sin(theta +tilt)**8)  * (self.grating_index < self.background_index)
-            else:
-                local_index = self.background_index + mod_ridges   * (1- mpo.sin(theta+tilt)**8)  * (self.grating_index < self.background_index)
+            # is_groove = False
+            # for i in range(N):
+            #     groove_start = D/2 + i*period
+            #     groove_end   = D/2 + i*period + FF*period
+            #     if r > groove_start and r <= groove_end:
+            #         is_groove = True
+            #         break
 
-        local_index += (np.random.rand(1) - .5)*0.1
+            # # modulate only the higher effective index part
+            # if is_groove:
+            #     local_index = self.grating_index    + mod_tranches * (1-mpo.sin(theta +tilt)**8)  * (self.grating_index < self.background_index)
+            # else:
+            #     local_index = self.background_index + mod_ridges   * (1- mpo.sin(theta+tilt)**8)  * (self.grating_index < self.background_index)
+
+        local_index += (np.random.rand(1) - .5)*00
         return local_index**2 if local_index > 1 else 1
 
     def imported_structure(self, pos):
@@ -549,7 +554,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
     n_eff_mod_l = n_eff([15e-9, wavelength*1e-6])[0] - n_eff_l
     n_eff_mod_h = n_eff([39e-9, wavelength*1e-6])[0] - n_eff_h
-    n_eff_spacer = n_eff([62e-9, wavelength*1e-6])[0]
+    n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
     #%% load susceptibilities data.
     # Even though the variable are still called n_eff, they refer
     # to epsilon susceptibilities. mpo.Medium() can handle it
@@ -589,7 +594,7 @@ if __name__ == "__main__":              # good practise in parallel computing
             n_eff_l      = n_eff_wv(2)
             n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)
             n_eff_mod_h  = n_eff_wv(40) - n_eff_wv(31)
-            n_eff_spacer = n_eff_wv(61)
+            n_eff_spacer = n_eff_wv(65)
     # for source_pos in [0]: # 0, period/4, period/2]:
 
     # for i in range(len(n_eff_h_v)) :
