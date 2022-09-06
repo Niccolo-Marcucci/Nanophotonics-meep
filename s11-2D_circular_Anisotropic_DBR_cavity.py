@@ -245,8 +245,8 @@ class Simulation(mp.Simulation):
             else:
                 local_index = self.background_index + mod_ridges   * (1- mpo.sin(theta+tilt)**8)  * (self.grating_index < self.background_index)
 
-        local_index += np.random.rand(1)*0.05
-        return local_index**2
+        local_index += (np.random.rand(1) - .5)*0.05
+        return local_index**2 if local_index > 1 else 1
 
     def imported_structure(self, pos):
         Z_f = self.eff_index_info["Z_f"]
