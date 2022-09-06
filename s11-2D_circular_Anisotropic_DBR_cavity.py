@@ -278,13 +278,13 @@ class Simulation(mp.Simulation):
                             center = source_pos,
                             size = mp.Vector3(y =self.cell_size.y),# 0), #
                             component = mp.Ey,
-                            amplitude = 1)]#np.cos(source_tilt))
-                          # mp.Source(
-                          #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                          #    center = source_pos,
-                          #    size = mp.Vector3(),
-                          #    component = mp.Ez,
-                          #    amplitude = np.sin(source_tilt))] # dephased by pi/4
+                            amplitude = np.cos(source_tilt)),
+                         mp.Source(
+                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                            center = source_pos,
+                            size = mp.Vector3(),
+                            component = mp.Ex,
+                            amplitude = np.sin(source_tilt))] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
@@ -294,7 +294,7 @@ class Simulation(mp.Simulation):
         self.Ez = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ez], 1/np.array([.5809, .5880, .590]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ex,mp.Ey], 1/np.array([.5809, .5880, .590]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
@@ -358,7 +358,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "FF": .5,
         "period": DBR_period,
         "N_rings": 30,
-        "tilt": source_tilt}
+        "tilt": 0} #source_tilt}
 
     outcoupler_parameters = {
         "type": 'spiral',
