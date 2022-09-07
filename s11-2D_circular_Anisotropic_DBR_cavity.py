@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos) # imported_structure(pos) #
+        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos) # circular_deformed_cavity(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -277,14 +277,14 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df,is_integrated=True),#,
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y),#
-                            component = mp.Ey,
-                            amplitude = np.cos(source_tilt)),
-                         mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                            center = source_pos,
-                            size = mp.Vector3(),
-                            component = mp.Ex,
-                            amplitude = np.sin(source_tilt))] # dephased by pi/4
+                            component = mp.Ez,
+                            amplitude = 1)] # np.cos(source_tilt)),
+                         # mp.Source(
+                         #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                         #    center = source_pos,
+                         #    size = mp.Vector3(),
+                         #    component = mp.Ex,
+                         #    amplitude = np.sin(source_tilt))] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
@@ -294,7 +294,7 @@ class Simulation(mp.Simulation):
         self.Ez = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ex,mp.Ey], 1/np.array([.5809, .5880, .590]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ez], 1/np.array([.5809, .5880, .590]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
@@ -313,7 +313,7 @@ class Simulation(mp.Simulation):
                     self.Ex.append([])
                     self.Ey.append([])
                     self.Ez.append([])
-                self.field_FT = self.add_dft_fields([mp.Hz], f, df, nfreq,
+                self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
                                                     center = mp.Vector3(),
                                                     size = mp.Vector3())#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
                 self.Ex.append([])
@@ -540,10 +540,10 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # Z_f = lambda rr, tht: Z_interp((rr,tht))
 
-    data = io.loadmat("topo_resampled2.mat")
+    data = io.loadmat("topo_resampled3.mat")
     x = data["xx"][0]
     y = data["yy"][0]
-    Z = data["topod"] + 60.8
+    Z = data["topod"] + 65-3
     Z_interp = itp.RegularGridInterpolator((y, x), Z)
     # raise
 
@@ -585,7 +585,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,13)[1:]:
+    for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 1)[1:]:
         for wavelength in np.linspace(.585, .5871, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
