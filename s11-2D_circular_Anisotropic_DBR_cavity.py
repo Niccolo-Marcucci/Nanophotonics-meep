@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos) # circular_deformed_cavity(pos) #
+        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos) #imported_structure(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -183,6 +183,7 @@ class Simulation(mp.Simulation):
         return local_index**2
 
     def weird_cone(self, pos):
+        # used for testing weird conic shapes of the central spacer
         r = pos.norm()
         z_min = -50.8
         z_max = 4.2
@@ -231,8 +232,8 @@ class Simulation(mp.Simulation):
             # local_index = np.polyval(p_neff_590, 65)
             local_index = self.eff_index_info["spacer_index"]
         else:
-            tranch = self.grating_index    + mod_tranches * (1-mpo.sin(theta +tilt)**8)
-            ridge  = self.background_index + mod_ridges   * (1-mpo.sin(theta +tilt)**8)
+            tranch = self.grating_index    + mod_tranches * (1 - np.sin(np.sin(.5*theta)*theta +tilt)**4) # (1-mpo.sin(theta +tilt)**8)
+            ridge  = self.background_index + mod_ridges   * (1 - np.sin(np.sin(.5*theta)*theta +tilt)**4) # (1-mpo.sin(theta +tilt)**8)
             amplitude = ridge - tranch
             local_index = tranch + amplitude *.5*(1 - np.sin(2*np.pi/period * (r - D/2)))
 
@@ -300,8 +301,8 @@ class Simulation(mp.Simulation):
         else:
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
-                nfreq = 1000 if df != 0 else 1
-                for angolo in np.linspace(-np.pi, np.pi,0)[1:]:
+                nfreq = 1 if df != 0 else 1
+                for angolo in np.linspace(-np.pi/2, np.pi/2, 9)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
                     direction = mp.X if abs(DL_y) < DL * np.cos(np.pi/4) else mp.Y
@@ -540,7 +541,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # Z_f = lambda rr, tht: Z_interp((rr,tht))
 
-    data = io.loadmat("topo_resampled3.mat")
+    data = io.loadmat("topo_resampled2.mat")
     x = data["xx"][0]
     y = data["yy"][0]
     Z = data["topod"] + 65-3
@@ -585,7 +586,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 2)[1:]:
+    for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 9)[1:]:
         for wavelength in np.linspace(.585, .5871, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
