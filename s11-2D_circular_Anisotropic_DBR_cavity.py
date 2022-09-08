@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos) #imported_structure(pos) #
+        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos) # circular_deformed_cavity(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -344,7 +344,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=1000
+    sim_end=400
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -402,7 +402,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 50,
+                                resolution = 40,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -541,7 +541,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # Z_f = lambda rr, tht: Z_interp((rr,tht))
 
-    data = io.loadmat("topo_resampled2.mat")
+    data = io.loadmat("topo_resampled4.mat")
     x = data["xx"][0]
     y = data["yy"][0]
     Z = data["topod"] + 65-3
