@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos) # circular_undeformed_cavity(pos) #
+        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos) #imported_structure(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -233,7 +233,7 @@ class Simulation(mp.Simulation):
             local_index = self.eff_index_info["spacer_index"]
         else:
             tranch = self.grating_index    + mod_tranches * (mpo.sin(theta +tilt)**8)
-            ridge  = self.background_index + mod_ridges   * (mpo.sin(theta +tilt)**8)
+            ridge  = self.background_index + mod_ridges * (mpo.sin(theta +tilt)**8)
             amplitude = ridge - tranch
             local_index = tranch + amplitude *.5*(1 - np.sin(2*np.pi/period * (r - D/2)))
 
@@ -303,7 +303,7 @@ class Simulation(mp.Simulation):
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
                 nfreq = 1 if df != 0 else 1
-                for angolo in np.linspace(-np.pi, np.pi,0)[1:]:
+                for angolo in np.linspace(-np.pi, np.pi,33)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
                     direction = mp.X if abs(DL_y) < DL * np.cos(np.pi/4) else mp.Y
@@ -311,7 +311,7 @@ class Simulation(mp.Simulation):
                         center = mp.Vector3(DL_x, DL_y),
                         size = mp.Vector3(0, 0),
                         direction = direction)
-                    self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
+                    # self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
                     self.time_monitors.append(mp.Volume(center = mp.Vector3(DL_x, DL_y), size = mp.Vector3(0, 0)))
                     self.Ex.append([])
                     self.Ey.append([])
@@ -320,7 +320,7 @@ class Simulation(mp.Simulation):
                 #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
                 #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
                 self.time_monitors.append(mp.Volume(center = mp.Vector3(),
-                                                    size = mp.Vector3(self.cavity_parameters["D"],self.cavity_parameters["D"])))
+                                                    size = mp.Vector3(0,0)))
                 self.Ex.append([])
                 self.Ey.append([])
                 self.Ez.append([])
@@ -586,19 +586,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    # for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 2)[1:]:
-    source_tilt = 0
+    for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 2)[1:]:
 
-    for D in [1] : # np.linspace(0, 1, 50):
-        for wavelength in np.linspace(.585, .5871, 1):
-            th = np.linspace(0,70,50)
-            n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
-            n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(31)
-            n_eff_l      = n_eff_wv(2)
-            n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)
-            n_eff_mod_h  = n_eff_wv(40) - n_eff_wv(31)
-            n_eff_spacer = n_eff_wv(65)
     # for source_pos in [0]: # 0, period/4, period/2]:
 
     # for i in range(len(n_eff_h_v)) :
@@ -606,6 +595,18 @@ if __name__ == "__main__":              # good practise in parallel computing
     #     n_eff_l = n_eff_l_v[i]
 
     # for anisotropy in np.linspace(0,5, 1):
+
+    # source_tilt = 0
+    # for D in [1] : # np.linspace(0, 1, 50):
+        for wavelength in np.linspace(.585, .5871, 1):
+            th = np.linspace(0,70,50)
+            n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
+            n_eff_wv = lambda th : n_eff_tmp(th).item()
+            n_eff_h      = n_eff_wv(31)
+            n_eff_l      = n_eff_wv(2)
+            n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)
+            n_eff_mod_h  = n_eff_mod_l #n_eff_wv(40) - n_eff_wv(31)
+            n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
             tuple_list.append( (wavelength,
