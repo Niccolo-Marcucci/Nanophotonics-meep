@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos) # imported_structure(pos) #
+        self.epsilon_proxy_function = lambda pos: self.circular_undeformed_cavity(pos) # imported_structure(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -290,6 +290,7 @@ class Simulation(mp.Simulation):
         self.harminv_instance = None
         self.field_profile = None
         self.spectrum_monitors = []
+        self.time_monitors = []
         self.Ex = []
         self.Ey = []
         self.Ez = []
@@ -302,7 +303,7 @@ class Simulation(mp.Simulation):
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
                 nfreq = 1 if df != 0 else 1
-                for angolo in np.linspace(-np.pi, np.pi,32)[1:]:
+                for angolo in np.linspace(-np.pi, np.pi,0)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
                     direction = mp.X if abs(DL_y) < DL * np.cos(np.pi/4) else mp.Y
@@ -311,12 +312,15 @@ class Simulation(mp.Simulation):
                         size = mp.Vector3(0, 0),
                         direction = direction)
                     self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
+                    self.time_monitors.append(mp.Volume(center = mp.Vector3(DL_x, DL_y), size = mp.Vector3(0, 0)))
                     self.Ex.append([])
                     self.Ey.append([])
                     self.Ez.append([])
-                self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
-                                                    center = mp.Vector3(),
-                                                    size = mp.Vector3())#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
+                # self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
+                #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
+                #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
+                self.time_monitors.append(mp.Volume(center = mp.Vector3(self.cavity_parameters["D"]/2),
+                                                    size = mp.Vector3(self.cavity_parameters["D"])))
                 self.Ex.append([])
                 self.Ey.append([])
                 self.Ez.append([])
@@ -326,14 +330,10 @@ class Simulation(mp.Simulation):
 
 def save_fields(sim):
     i=-1
-    for i, monitor in enumerate(sim.spectrum_monitors):
-        sim.Ex[i].append( sim.get_array(mp.Ex, center = monitor.regions[0].center, size = monitor.regions[0].size) )
-        sim.Ey[i].append( sim.get_array(mp.Ey, center = monitor.regions[0].center, size = monitor.regions[0].size) )
-        sim.Ez[i].append( sim.get_array(mp.Ez, center = monitor.regions[0].center, size = monitor.regions[0].size) )
-    monitor = sim.field_FT
-    sim.Ex[i+1].append( sim.get_array(mp.Ex, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
-    sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
-    sim.Ez[i+1].append( sim.get_array(mp.Ez, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
+    for i, monitor in enumerate(sim.time_monitors):
+        sim.Ex[i].append( sim.get_array(mp.Ex, center = monitor.center, size = monitor.size) )
+        sim.Ey[i].append( sim.get_array(mp.Ey, center = monitor.center, size = monitor.size) )
+        sim.Ez[i].append( sim.get_array(mp.Ez, center = monitor.center, size = monitor.size) )
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff_wv=None, Z_f=None):
@@ -397,7 +397,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += f"angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#
 
 
-    sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
+    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength#/n_eff_l
     sim.eps_averaging = False
     sim.force_complex_fields = False
@@ -586,7 +586,10 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 2)[1:]:
+    # for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 2)[1:]:
+    source_tilt = 0
+
+    for D in np.linspace(0, 1, 50):
         for wavelength in np.linspace(.585, .5871, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
@@ -601,8 +604,6 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for i in range(len(n_eff_h_v)) :
     #     n_eff_h = n_eff_h_v[i]
     #     n_eff_l = n_eff_l_v[i]
-
-    # for D in Ds:
 
     # for anisotropy in np.linspace(0,5, 1):
 
