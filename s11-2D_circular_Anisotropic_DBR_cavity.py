@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_undeformed_cavity(pos) # imported_structure(pos) #
+        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos) # circular_undeformed_cavity(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -319,8 +319,8 @@ class Simulation(mp.Simulation):
                 # self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
                 #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
                 #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
-                self.time_monitors.append(mp.Volume(center = mp.Vector3(self.cavity_parameters["D"]/2),
-                                                    size = mp.Vector3(self.cavity_parameters["D"])))
+                self.time_monitors.append(mp.Volume(center = mp.Vector3(),
+                                                    size = mp.Vector3(self.cavity_parameters["D"],self.cavity_parameters["D"])))
                 self.Ex.append([])
                 self.Ey.append([])
                 self.Ez.append([])
@@ -397,7 +397,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += f"angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#
 
 
-    sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
+    sim = Simulation(sim_name,symmetries=[] ) # mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength#/n_eff_l
     sim.eps_averaging = False
     sim.force_complex_fields = False
@@ -589,7 +589,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 2)[1:]:
     source_tilt = 0
 
-    for D in np.linspace(0, 1, 50):
+    for D in [1] : # np.linspace(0, 1, 50):
         for wavelength in np.linspace(.585, .5871, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
