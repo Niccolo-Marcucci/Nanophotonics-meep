@@ -275,7 +275,7 @@ class Simulation(mp.Simulation):
 
     def init_sources_and_monitors(self, f, df, source_pos, source_tilt, allow_profile=False) :
         self.sources = [ mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df,is_integrated=True),#,
+                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y),#
                             component = mp.Ez,
@@ -302,7 +302,7 @@ class Simulation(mp.Simulation):
         else:
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
-                nfreq = 1 if df != 0 else 1
+                nfreq = 1000 if df != 0 else 1
                 for angolo in np.linspace(-np.pi, np.pi,33)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
@@ -605,7 +605,7 @@ if __name__ == "__main__":              # good practise in parallel computing
             n_eff_h      = n_eff_wv(31)
             n_eff_l      = n_eff_wv(2)
             n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)
-            n_eff_mod_h  = n_eff_mod_l #n_eff_wv(40) - n_eff_wv(31)
+            n_eff_mod_h  = n_eff_wv(40) - n_eff_wv(31)
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
