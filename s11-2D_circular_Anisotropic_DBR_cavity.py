@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos) # circular_deformed_cavity(pos) #
+        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos) # imported_structure(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -232,8 +232,8 @@ class Simulation(mp.Simulation):
             # local_index = np.polyval(p_neff_590, 65)
             local_index = self.eff_index_info["spacer_index"]
         else:
-            tranch = self.grating_index    + mod_tranches * (1 - np.sin(np.sin(.5*theta)*theta +tilt)**4) # (1-mpo.sin(theta +tilt)**8)
-            ridge  = self.background_index + mod_ridges   * (1 - np.sin(np.sin(.5*theta)*theta +tilt)**4) # (1-mpo.sin(theta +tilt)**8)
+            tranch = self.grating_index    + mod_tranches * (mpo.sin(theta +tilt)**8)
+            ridge  = self.background_index + mod_ridges   * (mpo.sin(theta +tilt)**8)
             amplitude = ridge - tranch
             local_index = tranch + amplitude *.5*(1 - np.sin(2*np.pi/period * (r - D/2)))
 
@@ -302,7 +302,7 @@ class Simulation(mp.Simulation):
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
                 nfreq = 1 if df != 0 else 1
-                for angolo in np.linspace(-np.pi, np.pi,17)[1:]:
+                for angolo in np.linspace(-np.pi, np.pi,32)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
                     direction = mp.X if abs(DL_y) < DL * np.cos(np.pi/4) else mp.Y
@@ -541,10 +541,10 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # Z_f = lambda rr, tht: Z_interp((rr,tht))
 
-    data = io.loadmat("topo_resampled4.mat")
+    data = io.loadmat("topo_resampled2.mat")
     x = data["xx"][0]
     y = data["yy"][0]
-    Z = data["topod"] + 65-3
+    Z = data["topod"] + 65 - 4.2
     Z_interp = itp.RegularGridInterpolator((y, x), Z)
     # raise
 
