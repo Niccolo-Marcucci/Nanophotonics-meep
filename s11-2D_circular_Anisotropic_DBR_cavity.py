@@ -232,24 +232,24 @@ class Simulation(mp.Simulation):
             # local_index = np.polyval(p_neff_590, 65)
             local_index = self.eff_index_info["spacer_index"]
         else:
-            tranch = self.grating_index    + mod_tranches * (mpo.sin(theta +tilt)**8)
-            ridge  = self.background_index + mod_ridges * (mpo.sin(theta +tilt)**8)
-            amplitude = ridge - tranch
-            local_index = tranch + amplitude *.5*(1 - np.sin(2*np.pi/period * (r - D/2)))
+            # tranch = self.grating_index    + mod_tranches * (mpo.sin(theta +tilt)**8)
+            # ridge  = self.background_index + mod_ridges   * (mpo.sin(theta +tilt)**8)
+            # amplitude = ridge - tranch
+            # local_index = tranch + amplitude *.5*(1 - np.sin(2*np.pi/period * (r - D/2)))
 
-            # is_groove = False
-            # for i in range(N):
-            #     groove_start = D/2 + i*period
-            #     groove_end   = D/2 + i*period + FF*period
-            #     if r > groove_start and r <= groove_end:
-            #         is_groove = True
-            #         break
+            is_groove = False
+            for i in range(N):
+                groove_start = D/2 + i*period
+                groove_end   = D/2 + i*period + FF*period
+                if r > groove_start and r <= groove_end:
+                    is_groove = True
+                    break
 
-            # # modulate only the higher effective index part
-            # if is_groove:
-            #     local_index = self.grating_index    + mod_tranches * (1-mpo.sin(theta +tilt)**8)  * (self.grating_index < self.background_index)
-            # else:
-            #     local_index = self.background_index + mod_ridges   * (1- mpo.sin(theta+tilt)**8)  * (self.grating_index < self.background_index)
+            # modulate only the higher effective index part
+            if is_groove:
+                local_index = self.grating_index    + mod_tranches * (1 - mpo.sin(theta +tilt)**8)  * (self.grating_index < self.background_index)
+            else:
+                local_index = self.background_index + mod_tranches * (1 - mpo.sin(theta+tilt)**8)  * (self.grating_index < self.background_index)
 
         local_index += (np.random.rand(1) - .5)*00
         return local_index**2 if local_index > 1 else 1
