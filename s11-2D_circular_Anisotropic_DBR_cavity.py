@@ -247,9 +247,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index  + mod_tranches * ( mpo.sin(theta +tilt)**8)  * (self.grating_index < self.background_index)
+                local_index = self.grating_index  + mod_tranches * (mpo.sin(theta + tilt)**2)  * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges * ( mpo.sin(theta+tilt)**8)  * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges * (mpo.sin(theta + tilt)**2)  * (self.grating_index < self.background_index)
 
         local_index += (np.random.rand(1) - .5)*00
         return local_index**2 if local_index > 1 else 1
@@ -303,7 +303,7 @@ class Simulation(mp.Simulation):
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
                 nfreq = 1000 if df != 0 else 1
-                for angolo in np.linspace(-np.pi, np.pi,33)[1:]:
+                for angolo in np.linspace(-np.pi/2, np.pi/2,8)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
                     direction = mp.X if abs(DL_y) < DL * np.cos(np.pi/4) else mp.Y
@@ -566,7 +566,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.560 #
+    D = 0.640 #
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -598,14 +598,14 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # source_tilt = 0
     # for D in [1] : # np.linspace(0, 1, 50):
-        for wavelength in np.linspace(.585, .5871, 1):
+        for wavelength in np.linspace(.592, .5871, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
             n_eff_h      = n_eff_wv(31)
-            n_eff_l      = n_eff_wv(2)
-            n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)
-            n_eff_mod_h  = n_eff_wv(40) - n_eff_wv(31)
+            n_eff_l      = n_eff_wv(10)
+            n_eff_mod_l  = n_eff_wv(34) - n_eff_wv(10)
+            n_eff_mod_h  = n_eff_wv(65) - n_eff_wv(10)
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
