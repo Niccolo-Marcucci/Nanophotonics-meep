@@ -303,7 +303,7 @@ class Simulation(mp.Simulation):
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
                 nfreq = 1000 if df != 0 else 1
-                for angolo in np.linspace(-np.pi/2, np.pi/2,8)[1:]:
+                for angolo in np.linspace(-np.pi/2, np.pi/2,9)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
                     direction = mp.X if abs(DL_y) < DL * np.cos(np.pi/4) else mp.Y
@@ -602,10 +602,10 @@ if __name__ == "__main__":              # good practise in parallel computing
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(31)
+            n_eff_h      = n_eff_wv(34)
             n_eff_l      = n_eff_wv(10)
-            n_eff_mod_l  = n_eff_wv(34) - n_eff_wv(10)
-            n_eff_mod_h  = n_eff_wv(65) - n_eff_wv(10)
+            n_eff_mod_l  = n_eff_wv(10) - n_eff_wv(10)
+            n_eff_mod_h  = n_eff_wv(65) - n_eff_wv(34)
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
