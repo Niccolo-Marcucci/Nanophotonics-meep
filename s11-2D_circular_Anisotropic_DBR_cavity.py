@@ -602,10 +602,10 @@ if __name__ == "__main__":              # good practise in parallel computing
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(34)
-            n_eff_l      = n_eff_wv(10)
-            n_eff_mod_l  = n_eff_wv(65) - n_eff_wv(34)
-            n_eff_mod_h  = n_eff_wv(65) - n_eff_wv(34)
+            n_eff_h      = n_eff_wv(65)
+            n_eff_l      = n_eff_wv(5)
+            n_eff_mod_l  = n_eff_wv(20) - n_eff_wv(5)
+            n_eff_mod_h  = n_eff_wv(65) - n_eff_wv(65)
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
