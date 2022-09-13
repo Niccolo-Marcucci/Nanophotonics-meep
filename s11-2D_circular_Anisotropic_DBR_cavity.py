@@ -604,7 +604,7 @@ if __name__ == "__main__":              # good practise in parallel computing
             n_eff_wv = lambda th : n_eff_tmp(th).item()
             n_eff_h      = n_eff_wv(34)
             n_eff_l      = n_eff_wv(10)
-            n_eff_mod_l  = n_eff_wv(10) - n_eff_wv(10)
+            n_eff_mod_l  = n_eff_wv(65) - n_eff_wv(34)
             n_eff_mod_h  = n_eff_wv(65) - n_eff_wv(34)
             n_eff_spacer = n_eff_wv(65)
 
