@@ -24,7 +24,7 @@ import time
 
 files = os.listdir("data")
 
-hashtag ='57b83ce603'
+hashtag ='c43fc59312'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -55,7 +55,7 @@ for file in files :
                 lista_spectra.append(data['spectra'])
                 FT_x = data['FT_x'][0]
                 FT_y = data['FT_y'][0]
-                # print(data['resonance_table_t500.0'])
+                print(file)
 
 if i == 0 :
     raise FileNotFoundError(f"No spectra file was found for hash {hashtag}")
@@ -74,14 +74,14 @@ sp0 = np.zeros(wavelength.shape)
 for i in range(len(spectrum_empty)):#
     sp0 += abs(spectrum_empty[i])/len(spectrum_empty)
 #%%
-# sp_centre =  np.abs(FT_x)**2/abs(FT_x_empty)**2 # + np.abs(FT_y)**2/abs(FT_y_empty)**2#+
+sp_centre =  np.abs(FT_x)**2 + np.abs(FT_y)**2
 for spectrum in lista_spectra[:]:
     sp = np.zeros(wavelength.shape)
-    for i in [15,7,3,11] : #range(len(spectrum)): # [7,15] : ##
-        sp = abs(spectrum[i])/sp0#/spectrum_empty[i]/len(spectrum)
+    for i in range(len(spectrum))[0:8]: # [3, 7, 11, 15] : #[[7] : # [7,15] : ##
+        sp = abs(spectrum[i])#/spectrum_empty[i]/len(spectrum)
 
-    # sp = sp/max(sp)
-    # sp_centre = sp_centre/max(sp_centre)
+        # sp = sp/max(sp)
+        # sp_centre = sp_centre/max(sp_centre)
         ax1.plot(wavelength, sp)
 
         ax2.plot(wavelength, np.log(sp))
@@ -89,7 +89,7 @@ for spectrum in lista_spectra[:]:
     # ax1.plot(wavelength, sp_centre)
     # ax2.plot(wavelength, np.log(sp_centre))
 
-# plt.legend(titles)
+plt.legend(range(0,17))
 #%%
 for ax in [ax1, ax2]:
     ax.grid(True)

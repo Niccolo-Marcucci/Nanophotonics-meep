@@ -26,7 +26,7 @@ date = time.strftime('%y%m%d-%H%M%S')
 
 
 files = os.listdir("data")
-hashtag ='e8a05f2201'#'5cab4c8862'#'e20d2ea866'#'62ef19ee4d'#'4dc3971d95'#'8a593f9138'#'2cb6bfb1fa'
+hashtag ='7bae1ab6b6'#'5cab4c8862'#'e20d2ea866'#'62ef19ee4d'#'4dc3971d95'#'8a593f9138'#'2cb6bfb1fa'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -82,11 +82,11 @@ if len(spectrum_empty) == 0:
 period = 280
 
 #%% sort second parameter list
-second_parameter = np.array(scnd_param['list'])/np.pi**2
+second_parameter = np.array(scnd_param['list'])
 if second_parameter.size > 1:
     sort_idx = second_parameter.argsort(0)
     sim_filelist = [sim_filelist[idx] for idx in sort_idx]
-    scnd_param['list'] = [round(scnd_param['list'][idx]/np.pi**2) for idx in sort_idx]
+    scnd_param['list'] = [round(scnd_param['list'][idx]) for idx in sort_idx]
     frst_param['list'] = [frst_param['list'][idx] for idx in sort_idx]
 # fig = plt.figure(dpi=150,figsize=(10,5))
 # ax = fig.add_subplot(111)
@@ -138,8 +138,8 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
         data = mpo.loadmat(folder + '/' + file)
         # fig = plt.figure(dpi=150,figsize=(10,5))
         # ax = fig.add_subplot(111)
-        for i in  range(0,len(data['spectra'])):#[7,11,15,] : # [7,15] : ##
-            images[k,:,i] = abs(data['spectra'][i])/spectrum_empty #can devide by spectrum_emty even if we have it at only one freq
+        for i in  [0]:#range(0,len(data['spectra'])):#[7,11,15,] : # [7,15] : ##
+            images[k,:,i] = (abs(data['spectra'][7])**2) # np.abs(data['FT_x'])**2 + np.abs(data['FT_y'])**2 #
         wavelength = data["wavelength"][0]
         WV[k,:]  = wavelength
         WVV[k,:] = 1 / ( (1/wavelength[-1] + 1/wavelength[1])/2 )
@@ -188,20 +188,21 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
         # plt.title(f'n_eff_h={tuple_list[k][1]:.2f};   DBR_period={tuple_list[k][4]*1e3:.0f}; D={tuple_list[k][3]/tuple_list[k][4]:.2f}*DBR_period')
         # fig.savefig(f'{names[k]}_spectrumfield_profile.png')
     fig = plt.figure()
-    image = sum([images[:,:, i] for i in [3,7,11,15]])
+    image = sum([images[:,:, i] for i in [0]])
     # ax = fig.add_subplot(111, projection='3d')
     # ax.plot_surface(WV, WVV, image)
     plt.pcolormesh(WV, WVV, image)
+    plt.axis("image")
     # plt.pcolor(wavelength, first_parameter , image)
     plt.plot(WVV[:,0],WVV[:,0])
 
     fig.set_figheight(6)
-    fig.set_figwidth(12)
+    fig.set_figwidth(15)
     fig.set_dpi(100)
     plt.xlabel('wavelength (nm)')
     plt.ylabel(f'{frst_param["label"]}')
     plt.title(f'Period DBR: {period}nm, source_{scnd_param["label"]}: {second_parameter:.0f}, spacer: 560nm')
-    # fig.savefig(folder + f'/sim_2D_{date}_{scnd_param["name"]}{second_parameter:.0f}_intensity_map.png')
+    # fig.savefig(folder + f'/maps/sim_2D_{date}_{scnd_param["name"]}{second_parameter+360:.0f}_intensity_map.png')
 
     plt.close()
 
@@ -212,21 +213,22 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
     fig.set_figwidth(12)
     def run_parallel(image):
         return itp.griddata((WV.reshape(WV.size), WVV.reshape(WV.size)), image.reshape(WV.size), (lambd, lambd))
-    with Pool(6) as parfor:
-        output = parfor.map(run_parallel, (images[:,:,i] for i in range(len(spectra[:,0])) ))
+    # with Pool(1) as parfor:
+    #     output = parfor.map(run_parallel, (images[:,:,i] for i in [0]))#range(len(spectra[:,0])) ))
+    output = [run_parallel(images[:,:,0])]
     # for i in  tqdm(range(0,len(data['spectra']))):
     #     spectra[i,:] = itp.griddata((WV.reshape(WV.size), WVV.reshape(WV.size)), images[:,:,i].reshape(WV.size), (lambd, lambd))
     spectra = np.array(output)
-    io.savemat(folder + f'/sim_2D_{date}_{scnd_param["name"]}{second_parameter:.0f}_all_monitors_spectrum.mat',
-                {"wavelength":lambd, "intensity": spectra, "monitors_angle": np.linspace(-180,180,17)[1:]})
-    intensity =  sum([spectra[i,:] for i in [3,7,11,15]])
+    # io.savemat(folder + f'/mat_files/sim_2D_{date}_{scnd_param["name"]}{second_parameter+360:.0f}_opposite_monitor_spectrum.mat',
+    #             {"diagonal_wavelength":lambd, "diagonal_intensity": spectra[0], "wv_n_eff": WV, "wavelength" : WVV, "map": image})
+    intensity =  sum([spectra[i,:] for i in [0]])#[3,7,11,15]])
     plt.plot(lambd, intensity )
     plt.xlabel('wavelength (nm)')
     plt.ylabel('intensity (a.u.)')
     plt.grid(True)
     # images.append(image)
     plt.title(f'Period DBR: {period}nm, source_{scnd_param["label"]}: {second_parameter:.0f}, spacer: 560nm')
-    fig.savefig(folder + f'/sim_2D_{date}_{scnd_param["name"]}{second_parameter:.0f}_intensity.png')
+    # fig.savefig(folder + f'/intensity/sim_2D_{date}_{scnd_param["name"]}{second_parameter+360:.0f}_intensity.png')
     plt.close()
     inc_sum += intensity
 #%%
@@ -239,7 +241,7 @@ plt.ylabel('intensity (a.u.)')
 plt.grid(True)
 # images.append(image)
 plt.title(f'Period DBR: {period}nm, spacer: 560nm')
-fig.savefig(folder + f'/sim_2D_{date}_incoerent_sum_intensity.png')
+# fig.savefig(folder + f'/sim_2D_{date}_incoerent_sum_intensity.png')
 # fig = plt.figure()
 # image = np.array(images[0] + images[1])#.transpose()
 # plt.pcolor(wavelength, first_parameter , image)

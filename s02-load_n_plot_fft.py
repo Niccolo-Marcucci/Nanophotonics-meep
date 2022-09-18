@@ -21,10 +21,26 @@ import os
 import sys
 import json
 import time
+from tqdm import tqdm
+
+def ft(x, t, f):
+    dt =  (t[1]-t[0])
+
+    # fourier transform definition
+    # F = np.zeros(f.size, dtype=complex)
+    # for i in range(f.size) :
+    #     F[i] = sum( x * np.exp( -1j*2*np.pi * f[i] * t) ) *dt
+
+    # expoit matrix product to speed up
+    f = np.matrix(f)
+    t = np.matrix(t)
+    x = np.matrix(x)
+    F = np.array(np.exp( -1j*2*np.pi * f.transpose() * t) * x.transpose()) * dt
+    return F.reshape((F.size,))
 
 files = os.listdir("data")
 
-hashtag ='8cc068f5a0'
+hashtag ='42dd1ce876'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -68,7 +84,7 @@ ax2 = fig2.add_subplot(111)
 
 #%%
 flag = True
-padding = int(3e5);
+padding = int(0);
 source_len = int(12e3)
 FF_list = []
 for l in range(len( E_x[:])):
@@ -85,41 +101,49 @@ for l in range(len( E_x[:])):
         dt = np.diff(t)[0];
         t = np.concatenate( (t, t[-1:] + np.cumsum(dt*np.ones( padding)) ) )
         FF = np.zeros(t.size)
-        field = np.zeros( (shape[2],shape[3]) )
+        field = np.zeros( (1000, shape[2],shape[3]) )
     flag = False
 
-    for i in [shape[0]-1]: # range(shape[0]-1) : #[1,5,9,13,16]:# each monitor
-        for j in range(shape[2]) : # each monitor point
+    for i in [shape[0]-1]: # tqdm(range(shape[0]-1)): # #  [1,5,9,13,16]: # each monitor
+        for j in tqdm(range(shape[2])) : # each monitor point
             for k in range(shape[3]):
-                ex = np.concatenate( (E_x[l][i,:,j,k], np.zeros(padding)) )
-                ex[1:source_len] = 0
-                ey = np.concatenate( (E_y[l][i,:,j,k], np.zeros(padding)) )
-                ey[1:source_len] = 0
+                # ex = np.concatenate( (E_x[l][i,:,j,k], np.zeros(padding)) )
+                # ex[1:source_len] = 0
+                # ey = np.concatenate( (E_y[l][i,:,j,k], np.zeros(padding)) )
+                # ey[1:source_len] = 0
                 ez = np.concatenate( (E_z[l][i,:,j,k], np.zeros(padding)) )
                 ez_log = np.log(abs(ez))
                 ez_log[ez_log==-np.Inf] = 0
                 p = np.polyfit(t[source_len:shape[1]], ez_log[source_len:shape[1]],1)
                 ez = ez / np.exp(np.polyval(p, t))
-                ez[:0] = 0
+                ez[:source_len] = 0
 
 
-                FF = abs(np.fft.fftshift(np.fft.fft(ez)))**2 #+ abs(np.fft.fftshift(np.fft.fft(ex)))**2#
-                FF_list.append(FF)
+                # wv = np.linspace(.500, .600, 100)
+                # f = 1/wv
                 f = np.linspace(-1/dt/2, 1/dt/2, FF.size)
                 f -= np.diff(f)[0]/2 if np.mod(FF.size,2) else 0 # shift only if the vector is odd
+                FF = abs(np.fft.fftshift(np.fft.fft(ez)))**2 #+ abs(np.fft.fftshift(np.fft.fft(ex)))**2#
+                # FF = abs(ft(ez, t, f))**2 #+ abs(np.fft.fftshift(np.fft.fft(ex)))**2#
+                FF_list.append(FF[(1/f>.57)*(1/f <.62)])
 
-                idx  = np.argmin(abs(1/f - .570))
-                field[j,k] = FF[idx]
-                ax2.semilogy(t, abs(ez)**2) #+abs(ey)**2)
+                wvs = 1/f[(1/f>.57)*(1/f <.62)]
+
+                for s, wv in enumerate(wvs):
+                    idx  = np.argmin(abs(1/f - wv))
+                    field[s,j,k] = FF[idx]
+                # ax2.semilogy(t, abs(ez)**2) #+abs(ey)**2)
+
 
         ax1.plot(1/f*1e3, FF, '-' if i<10 else '--')
+
 plt.draw()
 #%%
 for ax in [ax1, ax2]:
     ax.grid(True)
     ax.minorticks_on()
     # ax.grid(True, 'minor','x')
-ax1.set_xlim(550, 615)
+ax1.set_xlim(550, 620)
 ax1.set_xlabel('Wavelength [nm]')
 ax2.set_xlabel('time (s)')
 ax1.set_ylabel('Transmission')
@@ -127,22 +151,25 @@ ax2.set_ylabel('field')
 ax1.legend(range(shape[0]-1))
 date = time.strftime('%y%m%d-%H%M%S')
 
+fig.savefig(folder + '/' + date + '_fft.png')
+
 raise
-# fig.savefig(folder + '/' + date + '_fft.png')
-
-
 # plt.legend()
-
+#%%
+# for s, wv in enumerate(wvs): #range(100,200,10) :
+#     # plt.figure()
+#     # plt.imshow(field[s,:,:])
+#     plt.imsave(folder+f"/fields/field_{wv*1e3:.1f}.png", field[s,:,:])
 #%%
 # FF_list.append(FF_list[0])
-im = np.transpose(np.array(FF_list)) [(1/f>.57)*(1/f <.595), :]
+im = np.transpose(np.array(FF_list))# [(1/f>.57)*(1/f <.595), :]
 
-wv = 1/ f[(1/f>.57)*(1/f <.595)] - .57
-#%%
-theta = np.linspace(0,np.pi*2,32)[:-1] + np.pi/31
-THT, wv = np.meshgrid(theta, wv)
-x = wv * np.cos(THT)
-y = wv * np.sin(THT)
+wv = 1/ f[(1/f>.57)*(1/f <.62 )] - .57
+
+theta = np.linspace(-np.pi/2,np.pi/2,9)[1:] # - np.pi/32
+THT, WV = np.meshgrid(theta, wv)
+x = WV * np.cos(THT)
+y = WV * np.sin(THT)
 
 plt.figure()
 plt.pcolormesh(x, y, im)
