@@ -402,7 +402,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 60,
+                                resolution = 50,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -600,8 +600,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for D in [1] : # np.linspace(0, 1, 50):
         # for wavelength in np.linspace(.592, .5871, 1):
 
-    for th_low in np.linspace(0, 65, 30):
-        for th_high in np.linspace(0, 65, 30):
+    for th_low in np.linspace(0, 65, 25):
+        for th_high in np.linspace(0, 65, 25):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
