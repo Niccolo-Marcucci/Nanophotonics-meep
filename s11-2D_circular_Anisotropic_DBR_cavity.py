@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos) #imported_structure(pos) #
+        self.epsilon_proxy_function = lambda pos: self.circular_undeformed_cavity(pos) #imported_structure(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -174,7 +174,7 @@ class Simulation(mp.Simulation):
         else:
             local_index = self.background_index # + mod_ridges
 
-        if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
+        if r < D/2 or r > D/2 + N*period - (1-FF)*period:
             local_index = self.eff_index_info["spacer_index"]
 
             # Z = self.weird_cone( pos)
@@ -326,7 +326,7 @@ class Simulation(mp.Simulation):
                 self.Ez.append([])
 
                 if not self.empty:
-                    self.harminv_instance = None #mp.Harminv(mp.Ex, mp.Vector3(), f, df)
+                    self.harminv_instance = mp.Harminv(mp.Ez, mp.Vector3(), f, df)
 
 def save_fields(sim):
     i=-1
@@ -344,7 +344,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=400
+    sim_end=170
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -394,15 +394,15 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#
+    sim_name += f"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"
 
 
-    sim = Simulation(sim_name,symmetries=[] ) # mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
+    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength#/n_eff_l
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 60,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -431,8 +431,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     # mp.verbosity(0)
     step_functions = []
     if sim.harminv_instance != None :
-        step_functions.append( mp.after_sources(sim.harminv_instance) )
-    step_functions.append((save_fields))
+        step_functions.append( mp.after_time(150, sim.harminv_instance) )
+    # step_functions.append((save_fields))
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
@@ -517,7 +517,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     anisotropy = 0
 
-    wavelength = .580
+    wavelength = .590
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
@@ -586,7 +586,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 2)[1:]:
+    # for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 2)[1:]:
 
     # for source_pos in [0]: # 0, period/4, period/2]:
 
@@ -596,27 +596,31 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # for anisotropy in np.linspace(0,5, 1):
 
-    # source_tilt = 0
+    source_tilt = 0
     # for D in [1] : # np.linspace(0, 1, 50):
-        for wavelength in np.linspace(.592, .5871, 1):
+        # for wavelength in np.linspace(.592, .5871, 1):
+
+    for th_low in np.linspace(0, 65, 30):
+        for th_high in np.linspace(0, 65, 30):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(65)
-            n_eff_l      = n_eff_wv(5)
+            n_eff_h      = n_eff_wv(th_high)
+            n_eff_l      = n_eff_wv(th_low)
             n_eff_mod_l  = n_eff_wv(20) - n_eff_wv(5)
             n_eff_mod_h  = n_eff_wv(65) - n_eff_wv(65)
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
-            tuple_list.append( (wavelength,
-                                n_eff_h, n_eff_l, n_eff_spacer,
-                                D, period,
-                                empty,
-                                source_pos, source_tilt,
-                                n_eff_mod_l,
-                                n_eff_mod_h, n_eff_wv, Z_f ) )
-            j += 1
+            if th_high > th_low:
+                tuple_list.append( (wavelength,
+                                    n_eff_h, n_eff_l, n_eff_spacer,
+                                    D, period,
+                                    empty,
+                                    source_pos, source_tilt,
+                                    n_eff_mod_l,
+                                    n_eff_mod_h, n_eff_wv, Z_f ) )
+                j += 1
     mp.verbosity(1)
     # mp.quiet(True)
     output = []
