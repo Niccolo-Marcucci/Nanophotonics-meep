@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos)
+        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos)#circular_deformed_cavity(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -57,7 +57,7 @@ class Simulation(mp.Simulation):
                     dimensions = dimensions,
                     symmetries = symmetries,
                     filename_prefix = sim_name,
-                    force_complex_fields = False,k_point=mp.Vector3(),
+                    force_complex_fields = False,
                     eps_averaging = False)
 
     @property
@@ -143,7 +143,7 @@ class Simulation(mp.Simulation):
         # print( [self.cell_size.x / self.
 
         with open(f'{self.name}.json', 'w') as fp:
-            data2save = {"eff_index_info": {key: eff_index_info[key] for key in eff_index_info.keys() if type(eff_index_info[key])!=type(lambda x:x)},
+            data2save = {"eff_index_info": {key: eff_index_info[key] for key in eff_index_info.keys() if type(eff_index_info[key]) != type(lambda x:x) },
                          "pattern_type": pattern_type,
                          "resolution": self.resolution}
 
@@ -247,20 +247,37 @@ class Simulation(mp.Simulation):
 
         return local_index**2
 
+    def imported_structure(self, pos):
+        Z_f = self.eff_index_info["Z_f"]
+        n_eff_wv = self.eff_index_info["n_eff_wv"]
+        r = pos.norm()
+        theta = mpo.atan2(pos.y, pos.x)/np.pi*180 - np.pi/72
+        theta = theta if theta > -np.pi else theta + np.pi*2
+
+        if r > 8.7 or r < 0.15:
+            local_index = self.eff_index_info["spacer_index"]
+        else:
+            Z = Z_f(r, theta).item()
+            Z = Z if Z > 0 else 0
+            Z = Z if Z < 65 else 65
+            local_index = n_eff_wv(Z)
+            # print(r,theta)
+
+        return local_index**2
 
     def init_sources_and_monitors(self, f, df, source_pos, source_tilt, allow_profile=False) :
         self.sources = [ mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df,is_integrated=True),
+                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,is_integrated=True),
                             center = source_pos,
-                            size = mp.Vector3(y = self.cell_size.y),
+                            size = mp.Vector3(y = 0), #self.cell_size.y/10),
                             component = mp.Ey,
-                            amplitude = 1)]#np.cos(source_tilt))]
-                         # mp.Source(
-                         #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                         #    center = source_pos,
-                         #    size = mp.Vector3(),
-                         #    component = mp.Ex,
-                         #    amplitude = np.sin(source_tilt))] # dephased by pi/4
+                            amplitude = np.cos(source_tilt)),
+                          mp.Source(
+                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                             center = source_pos,
+                             size = mp.Vector3(),
+                             component = mp.Ex,
+                             amplitude = np.sin(source_tilt))] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
@@ -269,7 +286,7 @@ class Simulation(mp.Simulation):
         self.Ey = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.5816, .5871]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], 1/np.array([.590]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
@@ -303,7 +320,7 @@ def save_fields(sim):
     sim.Ey[i+1].append( sim.get_array(mp.Ey, center = sim.field_FT.regions[0].center, size = monitor.regions[0].size) )
 
 #%% function for parallel computing
-def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff_wv=None):
+def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff_wv=None, Z_f=None):
     # import meep as mp
 
     c0 = 1
@@ -326,7 +343,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "FF": .5,
         "period": DBR_period,
         "N_rings": 30,
-        "tilt": source_tilt}
+        "tilt": 0 } #source_tilt}
 
     outcoupler_parameters = {
         "type": 'spiral',
@@ -344,7 +361,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "modulation_amplitude_ridges": n_eff_mod_h,
         "modulation_amplitude_tranches": n_eff_mod_l,
         "spacer_index": n_eff_spacer,
-        "n_eff_wv": n_eff_wv}
+        "n_eff_wv": n_eff_wv,
+        "Z_f": Z_f}
 
 
     t0 = time.time()
@@ -368,7 +386,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 50,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -378,7 +396,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=-sim.cavity_r_size - 0.2,y=0),
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=0,y=0),
                                          source_tilt=source_tilt, allow_profile=False)# y=1e-3
 
     # raise Exception()1
@@ -393,17 +411,16 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         plt.close()
         print("Only one of the parallel jobs jobs will print the image")
     else:
-        # if mp.am_really_master():
-        #     fig.savefig(f'{sim.name}-xy.jpg')
-        plt.show()
+        if mp.am_really_master():
+            fig.savefig(f'{sim.name}-xy.jpg')
+        # plt.show()
         # plt.close()
-
 
     # mp.verbosity(0)
     step_functions = []
     if sim.harminv_instance != None :
         step_functions.append( mp.after_sources(sim.harminv_instance) )
-
+    step_functions.append((save_fields))
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
@@ -463,7 +480,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         spectrum_f = np.array(mp.get_flux_freqs(monitor))
         spectra.append(np.array(mp.get_fluxes(monitor)))
 
-    if df == 0:
+    if len(sim.Ex) > 0:
         data2save["E_x"] = sim.Ex
         data2save["E_y"] = sim.Ey
 
@@ -492,12 +509,31 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     data = io.loadmat("Lumerical-Objects/multilayer_design/designs/TE_N7_dispersion_azoPPA_1.615.mat")
     n_eff = itp.RegularGridInterpolator((data["d"][0], data["lambda"][0]), data["n_eff"])
+    data = io.loadmat("16_29_50_WR_cavity_and_outcoupler_pos_280_D661_FF0d4_Ndbr30_Nout10_charge0_x1_15nm_1025C_RADIAL_compression.mat")
+
+    r = data["R"][0]
+    theta = data["theta"][0]
+    Z = data["Z"] + 60.8
+    theta = np.concatenate((theta, -theta[0:1]))
+    Z = np.concatenate((Z[r<9,:], Z[r<9,0:1]),axis=1)
+    r = r[r<9]
+    Z = Z[r>.1,:]
+    r = r[r>.1]
+    Z_interp = itp.RegularGridInterpolator((r, theta), Z)
+
+    # R, THT = np.meshgrid(r,theta)
+    # plt.figure()
+    # ax = plt.subplot(111,projection='3d')
+    # ax.plot_surface(R,THT, Z.transpose())
+    # raise
+
+    Z_f = lambda rr, tht: Z_interp((rr,tht))
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
     n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
     n_eff_mod_l = n_eff([15e-9, wavelength*1e-6])[0] - n_eff_l
-    n_eff_mod_h = n_eff([40e-9, wavelength*1e-6])[0] - n_eff_h
+    n_eff_mod_h = n_eff([39e-9, wavelength*1e-6])[0] - n_eff_h
     n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
     #%% load susceptibilities data.
     # Even though the variable are still called n_eff, they refer
@@ -526,14 +562,14 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    # j = 0           # resets  tiple list (insted of commenting all previous lines)
-    # tuple_list = []
+    j = 0           # resets  tiple list (insted of commenting all previous lines)
+    tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi/2,+np.pi/2,13)[1:]:
-        for wavelength in np.linspace(.565, .615, 150):
+    for source_tilt in np.linspace(0,+np.pi/2,3):
+        for wavelength in np.linspace(.585, .5871, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
-            n_eff_wv = lambda th : np.asscalar(n_eff_tmp(th))
+            n_eff_wv = lambda th : n_eff_tmp(th).item()
             n_eff_h      = n_eff_wv(31)
             n_eff_l      = n_eff_wv(2)
             n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)
@@ -556,7 +592,7 @@ if __name__ == "__main__":              # good practise in parallel computing
                                 empty,
                                 source_pos, source_tilt,
                                 n_eff_mod_l,
-                                n_eff_mod_h, n_eff_wv ) )
+                                n_eff_mod_h, n_eff_wv, Z_f ) )
             j += 1
     mp.verbosity(1)
     # mp.quiet(True)
