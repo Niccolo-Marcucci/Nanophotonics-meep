@@ -517,7 +517,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     anisotropy = 0
 
-    wavelength = .596
+    wavelength = .584
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
