@@ -402,7 +402,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 50,
+                                resolution = 40,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -546,7 +546,11 @@ if __name__ == "__main__":              # good practise in parallel computing
     y = data["yy"][0]
     Z = data["topod"] + 65 - 4.2
     Z_interp = itp.RegularGridInterpolator((y, x), Z)
-    # raise
+
+
+    data = io.loadmat("contour_lines_ba617402dd.mat")
+    lines = data["lines"][0]
+    raise
 
     Z_f = lambda x, y: Z_interp((y,x))
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
@@ -600,19 +604,26 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for D in [1] : # np.linspace(0, 1, 50):
         # for wavelength in np.linspace(.592, .5871, 1):
 
-    for th_low in np.linspace(0, 65, 25):
-        for th_high in np.linspace(0, 65, 25):
+
+    # test various thicknesses
+    # for th_low in np.linspace(0, 65, 25):
+    #     for th_high in np.linspace(0, 65, 25):
+
+    # test the eff indeces extracted from the contour of resonances as a function of thicknesses
+    for i in range(lines[0]) :
+        for k in range(lines[1]) :
+
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(th_high)
-            n_eff_l      = n_eff_wv(th_low)
-            n_eff_mod_l  = n_eff_wv(20) - n_eff_wv(5)
-            n_eff_mod_h  = n_eff_wv(65) - n_eff_wv(65)
+            n_eff_h      = lines[0][i,1]#n_eff_wv(th_high)
+            n_eff_l      = lines[0][i,0]#n_eff_wv(th_low)
+            n_eff_mod_l  = lines[1][k,0] - lines[0][i,0]#n_eff_wv(20) - n_eff_wv(5)
+            n_eff_mod_h  = lines[1][k,1] - lines[0][i,1]# n_eff_wv(65) - n_eff_wv(65)
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
-            if th_high > th_low:
+            if n_eff_h > n_eff_l:
                 tuple_list.append( (wavelength,
                                     n_eff_h, n_eff_l, n_eff_spacer,
                                     D, period,
