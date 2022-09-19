@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_undeformed_cavity(pos) #imported_structure(pos) #
+        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos) #imported_structure(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -247,11 +247,11 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index  + mod_tranches * (mpo.sin(theta + tilt)**2)  * (self.grating_index < self.background_index)
+                local_index = self.grating_index  + mod_tranches * (1 - mpo.sin(theta + tilt)**2)  * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges * (mpo.sin(theta + tilt)**2)  * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges * (1 - mpo.sin(theta + tilt)**2)  * (self.grating_index < self.background_index)
 
-        local_index += (np.random.rand(1) - .5)*00
+        # local_index += (np.random.rand(1) - .5)
         return local_index**2 if local_index > 1 else 1
 
     def imported_structure(self, pos):
@@ -326,7 +326,7 @@ class Simulation(mp.Simulation):
                 self.Ez.append([])
 
                 if not self.empty:
-                    self.harminv_instance = mp.Harminv(mp.Ez, mp.Vector3(), f, df)
+                    self.harminv_instance = None # mp.Harminv(mp.Ez, mp.Vector3(), f, df)
 
 def save_fields(sim):
     i=-1
@@ -344,7 +344,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=170
+    sim_end=400
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -394,7 +394,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"
+    sim_name += f"n_eff_l{n_eff_l:.4f}_wv{1/f*1e3:.1f}"#_n_eff_h{n_eff_h:.4f}"#angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"
 
 
     sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -402,7 +402,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 50,
+                                resolution = 40,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -432,7 +432,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     step_functions = []
     if sim.harminv_instance != None :
         step_functions.append( mp.after_time(150, sim.harminv_instance) )
-    # step_functions.append((save_fields))
+    step_functions.append(mp.at_every(0.025,save_fields))
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
@@ -517,7 +517,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     anisotropy = 0
 
-    wavelength = .596
+    wavelength = .590
 
     period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
@@ -541,14 +541,15 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # Z_f = lambda rr, tht: Z_interp((rr,tht))
 
-    #data = io.loadmat("topo_resampled2.mat")
-    #x = data["xx"][0]
-    #y = data["yy"][0]
-    #Z = data["topod"] + 65 - 4.2
-    #Z_interp = itp.RegularGridInterpolator((y, x), Z)
-    # raise
+    # data = io.loadmat("topo_resampled2.mat")
+    # x = data["xx"][0]
+    # y = data["yy"][0]
+    # Z = data["topod"] + 65 - 4.2
+    # Z_interp = itp.RegularGridInterpolator((y, x), Z)
 
-    Z_f = lambda x, y: 1#Z_interp((y,x))
+
+
+    Z_f = lambda x, y: 1 # Z_interp((y,x))
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
     n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
@@ -566,7 +567,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.565 #
+    D = 0.640 #
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -598,21 +599,33 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     source_tilt = 0
     # for D in [1] : # np.linspace(0, 1, 50):
-        # for wavelength in np.linspace(.592, .5871, 1):
 
-    for th_low in np.linspace(0, 65, 30):
-        for th_high in np.linspace(0, 65, 30):
+
+    # test the eff indeces extracted from the contour
+    # of resonances as a function of thicknesses
+    data = io.loadmat("cross_points_7edc4aea0b.mat")
+    points596 = data["points"][:,0,:]
+    data = io.loadmat("cross_points_68fa746847.mat")
+    points584 = data["points"][:,0,:]
+    raise
+    for i in range(len(points584)):
+
+    # test various thicknesses
+    # for th_low in np.linspace(0, 65, 25):
+    #     for th_high in np.linspace(0, 65, 25):
+
+        for wavelength in np.linspace(.565, .615, 51):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(th_high)
-            n_eff_l      = n_eff_wv(th_low)
-            n_eff_mod_l  = n_eff_wv(20) - n_eff_wv(5)
-            n_eff_mod_h  = n_eff_wv(65) - n_eff_wv(65)
+            n_eff_h      = n_eff_wv(points584[i,1])
+            n_eff_l      = n_eff_wv(points584[i,0])
+            n_eff_mod_l  = n_eff_wv(points596[i,0]) - n_eff_wv(points584[i,0])
+            n_eff_mod_h  = n_eff_wv(points596[i,1]) - n_eff_wv(points584[i,1])
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
-            if th_high > th_low:
+            if n_eff_h > n_eff_l:
                 tuple_list.append( (wavelength,
                                     n_eff_h, n_eff_l, n_eff_spacer,
                                     D, period,
