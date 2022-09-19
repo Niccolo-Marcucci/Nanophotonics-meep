@@ -541,14 +541,14 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # Z_f = lambda rr, tht: Z_interp((rr,tht))
 
-    data = io.loadmat("topo_resampled2.mat")
-    x = data["xx"][0]
-    y = data["yy"][0]
-    Z = data["topod"] + 65 - 4.2
-    Z_interp = itp.RegularGridInterpolator((y, x), Z)
+    #data = io.loadmat("topo_resampled2.mat")
+    #x = data["xx"][0]
+    #y = data["yy"][0]
+    #Z = data["topod"] + 65 - 4.2
+    #Z_interp = itp.RegularGridInterpolator((y, x), Z)
     # raise
 
-    Z_f = lambda x, y: Z_interp((y,x))
+    #Z_f = lambda x, y: Z_interp((y,x))
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
     n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
