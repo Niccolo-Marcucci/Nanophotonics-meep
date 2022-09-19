@@ -548,7 +548,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     #Z_interp = itp.RegularGridInterpolator((y, x), Z)
     # raise
 
-    #Z_f = lambda x, y: Z_interp((y,x))
+    Z_f = lambda x, y: 1#Z_interp((y,x))
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
     n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
