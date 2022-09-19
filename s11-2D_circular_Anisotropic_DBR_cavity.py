@@ -607,7 +607,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     points596 = data["points"][:,0,:]
     data = io.loadmat("cross_points_68fa746847.mat")
     points584 = data["points"][:,0,:]
-    raise
+    
     for i in range(len(points584)):
 
     # test various thicknesses
