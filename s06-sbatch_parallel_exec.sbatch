@@ -6,7 +6,7 @@
 #SBATCH --ntasks=32
 # SBATCH --nodes=2
 # SBATCH --ntasks-per-node=
-#SBATCH --mem-per-cpu=200M
+#SBATCH --mem-per-cpu=500M
 # SBATCH --partition=global
 # SBATCH --nodelist=compute-3-[13,17-20]
 # the following nodes are not reserved for anyone in particular
