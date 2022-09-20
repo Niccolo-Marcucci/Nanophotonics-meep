@@ -316,11 +316,11 @@ class Simulation(mp.Simulation):
                     self.Ex.append([])
                     self.Ey.append([])
                     self.Ez.append([])
-                self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
-                                                    center = mp.Vector3(self.cavity_parameters["D"]/2),
-                                                    size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
-                # self.time_monitors.append(mp.Volume(center = mp.Vector3(),
-                #                                     size = mp.Vector3(0,0)))
+                # self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
+                #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
+                #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
+                self.time_monitors.append(mp.Volume(center = mp.Vector3(),
+                                                    size = mp.Vector3(0,0)))
                 self.Ex.append([])
                 self.Ey.append([])
                 self.Ez.append([])
