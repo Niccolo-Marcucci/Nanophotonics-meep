@@ -15,5 +15,3 @@
 mpirun -np 64 python $@ 64
 
 mv -v $(ls *${2}* | grep -v 'log\|err') data/*$2
-
-rm $1
