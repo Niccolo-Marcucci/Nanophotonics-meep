@@ -311,16 +311,16 @@ class Simulation(mp.Simulation):
                         center = mp.Vector3(DL_x, DL_y),
                         size = mp.Vector3(0, 0),
                         direction = direction)
-                    # self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
-                    self.time_monitors.append(mp.Volume(center = mp.Vector3(DL_x, DL_y), size = mp.Vector3(0, 0)))
+                    self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
+                    # self.time_monitors.append(mp.Volume(center = mp.Vector3(DL_x, DL_y), size = mp.Vector3(0, 0)))
                     self.Ex.append([])
                     self.Ey.append([])
                     self.Ez.append([])
-                # self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
-                #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
-                #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
-                self.time_monitors.append(mp.Volume(center = mp.Vector3(),
-                                                    size = mp.Vector3(0,0)))
+                self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
+                                                    center = mp.Vector3(self.cavity_parameters["D"]/2),
+                                                    size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
+                # self.time_monitors.append(mp.Volume(center = mp.Vector3(),
+                #                                     size = mp.Vector3(0,0)))
                 self.Ex.append([])
                 self.Ey.append([])
                 self.Ez.append([])
@@ -432,7 +432,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     step_functions = []
     if sim.harminv_instance != None :
         step_functions.append( mp.after_time(150, sim.harminv_instance) )
-    step_functions.append(mp.at_every(0.05,save_fields))
+    # step_functions.append(mp.at_every(0.05,save_fields))
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
