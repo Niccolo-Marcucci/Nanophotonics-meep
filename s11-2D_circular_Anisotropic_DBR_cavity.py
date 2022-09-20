@@ -432,7 +432,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     step_functions = []
     if sim.harminv_instance != None :
         step_functions.append( mp.after_time(150, sim.harminv_instance) )
-    step_functions.append(mp.at_every(0.025,save_fields))
+    step_functions.append((save_fields))
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
@@ -634,7 +634,7 @@ if __name__ == "__main__":              # good practise in parallel computing
                                     n_eff_mod_l,
                                     n_eff_mod_h, n_eff_wv, i ) )
                 j += 1
-                raise
+
     mp.verbosity(1)
     # mp.quiet(True)
     output = []
