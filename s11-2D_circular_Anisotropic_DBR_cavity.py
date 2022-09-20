@@ -40,7 +40,7 @@ class Simulation(mp.Simulation):
 
         self.name = sim_name
 
-        self.extra_space_xy = .3
+        self.extra_space_xy = 5
 
         self.PML_width = .6
 
@@ -302,7 +302,7 @@ class Simulation(mp.Simulation):
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
             if self.cavity_r_size > 0 :
-                DL = self.cavity_r_size + 0.05
+                DL = self.cavity_r_size - 0.5 + self.extra_space_xy
                 nfreq = 1000 if df != 0 else 1
                 for angolo in np.linspace(0, np.pi/2,3)[:]:
                     DL_x = DL * np.cos(angolo)
