@@ -31,8 +31,12 @@ errorname="${jobname}${empty}_${prefix}_%j.err"
 jobname="${jobname}${empty}_${prefix}"
 prefix="$(date +%y%m%d-%H%M%S)_${prefix}"
 
+tmp_file="${filename}_${prefix}.run"
+
+cp $filenmae $tmp_file
+
 mkdir -p data/$output_folder
 
 echo "$outputname, $errorname"
 
-sbatch --job-name=$jobname --output=$outputname --error=$errorname s06-sbatch_parallel_exec.sbatch $filename $prefix ${@:3}
+sbatch --job-name=$jobname --output=$outputname --error=$errorname s06-sbatch_parallel_exec.sbatch $tmp_file $prefix ${@:3}
