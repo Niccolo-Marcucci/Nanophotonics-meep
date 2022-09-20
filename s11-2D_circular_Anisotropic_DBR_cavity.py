@@ -247,9 +247,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index  + mod_tranches * (1 - mpo.sin(theta + tilt)**2)  * (self.grating_index < self.background_index)
+                local_index = self.grating_index  + mod_tranches * (1 - mpo.sin(theta + tilt)**8)  * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges * (1 - mpo.sin(theta + tilt)**2)  * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges * (1 - mpo.sin(theta + tilt)**8)  * (self.grating_index < self.background_index)
 
         # local_index += (np.random.rand(1) - .5)
         return local_index**2 if local_index > 1 else 1
@@ -303,7 +303,7 @@ class Simulation(mp.Simulation):
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + 0.05
                 nfreq = 1000 if df != 0 else 1
-                for angolo in np.linspace(-np.pi/2, np.pi/2,9)[1:]:
+                for angolo in np.linspace(0, np.pi/2,5)[1:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
                     direction = mp.X if abs(DL_y) < DL * np.cos(np.pi/4) else mp.Y
@@ -344,7 +344,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=400
+    sim_end=10
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -394,7 +394,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"n_eff_l{n_eff_l:.4f}_n_eff_h{n_eff_h:.4f}"#angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"
+    sim_name += f"point{i:.0f}_wv{1/f*1e3:.1f}"#"_n_eff_h{n_eff_h:.4f}"#angle{source_tilt*180/np.pi:.2f}
 
 
     sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -603,12 +603,12 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # test the eff indeces extracted from the contour
     # of resonances as a function of thicknesses
-    data = io.loadmat("cross_points_7edc4aea0b.mat")
-    points596 = data["points"][:,0,:]
-    data = io.loadmat("cross_points_68fa746847.mat")
-    points584 = data["points"][:,0,:]
-    raise
-    for i in range(len(points584)):
+    # data = io.loadmat("cross_points_7edc4aea0b.mat")
+    # points584 = data["points"]
+    # data = io.loadmat("cross_points_68fa746847.mat")
+    # points596 = data["points"]
+
+    for i in range(1):#len(points584)):
 
     # test various thicknesses
     # for th_low in np.linspace(0, 65, 25):
@@ -618,10 +618,10 @@ if __name__ == "__main__":              # good practise in parallel computing
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(points584[i,1])
-            n_eff_l      = n_eff_wv(points584[i,0])
-            n_eff_mod_l  = n_eff_wv(points596[i,0]) - n_eff_wv(points584[i,0])
-            n_eff_mod_h  = n_eff_wv(points596[i,1]) - n_eff_wv(points584[i,1])
+            n_eff_h      = n_eff_wv(29) # points584[i,1])
+            n_eff_l      = n_eff_wv(1.7) # points584[i,0])
+            n_eff_mod_l  = n_eff_wv(20) - n_eff_wv(1.7)# points596[i,0]) - n_eff_wv(points584[i,0])
+            n_eff_mod_h  = n_eff_wv(44) - n_eff_wv(29)# points596[i,1]) - n_eff_wv(points584[i,1])
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
@@ -632,8 +632,9 @@ if __name__ == "__main__":              # good practise in parallel computing
                                     empty,
                                     source_pos, source_tilt,
                                     n_eff_mod_l,
-                                    n_eff_mod_h, n_eff_wv, Z_f ) )
+                                    n_eff_mod_h, n_eff_wv, i ) )
                 j += 1
+
     mp.verbosity(1)
     # mp.quiet(True)
     output = []
