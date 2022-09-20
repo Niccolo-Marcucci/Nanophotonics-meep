@@ -33,7 +33,7 @@ prefix="$(date +%y%m%d-%H%M%S)_${prefix}"
 
 tmp_file="${filename}_${prefix}.run"
 
-cp $filenmae $tmp_file
+cp $filename $tmp_file
 
 mkdir -p data/$output_folder
 
