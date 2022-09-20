@@ -278,14 +278,14 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y),#
-                            component = mp.Ez,
-                            amplitude = 1)] # np.cos(source_tilt)),
-                         # mp.Source(
-                         #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                         #    center = source_pos,
-                         #    size = mp.Vector3(),
-                         #    component = mp.Ex,
-                         #    amplitude = np.sin(source_tilt))] # dephased by pi/4
+                            component = mp.Ey,
+                            amplitude = np.cos(source_tilt)),
+                          mp.Source(
+                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                             center = source_pos,
+                             size = mp.Vector3(),
+                             component = mp.Ex,
+                             amplitude = np.sin(source_tilt))] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
@@ -394,10 +394,10 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"point{Z_f:.0f}_wv{1/f*1e3:.1f}"#"_n_eff_h{n_eff_h:.4f}"#angle{source_tilt*180/np.pi:.2f}
+    sim_name += f"angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"_n_eff_h{n_eff_h:.4f}"#point{Z_f:.0f}_
 
 
-    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
+    sim = Simulation(sim_name,symmetries=[])#mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength#/n_eff_l
     sim.eps_averaging = False
     sim.force_complex_fields = False
@@ -587,7 +587,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    # for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 2)[1:]:
+    for source_tilt in np.linspace(0, +np.pi/2, 3)[:]:
 
     # for source_pos in [0]: # 0, period/4, period/2]:
 
@@ -597,7 +597,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # for anisotropy in np.linspace(0,5, 1):
 
-    source_tilt = 0
+    # source_tilt = 0
     # for D in [1] : # np.linspace(0, 1, 50):
 
 
@@ -608,20 +608,20 @@ if __name__ == "__main__":              # good practise in parallel computing
     # data = io.loadmat("cross_points_68fa746847.mat")
     # points596 = data["points"]
 
-    for i in range(1):#len(points584)):
+    # for i in range(1):#len(points584)):
 
     # test various thicknesses
     # for th_low in np.linspace(0, 65, 25):
     #     for th_high in np.linspace(0, 65, 25):
 
-        for wavelength in np.linspace(.596, .615, 1):
+        for wavelength in np.linspace(.590, .615, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
             n_eff_h      = n_eff_wv(31) # points584[i,1])
             n_eff_l      = n_eff_wv(2) # points584[i,0])
             n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)# points596[i,0]) - n_eff_wv(points584[i,0])
-            n_eff_mod_h  = n_eff_wv(50) - n_eff_wv(29)# points596[i,1]) - n_eff_wv(points584[i,1])
+            n_eff_mod_h  = n_eff_wv(40) - n_eff_wv(31)# points596[i,1]) - n_eff_wv(points584[i,1])
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
@@ -632,7 +632,7 @@ if __name__ == "__main__":              # good practise in parallel computing
                                     empty,
                                     source_pos, source_tilt,
                                     n_eff_mod_l,
-                                    n_eff_mod_h, n_eff_wv, i ) )
+                                    n_eff_mod_h, n_eff_wv, Z_f ) )
                 j += 1
 
     mp.verbosity(1)
