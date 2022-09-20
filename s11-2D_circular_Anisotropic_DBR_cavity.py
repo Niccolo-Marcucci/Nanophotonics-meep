@@ -614,14 +614,14 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for th_low in np.linspace(0, 65, 25):
     #     for th_high in np.linspace(0, 65, 25):
 
-        for wavelength in np.linspace(.565, .615, 51):
+        for wavelength in np.linspace(.596, .615, 1):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(29) # points584[i,1])
-            n_eff_l      = n_eff_wv(1.7) # points584[i,0])
-            n_eff_mod_l  = n_eff_wv(20) - n_eff_wv(1.7)# points596[i,0]) - n_eff_wv(points584[i,0])
-            n_eff_mod_h  = n_eff_wv(44) - n_eff_wv(29)# points596[i,1]) - n_eff_wv(points584[i,1])
+            n_eff_h      = n_eff_wv(31) # points584[i,1])
+            n_eff_l      = n_eff_wv(2) # points584[i,0])
+            n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)# points596[i,0]) - n_eff_wv(points584[i,0])
+            n_eff_mod_h  = n_eff_wv(50) - n_eff_wv(29)# points596[i,1]) - n_eff_wv(points584[i,1])
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
