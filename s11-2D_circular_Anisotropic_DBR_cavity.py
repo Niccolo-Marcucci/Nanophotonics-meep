@@ -394,7 +394,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"point{i:.0f}_wv{1/f*1e3:.1f}"#"_n_eff_h{n_eff_h:.4f}"#angle{source_tilt*180/np.pi:.2f}
+    sim_name += f"point{Z_f:.0f}_wv{1/f*1e3:.1f}"#"_n_eff_h{n_eff_h:.4f}"#angle{source_tilt*180/np.pi:.2f}
 
 
     sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -634,7 +634,7 @@ if __name__ == "__main__":              # good practise in parallel computing
                                     n_eff_mod_l,
                                     n_eff_mod_h, n_eff_wv, i ) )
                 j += 1
-
+                raise
     mp.verbosity(1)
     # mp.quiet(True)
     output = []
