@@ -289,6 +289,7 @@ class Simulation(mp.Simulation):
 
         self.harminv_instance = None
         self.field_profile = None
+        self.field_FT = None
         self.spectrum_monitors = []
         self.time_monitors = []
         self.Ex = []
@@ -501,6 +502,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     if len(spectra) > 0 :
         data2save["wavelength"] = 1/spectrum_f*1e3
         data2save["spectra"] = spectra
+    if sim.field_FT != None :
         central_FT_x = np.array( [sim.get_dft_array(sim.field_FT, mp.Ex, j) for j in range(len(sim.field_FT.freq))] )
         central_FT_y = np.array( [sim.get_dft_array(sim.field_FT, mp.Ey, j) for j in range(len(sim.field_FT.freq))] )
         data2save["FT_x"] = central_FT_x
