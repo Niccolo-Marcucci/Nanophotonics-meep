@@ -40,7 +40,7 @@ class Simulation(mp.Simulation):
 
         self.name = sim_name
 
-        self.extra_space_xy = 5
+        self.extra_space_xy = .5
 
         self.PML_width = .6
 
@@ -297,12 +297,12 @@ class Simulation(mp.Simulation):
         self.Ez = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ez], 1/np.array([.5809, .5880, .590]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ex, mp.Ey], 1/np.array([.5772, .5842, .5854]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
             if self.cavity_r_size > 0 :
-                DL = self.cavity_r_size - 0.5 + self.extra_space_xy
+                DL = self.cavity_r_size + self.extra_space_xy*.5
                 nfreq = 1000 if df != 0 else 1
                 for angolo in np.linspace(0, np.pi/2,3)[:]:
                     DL_x = DL * np.cos(angolo)
@@ -414,7 +414,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         sim.empty = False
 
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(), #x=-sim.cavity_r_size - 0.1),
-                                         source_tilt=source_tilt, allow_profile=False)# y=1e-3
+                                         source_tilt=source_tilt, allow_profile=True)# y=1e-3
 
     # raise Exception()1
 
