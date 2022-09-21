@@ -357,7 +357,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
     cavity_parameters = {
         "D": D,
-        "FF": .4,
+        "FF": .48,
         "period": DBR_period,
         "N_rings": 30,
         "tilt": 0} #source_tilt}
@@ -522,7 +522,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     wavelength = .590
 
-    period = .282 #round(wavelength/(n_eff_l+n_eff_h),3 )
+    period = .281 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
     data = io.loadmat("Lumerical-Objects/multilayer_design/designs/TE_N7_dispersion_azoPPA_1.615.mat")
     n_eff = itp.RegularGridInterpolator((data["d"][0], data["lambda"][0]), data["n_eff"])
