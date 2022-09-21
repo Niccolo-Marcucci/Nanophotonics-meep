@@ -557,7 +557,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     n_eff_l = n_eff([ 3e-9, wavelength*1e-6])[0]
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
-    n_eff_mod_l = n_eff([16e-9, wavelength*1e-6])[0] - n_eff_l
+    n_eff_mod_l = n_eff([15e-9, wavelength*1e-6])[0] - n_eff_l
     n_eff_mod_h = n_eff([39e-9, wavelength*1e-6])[0] - n_eff_h
     n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
     #%% load susceptibilities data.
@@ -621,10 +621,10 @@ if __name__ == "__main__":              # good practise in parallel computing
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(31) # points584[i,1])
-            n_eff_l      = n_eff_wv(2) # points584[i,0])
-            n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)# points596[i,0]) - n_eff_wv(points584[i,0])
-            n_eff_mod_h  = n_eff_wv(40) - n_eff_wv(31)# points596[i,1]) - n_eff_wv(points584[i,1])
+            n_eff_h      = n_eff_wv(32) # points584[i,1])
+            n_eff_l      = n_eff_wv(3) # points584[i,0])
+            n_eff_mod_l  = n_eff_wv(16) - n_eff_wv(3)# points596[i,0]) - n_eff_wv(points584[i,0])
+            n_eff_mod_h  = n_eff_wv(41) - n_eff_wv(32)# points596[i,1]) - n_eff_wv(points584[i,1])
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
