@@ -24,7 +24,7 @@ import time
 
 files = os.listdir("data")
 
-hashtag = '9772782b76'
+hashtag = '7515207563'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -45,14 +45,15 @@ for file in files :
             x = data['field_profile_x'][0]
             y = data['field_profile_y'][0]
             eps = (data['field_profile_Eps'])#)np.flip(np.transpose
-            X,Y = np.meshgrid(x,y)
+            X,Y = np.meshgrid(x,y, indexing='ij')
             freqs = 1/ data['field_profile_frequencies'][0]*1e3
-            for i in range (len(freqs)):
+            for i in range(len(freqs)):
                 Ey = data[f'field_profile_Ey_{i}']
                 Ex = data[f'field_profile_Ex_{i}']
                 Ez = data[f'field_profile_Ez_{i}']
                 fig = plt.figure()
-                plt.pcolormesh(X,Y,np.flip(np.transpose(np.log(np.abs(Ez)**2 ))))#+ np.abs(Ex)**2)),axis=0))
+                # plt.imshow(np.log(np.abs(Ey)**2 + np.abs(Ex)**2))
+                plt.pcolormesh(X,Y,((np.log(np.abs(Ey)**2 + np.abs(Ex)**2))))
                 plt.axis('image')
                 plt.title(f"{freqs[i]} nm")
                 fig.savefig(folder + f'/{file[:-4]}_{date}_mode{i}.png')
@@ -63,7 +64,7 @@ for file in files :
             plt.plot(y, np.sqrt(eps[id_x, :]), x, np.sqrt(eps[:, id_y]))
             plt.legend(['x','y'])
             fig = plt.figure()
-            plt.pcolormesh(X,Y,np.flip(np.transpose(eps)),cmap='gnuplot')
+            plt.pcolormesh(X,Y,((eps)),cmap='gnuplot')
             plt.axis('image')
             # ax = fig.add_subplot(111, projection='3d')
             # ax.plot_surface(X,Y,(eps),cmap='gnuplot')
