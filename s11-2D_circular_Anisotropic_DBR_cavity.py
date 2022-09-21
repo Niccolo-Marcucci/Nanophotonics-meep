@@ -278,14 +278,14 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y),#
-                            component = mp.Ey,
-                            amplitude = np.cos(source_tilt)),
-                         mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                            center = source_pos,
-                            size = mp.Vector3(),
-                            component = mp.Ex,
-                            amplitude = np.sin(source_tilt))] # dephased by pi/4
+                            component = mp.Ez,
+                            amplitude = np.cos(source_tilt))]#,
+                         # mp.Source(
+                         #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                         #    center = source_pos,
+                         #    size = mp.Vector3(),
+                         #    component = mp.Ex,
+                         #    amplitude = np.sin(source_tilt))] # dephased by pi/4
 
         self.harminv_instance = None
         self.field_profile = None
@@ -297,7 +297,7 @@ class Simulation(mp.Simulation):
         self.Ez = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ex, mp.Ey], 1/np.array([.5772, .5842, .5854]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ez], 1/np.array([.5772, .5842, .5854]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
@@ -414,7 +414,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         sim.empty = False
 
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(), #x=-sim.cavity_r_size - 0.1),
-                                         source_tilt=source_tilt, allow_profile=True)# y=1e-3
+                                         source_tilt=source_tilt, allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
@@ -433,7 +433,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     step_functions = []
     if sim.harminv_instance != None :
         step_functions.append( mp.after_time(150, sim.harminv_instance) )
-    # step_functions.append(mp.at_every(0.05,save_fields))
+
+    step_functions.append(mp.at_every(0.05,save_fields))
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
@@ -589,7 +590,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(0, +np.pi/2, 3)[:]:
+    for source_tilt in np.linspace(0, +np.pi/2, 1)[:]:
 
     # for source_pos in [0]: # 0, period/4, period/2]:
 
