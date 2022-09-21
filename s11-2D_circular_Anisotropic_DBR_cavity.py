@@ -357,7 +357,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
     cavity_parameters = {
         "D": D,
-        "FF": .5,
+        "FF": .4,
         "period": DBR_period,
         "N_rings": 30,
         "tilt": 0} #source_tilt}
@@ -522,7 +522,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     wavelength = .590
 
-    period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
+    period = .282 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
     data = io.loadmat("Lumerical-Objects/multilayer_design/designs/TE_N7_dispersion_azoPPA_1.615.mat")
     n_eff = itp.RegularGridInterpolator((data["d"][0], data["lambda"][0]), data["n_eff"])
@@ -554,10 +554,10 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     Z_f = lambda x, y: 1 # Z_interp((y,x))
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
-    n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
+    n_eff_l = n_eff([ 3e-9, wavelength*1e-6])[0]
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
-    n_eff_mod_l = n_eff([15e-9, wavelength*1e-6])[0] - n_eff_l
+    n_eff_mod_l = n_eff([16e-9, wavelength*1e-6])[0] - n_eff_l
     n_eff_mod_h = n_eff([39e-9, wavelength*1e-6])[0] - n_eff_h
     n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
     #%% load susceptibilities data.
