@@ -414,7 +414,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         sim.empty = False
 
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(), #x=-sim.cavity_r_size - 0.1),
-                                         source_tilt=source_tilt, allow_profile=False)# y=1e-3
+                                         source_tilt=source_tilt, allow_profile=True)# y=1e-3
 
     # raise Exception()1
 
@@ -434,7 +434,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     if sim.harminv_instance != None :
         step_functions.append( mp.after_time(150, sim.harminv_instance) )
 
-    step_functions.append(mp.at_every(0.05,save_fields))
+    # step_functions.append(mp.at_every(0.05,save_fields))
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
