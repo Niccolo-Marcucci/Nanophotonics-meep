@@ -247,9 +247,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index  + mod_tranches * (1 - mpo.sin(theta + tilt)**8)  * (self.grating_index < self.background_index)
+                local_index = self.grating_index  + mod_tranches * (1 - mpo.sin(theta + tilt)**6)  * (self.grating_index < self.background_index)
             else:
-                local_index = self.background_index + mod_ridges * (1 - mpo.sin(theta + tilt)**8)  * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges * (1 - mpo.sin(theta + tilt)**6)  * (self.grating_index < self.background_index)
 
         # local_index += (np.random.rand(1) - .5)
         return local_index**2 if local_index > 1 else 1
@@ -621,10 +621,10 @@ if __name__ == "__main__":              # good practise in parallel computing
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(32) # points584[i,1])
-            n_eff_l      = n_eff_wv(3) # points584[i,0])
-            n_eff_mod_l  = n_eff_wv(16) - n_eff_wv(3)# points596[i,0]) - n_eff_wv(points584[i,0])
-            n_eff_mod_h  = n_eff_wv(41) - n_eff_wv(32)# points596[i,1]) - n_eff_wv(points584[i,1])
+            n_eff_h      = n_eff_wv(31) # points584[i,1])
+            n_eff_l      = n_eff_wv(2) # points584[i,0])
+            n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)# points596[i,0]) - n_eff_wv(points584[i,0])
+            n_eff_mod_h  = n_eff_wv(40) - n_eff_wv(31)# points596[i,1]) - n_eff_wv(points584[i,1])
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
