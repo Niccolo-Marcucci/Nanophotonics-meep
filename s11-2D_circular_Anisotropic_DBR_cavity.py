@@ -247,9 +247,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index  + mod_tranches * ( mpo.cos(theta + tilt)**8)  * (self.grating_index < self.background_index)
+                local_index = self.grating_index  + mod_tranches * ( mpo.cos(theta + tilt)**8)
             else:
-                local_index = self.background_index + mod_ridges * ( mpo.cos(theta + tilt)**8)  * (self.grating_index < self.background_index)
+                local_index = self.background_index + mod_ridges * ( mpo.cos(theta + tilt)**8)
 
         # local_index += (np.random.rand(1) - .5)
         return local_index**2 if local_index > 1 else 1
@@ -360,7 +360,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "FF": .48,
         "period": DBR_period,
         "N_rings": 30,
-        "tilt": 0} #source_tilt}
+        "tilt": np.pi/2} #source_tilt}
 
     outcoupler_parameters = {
         "type": 'spiral',
@@ -590,7 +590,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(0, +np.pi/2, 2)[:]:
+    for source_tilt in np.linspace(0, +np.pi/2, 1)[:]:
 
     # for source_pos in [0]: # 0, period/4, period/2]:
 
