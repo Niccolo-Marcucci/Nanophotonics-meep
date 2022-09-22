@@ -183,7 +183,7 @@ class Simulation(mp.Simulation):
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y),#
                             component = mp.Ez,
-                            amplitude = np.cos(source_tilt))] #
+                            amplitude = 1)] #
 
         self.harminv_instance = None
         self.field_profile = None
