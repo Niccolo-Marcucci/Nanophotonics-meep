@@ -316,14 +316,14 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
 
     sim.init_sim()
-    if mp.am_really_master():
-        fig = plt.figure(dpi=150, figsize=(10,10))
-        plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
+    # if mp.am_really_master():
+    #     fig = plt.figure(dpi=150, figsize=(10,10))
+    #     plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
 
-        fig.colorbar(plot.images[0])
-        fig.savefig(f'{sim.name}-xy.jpg')
-        # plt.show()
-        plt.close()
+    #     fig.colorbar(plot.images[0])
+    #     fig.savefig(f'{sim.name}-xy.jpg')
+    #     # plt.show()
+    #     plt.close()
 
     # mp.verbosity(0)
     step_functions = []
