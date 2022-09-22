@@ -216,10 +216,10 @@ class Simulation(mp.Simulation):
         r = pos.norm()
         theta = mpo.atan2(pos.y, pos.x)
         D = self.cavity_parameters["D"]
-        FF = self.cavity_parameters["FF"]
+        tilt  = self.cavity_parameters["tilt"]
+        FF = 0.45 + 0.05*(1-mpo.sin(theta + tilt)**8) # self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
-        tilt  = self.cavity_parameters["tilt"]
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
@@ -357,10 +357,10 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
     cavity_parameters = {
         "D": D,
-        "FF": .48,
+        "FF": .5,
         "period": DBR_period,
         "N_rings": 30,
-        "tilt": np.pi/2} #source_tilt}
+        "tilt": 0} #source_tilt}
 
     outcoupler_parameters = {
         "type": 'spiral',
