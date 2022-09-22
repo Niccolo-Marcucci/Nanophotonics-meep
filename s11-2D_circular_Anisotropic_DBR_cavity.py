@@ -590,7 +590,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(0, +np.pi/2, 2)[0]:
+    for source_tilt in np.linspace(0, +np.pi/2, 2)[:]:
 
     # for source_pos in [0]: # 0, period/4, period/2]:
 
