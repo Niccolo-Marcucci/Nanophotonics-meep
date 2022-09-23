@@ -278,14 +278,14 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y),#
-                            component = mp.Ey,
-                            amplitude = np.cos(source_tilt)),
-                        mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                            center = source_pos,
-                            size = mp.Vector3(),
-                            component = mp.Ex,
-                            amplitude = -1 * np.sin(source_tilt))] #
+                            component = mp.Ez,
+                            amplitude = 1)]#np.cos(source_tilt)),
+                        # mp.Source(
+                        #     src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                        #     center = source_pos,
+                        #     size = mp.Vector3(),
+                        #     component = mp.Ex,
+                        #     amplitude = -1 * np.sin(source_tilt))] #
 
         self.harminv_instance = None
         self.field_profile = None
@@ -398,7 +398,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += f"angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"_n_eff_h{n_eff_h:.4f}"#point{Z_f:.0f}_
 
 
-    sim = Simulation(sim_name,symmetries=[]) #mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
+    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength#/n_eff_l
     sim.eps_averaging = False
     sim.force_complex_fields = False
