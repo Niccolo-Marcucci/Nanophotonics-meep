@@ -53,10 +53,10 @@ for file in files :
                 Ez = data[f'field_profile_Ez_{i}']
                 fig = plt.figure()
                 # plt.imshow(np.log(np.abs(Ey)**2 + np.abs(Ex)**2))
-                plt.pcolormesh(X,Y,((np.log(np.abs(Ey)**2 + np.abs(Ex)**2))))
+                plt.pcolormesh(X,Y,((np.log(np.abs(Ey)**2))))# + np.abs(Ex)**2))))
                 plt.axis('image')
                 plt.title(f"{freqs[i]} nm")
-                fig.savefig(folder + f'/{file[:-4]}_{date}_mode{i}.png')
+                # fig.savefig(folder + f'/{file[:-4]}_{date}_mode{i}.png')
 
             id_x = np.argmin( abs(x))
             id_y = np.argmin( abs(y))

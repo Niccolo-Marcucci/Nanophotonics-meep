@@ -26,7 +26,7 @@ date = time.strftime('%y%m%d-%H%M%S')
 
 
 files = os.listdir("data")
-hashtag ='e8a05f2201'#'e20d2ea866'#5cab4c8862'#'7bae1ab6b6'#''62ef19ee4d'#'4dc3971d95'#'8a593f9138'#'2cb6bfb1fa'
+hashtag ='9388d33171'#'e20d2ea866'#5cab4c8862'#'7bae1ab6b6'#''62ef19ee4d'#'4dc3971d95'#'8a593f9138'#'2cb6bfb1fa'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -141,7 +141,7 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
         data = mpo.loadmat(folder + '/' + file)
         # fig = plt.figure(dpi=150,figsize=(10,5))
         # ax = fig.add_subplot(111)
-        for i in [3,7,11,15] : #range(len(data['spectra'])):# [0]:#[7,11,15,] : # [7,15] : ##
+        for i in [0] : #range(len(data['spectra'])):# [0]:#[7,11,15,] : # [7,15] : ##
             images[k,:,i] = (abs(data['spectra'][i])**2) # np.abs(data['FT_x'])**2 + np.abs(data['FT_y'])**2 #
         wavelength = data["wavelength"][0]
         WV[k,:]  = wavelength
@@ -205,7 +205,7 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
     plt.xlabel('wavelength (nm)')
     plt.ylabel(f'{frst_param["label"]}')
     plt.title(f'Period DBR: {period}nm, source_{scnd_param["label"]}: {second_parameter:.0f}, spacer: 560nm')
-    fig.savefig(folder + f'/maps/ortog_monitors_sim_2D_{date}_{scnd_param["name"]}{second_parameter:.0f}_intensity_map.png')
+    fig.savefig(folder + f'/sim1D_{date}_{scnd_param["name"]}{second_parameter:.0f}_intensity_map.png')
 
     plt.close()
     if flag :
@@ -235,7 +235,7 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
     plt.grid(True)
     # images.append(image)
     plt.title(f'Period DBR: {period}nm, source_{scnd_param["label"]}: {second_parameter:.0f}, spacer: 560nm')
-    # fig.savefig(folder + f'/intensities/sim_2D_{date}_{scnd_param["name"]}{second_parameter:.0f}_intensity.png')
+    fig.savefig(folder + f'sim1D_{date}_{scnd_param["name"]}{second_parameter:.0f}_intensity.png')
     plt.close()
     inc_sum += intensity
 #%%

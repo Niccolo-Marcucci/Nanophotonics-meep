@@ -24,7 +24,7 @@ import time
 
 files = os.listdir("data")
 
-hashtag ='4802314c3c'#'ac7da1b8e1'#'970756bcfb'
+hashtag ='9388d33171'#'ac7da1b8e1'#'970756bcfb'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -79,7 +79,7 @@ sp0 = np.zeros(wavelength.shape)
 for spectrum in lista_spectra[:]:
     sp = np.zeros(wavelength.shape)
     for i in [0,2] : #range(len(spectrum))[:]: # [[7] : # [7,15] : ##
-        sp = abs(spectrum[i])#/spectrum_empty[i]/len(spectrum)
+        sp = (abs(spectrum[i]))#/spectrum_empty[i]/len(spectrum)
 
         # sp = sp/max(sp)
         # sp_centre = sp_centre/max(sp_centre)
@@ -100,7 +100,7 @@ for ax in [ax1, ]:
 ax1.set_ylabel('Transmission')
 # ax2.set_ylabel('Transmission - log scale')
 date = time.strftime('%y%m%d-%H%M%S')
-plt.axes(ax1), plt.legend([f"source {i}° - monitor {j}°" for i in [0, 45, 90] for j in [0, 90]])
+plt.axes(ax1), plt.legend([f"source {i}° - monitor {j}°" for i in [0, 90] for j in [0, 90]])
 fig.savefig(folder + '/' + date + '_spectrum.png')
 
 # plt.legend()

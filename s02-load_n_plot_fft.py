@@ -40,7 +40,7 @@ def ft(x, t, f):
 
 files = os.listdir("data")
 
-hashtag ='4802314c3c'
+hashtag ='6e4e637dec'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -84,7 +84,7 @@ ax2 = fig2.add_subplot(111)
 
 #%%
 flag = True
-padding = int(5e4);
+padding = int(4e4);
 source_len = int(3e3)
 FF_list = []
 for l in range(len( E_x[:])):
@@ -111,7 +111,7 @@ for l in range(len( E_x[:])):
                 # ex[1:source_len] = 0
                 # ey = np.concatenate( (E_y[l][i,:,j,k], np.zeros(padding)) )
                 # ey[1:source_len] = 0
-                ez = np.concatenate( (E_z[l][i,:,j,k], np.zeros(padding)) )
+                ez = np.concatenate( (E_x[l][i,:,j,k], np.zeros(padding)) )
                 # ez_log = np.log(abs(ez))
                 # ez_log[ez_log==-np.Inf] = 0
                 # p = np.polyfit(t[source_len:shape[1]], ez_log[source_len:shape[1]],1)

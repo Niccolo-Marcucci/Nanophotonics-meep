@@ -25,7 +25,7 @@ date = time.strftime('%y%m%d-%H%M%S')
 
 
 files = os.listdir("data")
-hashtag ='68fa746847'#'1c62b710f2'#'038dd156ce'#'7edc4aea0b'#4fb109da14'#'
+hashtag ='7edc4aea0b'#'68fa746847'#'038dd156ce'#'1c62b710f2'#4fb109da14'#'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -124,7 +124,7 @@ def get_contour_verts(cn):
 
     return np.array(lines)
 
-plt.close('all')
+# plt.close('all')
 
 levels_wv = [584, 596 ]
 levels_q = np.linspace(2,2.8, 11)
@@ -158,7 +158,7 @@ b = [ ax2.plot(line[:,0], line[:,1], 'r' ) for line in lines_wv]
 
 # plt.figure(fig), plt.savefig(folder + "/resonances_wavelengths_map.png")
 # plt.figure(fig2), plt.savefig(folder + "/resonances_qualities_map.png")
-# ax1.plot([2,15],[31, 40], '+k', linewidth=3)
+ax1.plot([3,7.5],[28, 40], '+k', linewidth=3)
 
 points = []
 for line_q in lines_q:

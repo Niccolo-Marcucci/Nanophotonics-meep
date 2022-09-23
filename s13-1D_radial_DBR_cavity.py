@@ -412,7 +412,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         data2save["FT_x"] = central_FT_x
         data2save["FT_y"] = central_FT_y
 
-    if len(data2save) > 0 and (resonance_table[0][0] - wavelength) < 1:
+    if len(data2save) > 0:
         mpo.savemat(f'{sim.name}_spectra_t{t}.mat', data2save)
 
     return data2save, sim.name
