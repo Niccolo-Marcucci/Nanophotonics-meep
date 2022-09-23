@@ -217,7 +217,7 @@ class Simulation(mp.Simulation):
         theta = mpo.atan2(pos.y, pos.x)
         D = self.cavity_parameters["D"]
         tilt  = self.cavity_parameters["tilt"]
-        FF = 0.55 - 0.05*(1-mpo.sin(theta + tilt)**8) # self.cavity_parameters["FF"]
+        FF = 0.5#5 - 0.05*(1-mpo.sin(theta + tilt)**8) # self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
@@ -554,7 +554,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     Z_f = lambda x, y: 1 # Z_interp((y,x))
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
-    n_eff_l = n_eff([ 3e-9, wavelength*1e-6])[0]
+    n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
     n_eff_mod_l = n_eff([15e-9, wavelength*1e-6])[0] - n_eff_l
@@ -590,7 +590,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(0, +np.pi/2, 2)[:]:
+    for source_tilt in np.linspace(np.pi/4, +np.pi/2, 2)[0:]:
 
     # for source_pos in [0]: # 0, period/4, period/2]:
 
@@ -624,7 +624,7 @@ if __name__ == "__main__":              # good practise in parallel computing
             n_eff_h      = n_eff_wv(31) # points584[i,1])
             n_eff_l      = n_eff_wv(2) # points584[i,0])
             n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)# points596[i,0]) - n_eff_wv(points584[i,0])
-            n_eff_mod_h  = n_eff_wv(40) - n_eff_wv(31)# points596[i,1]) - n_eff_wv(points584[i,1])
+            n_eff_mod_h  = n_eff_wv(39) - n_eff_wv(31)# points596[i,1]) - n_eff_wv(points584[i,1])
             n_eff_spacer = n_eff_wv(65)
 
             source_pos=0
