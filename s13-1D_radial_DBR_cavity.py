@@ -127,7 +127,7 @@ class Simulation(mp.Simulation):
         print(self.cell_size)
         # make domain an integer number of voxels
         Nx = int(self.cell_size.x / self.grid_step)
-        Nx -= np.mod(Nx,2) # make even; + 1      # make odd
+        Nx += np.mod(Nx,2) # make even; + 1      # make odd
         self.cell_size.x = Nx * self.grid_step
 
         print(self.cell_size)
@@ -523,8 +523,8 @@ if __name__ == "__main__":              # good practise in parallel computing
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(26) # points584[i,1])
-            n_eff_l      = n_eff_wv(2) # points584[i,0])
+            n_eff_h      = n_eff_wv(40) # points584[i,1])
+            n_eff_l      = n_eff_wv(8) # points584[i,0])
             n_eff_mod_l  = n_eff_wv(16) - n_eff_wv(3)# points596[i,0]) - n_eff_wv(points584[i,0])
             n_eff_mod_h  = n_eff_wv(41) - n_eff_wv(32)# points596[i,1]) - n_eff_wv(points584[i,1])
             n_eff_spacer = n_eff_wv(65)
