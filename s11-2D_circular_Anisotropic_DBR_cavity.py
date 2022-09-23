@@ -247,9 +247,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = n_eff_wv(3  + mod_tranches )#* (1-mpo.sin(theta + tilt)**8))
+                local_index = n_eff_wv(3  + mod_tranches * (1-mpo.sin(theta + tilt)**8))
             else:
-                local_index = n_eff_wv(28 + mod_ridges )#* (1-mpo.sin(theta + tilt)**8))
+                local_index = n_eff_wv(28 + mod_ridges * (1-mpo.sin(theta + tilt)**8))
 
         # local_index += (np.random.rand(1) - .5)
         return local_index**2 if local_index > 1 else 1
@@ -277,7 +277,7 @@ class Simulation(mp.Simulation):
         self.sources = [ mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
                             center = source_pos,
-                            size = mp.Vector3(y = 3), #self.cell_size.y),#
+                            size = mp.Vector3(y = 0), #self.cell_size.y),#
                             component = mp.Ey,
                             amplitude = np.cos(source_tilt)),
                         mp.Source(
