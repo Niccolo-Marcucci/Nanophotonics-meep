@@ -217,7 +217,7 @@ class Simulation(mp.Simulation):
         theta = mpo.atan2(pos.y, pos.x)
         D = self.cavity_parameters["D"]
         tilt  = self.cavity_parameters["tilt"]
-        FF = 0.6 - 0.1*(1-mpo.sin(theta + tilt)**8) # self.cavity_parameters["FF"]
+        FF = 0.5 - 0.7*(1-mpo.sin(theta + tilt)**8) # self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
