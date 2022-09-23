@@ -220,7 +220,7 @@ class Simulation(mp.Simulation):
         FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
-        mod_ridges = 39 - 31 # self.eff_index_info["modulation_amplitude_ridges"]
+        mod_ridges = 44 - 26 # self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = 15 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
 
