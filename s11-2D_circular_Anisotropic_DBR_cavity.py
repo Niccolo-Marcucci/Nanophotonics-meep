@@ -221,7 +221,7 @@ class Simulation(mp.Simulation):
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
         mod_ridges = 40 - 26 # self.eff_index_info["modulation_amplitude_ridges"]
-        mod_tranches = 7.5 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
+        mod_tranches = 15 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
