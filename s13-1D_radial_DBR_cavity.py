@@ -519,7 +519,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for th_low in np.linspace(0, 65, 25):
     #     for th_high in np.linspace(0, 65, 25):
 
-        for wavelength in np.linspace(.590, .615, 1):
+        for wavelength in np.linspace(.565, .615, 50):
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
