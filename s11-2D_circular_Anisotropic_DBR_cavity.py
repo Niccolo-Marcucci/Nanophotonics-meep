@@ -277,7 +277,7 @@ class Simulation(mp.Simulation):
         self.sources = [ mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
                             center = source_pos,
-                            size = mp.Vector3(y = self.cell_size.y),#
+                            size = mp.Vector3(y = 3), # self.cell_size.y),#
                             component = mp.Ey,
                             amplitude = 1)]#np.cos(source_tilt)),
                         # mp.Source(
