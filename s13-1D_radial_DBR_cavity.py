@@ -292,7 +292,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"_n_eff_h{n_eff_h:.4f}"#point{Z_f:.0f}_
+    sim_name += f"_n_eff_h{n_eff_mod_h:.0f}_n_eff_l{n_eff_mod_l:.0f}_wv{1/f*1e3:.1f}"#""angle{source_tilt*180/np.pi:.2f}#point{Z_f:.0f}_
 
 
     sim = Simulation(sim_name,symmetries=[]) #mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -517,15 +517,14 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for i in range(1):#len(points584)):
 
     # test various thicknesses
-    for th_low in np.linspace(0, 65, 25):
-        for th_high in np.linspace(0, 65, 25):
-
+    for ii, th_low in enumerate(np.linspace(0, 65, 25)):
+        for jj, th_high in enumerate(np.linspace(0, 65, 25)):
             for wavelength in np.linspace(.565, .615, 50):
                 th = np.linspace(0,70,50)
                 n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
                 n_eff_wv = lambda th : n_eff_tmp(th).item()
-                n_eff_h      = n_eff_wv(40) # points584[i,1])
-                n_eff_l      = n_eff_wv(8) # points584[i,0])
+                n_eff_h      = n_eff_wv(th_high) # points584[i,1])
+                n_eff_l      = n_eff_wv(th_low) # points584[i,0])
                 n_eff_mod_l  = n_eff_wv(16) - n_eff_wv(3)# points596[i,0]) - n_eff_wv(points584[i,0])
                 n_eff_mod_h  = n_eff_wv(41) - n_eff_wv(32)# points596[i,1]) - n_eff_wv(points584[i,1])
                 n_eff_spacer = n_eff_wv(65)
@@ -537,8 +536,8 @@ if __name__ == "__main__":              # good practise in parallel computing
                                         D, period,
                                         empty,
                                         source_pos, source_tilt,
-                                        n_eff_mod_l,
-                                        n_eff_mod_h, n_eff_wv, Z_f ) )
+                                        ii,
+                                        jj, n_eff_wv, Z_f ) )
                     j += 1
 
     mp.verbosity(0)
