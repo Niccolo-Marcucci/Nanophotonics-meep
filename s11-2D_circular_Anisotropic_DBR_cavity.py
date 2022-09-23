@@ -220,7 +220,7 @@ class Simulation(mp.Simulation):
         FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
-        mod_ridges = 44 - 29 # self.eff_index_info["modulation_amplitude_ridges"]
+        mod_ridges = 44 - 26 # self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = 15 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
 
@@ -249,7 +249,7 @@ class Simulation(mp.Simulation):
             if is_groove:
                 local_index = n_eff_wv(2  + mod_tranches * (1-mpo.sin(theta + tilt)**8))
             else:
-                local_index = n_eff_wv(29 + mod_ridges * (1-mpo.sin(theta + tilt)**8))
+                local_index = n_eff_wv(26 + mod_ridges * (1-mpo.sin(theta + tilt)**8))
 
         # local_index += (np.random.rand(1) - .5)
         return local_index**2 if local_index > 1 else 1
@@ -570,7 +570,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.56 #
+    D = 0.64 #
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
