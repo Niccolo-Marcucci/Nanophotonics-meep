@@ -247,9 +247,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = n_eff_wv(3  + mod_tranches * (1-mpo.sin(theta + tilt)**8))
+                local_index = n_eff_wv(3  + mod_tranches )#* (1-mpo.sin(theta + tilt)**8))
             else:
-                local_index = n_eff_wv(28 + mod_ridges * (1-mpo.sin(theta + tilt)**8))
+                local_index = n_eff_wv(28 + mod_ridges )#* (1-mpo.sin(theta + tilt)**8))
 
         # local_index += (np.random.rand(1) - .5)
         return local_index**2 if local_index > 1 else 1
