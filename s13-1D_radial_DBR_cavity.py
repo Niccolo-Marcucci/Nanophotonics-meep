@@ -86,7 +86,7 @@ class Simulation(mp.Simulation):
         self.eff_index_info = eff_index_info
         self.cavity_r_size = (cavity_parameters["D"]/2 + cavity_parameters["period"] * cavity_parameters["N_rings"]) * (cavity_parameters["N_rings"]>0)
 
-        self.domain_x = self.cavity_r_size + self.extra_space_xy
+        self.domain_x = 2*(self.cavity_r_size + self.extra_space_xy)
 
         if pattern_type == 'positive':
             self.grating_index = np.real(eff_index_info["n_eff_l"])
@@ -123,7 +123,7 @@ class Simulation(mp.Simulation):
         # round domain with an integer number of grid points
         self.grid_step = 1/self.resolution
 
-        self.cell_size = mp.Vector3(self.domain_x + self.PML_width)
+        self.cell_size = mp.Vector3(self.domain_x + 2*self.PML_width)
         print(self.cell_size)
         # make domain an integer number of voxels
         Nx = int(self.cell_size.x / self.grid_step)
@@ -210,9 +210,9 @@ class Simulation(mp.Simulation):
                     direction = direction)
                 self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
                 # self.time_monitors.append(mp.Volume(center = mp.Vector3(DL_x, DL_y), size = mp.Vector3(0, 0)))
-                self.Ex.append([])
-                self.Ey.append([])
-                self.Ez.append([])
+                # self.Ex.append([])
+                # self.Ey.append([])
+                # self.Ez.append([])
                 # self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
                 #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
                 #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
@@ -223,7 +223,7 @@ class Simulation(mp.Simulation):
                 self.Ez.append([])
 
                 if not self.empty:
-                    self.harminv_instance = None # mp.Harminv(mp.Ez, mp.Vector3(), f, df)
+                    self.harminv_instance = None #mp.Harminv(mp.Ez, mp.Vector3(), f, df)
 
 def save_fields(sim):
     i=-1
@@ -253,7 +253,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
     cavity_parameters = {
         "D": D,
-        "FF": .48,
+        "FF": .5,
         "period": DBR_period,
         "N_rings": 30,
         "tilt": 0} #source_tilt}
@@ -287,7 +287,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         sim_prefix = f"{date}"
 
-    sim_name = "2D_eff_index_"
+    sim_name = "1D_radial_eff_index_"
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
@@ -299,7 +299,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 50,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -316,14 +316,20 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
 
     sim.init_sim()
-    # if mp.am_really_master():
-    #     fig = plt.figure(dpi=150, figsize=(10,10))
-    #     plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
+    if mp.am_really_master():
+        fig = plt.figure(dpi=150, figsize=(10,10))
 
-    #     fig.colorbar(plot.images[0])
-    #     fig.savefig(f'{sim.name}-xy.jpg')
-    #     # plt.show()
-    #     plt.close()
+        eps = sim.get_array(mp.Dielectric,
+                            center = mp.Vector3(),
+                            size = sim.cell_size)
+        # (x, xx, xxx, _ ) = sim.get_array_metadata(center = mp.Vector3(),
+        #                                          size   = sim.cell_size)
+        plt.plot( np.sqrt(eps) )
+
+        # fig.colorbar(plot.images[0])
+        fig.savefig(f'{sim.name}-xy.jpg')
+        # plt.show()
+        plt.close()
 
     # mp.verbosity(0)
     step_functions = []
@@ -418,7 +424,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     wavelength = .590
 
-    period = .281 #round(wavelength/(n_eff_l+n_eff_h),3 )
+    period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
     data = io.loadmat("Lumerical-Objects/multilayer_design/designs/TE_N7_dispersion_azoPPA_1.615.mat")
     n_eff = itp.RegularGridInterpolator((data["d"][0], data["lambda"][0]), data["n_eff"])
@@ -466,7 +472,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.560 #
+    D = 0.56 #
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
@@ -517,8 +523,8 @@ if __name__ == "__main__":              # good practise in parallel computing
             th = np.linspace(0,70,50)
             n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
             n_eff_wv = lambda th : n_eff_tmp(th).item()
-            n_eff_h      = n_eff_wv(32) # points584[i,1])
-            n_eff_l      = n_eff_wv(3) # points584[i,0])
+            n_eff_h      = n_eff_wv(26) # points584[i,1])
+            n_eff_l      = n_eff_wv(2) # points584[i,0])
             n_eff_mod_l  = n_eff_wv(16) - n_eff_wv(3)# points596[i,0]) - n_eff_wv(points584[i,0])
             n_eff_mod_h  = n_eff_wv(41) - n_eff_wv(32)# points596[i,1]) - n_eff_wv(points584[i,1])
             n_eff_spacer = n_eff_wv(65)
@@ -534,7 +540,7 @@ if __name__ == "__main__":              # good practise in parallel computing
                                     n_eff_mod_h, n_eff_wv, Z_f ) )
                 j += 1
 
-    mp.verbosity(1)
+    mp.verbosity(0)
     # mp.quiet(True)
     output = []
     names = []
