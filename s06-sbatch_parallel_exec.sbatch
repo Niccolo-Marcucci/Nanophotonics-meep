@@ -3,7 +3,7 @@
 #SBATCH --mail-user=niccolo.marcucci@polito.it
 #SBATCH --partition=global
 #SBATCH --time=07-00:00:00
-#SBATCH --ntasks=32
+#SBATCH --ntasks=64
 # SBATCH --nodes=2
 # SBATCH --ntasks-per-node=
 #SBATCH --mem-per-cpu=100M
