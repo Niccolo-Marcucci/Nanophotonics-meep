@@ -217,7 +217,7 @@ class Simulation(mp.Simulation):
         theta = mpo.atan2(pos.y, pos.x)
         D = self.cavity_parameters["D"]
         tilt  = self.cavity_parameters["tilt"]
-        FF = 0.5#5 - 0.05*(1-mpo.sin(theta + tilt)**8) # self.cavity_parameters["FF"]
+        FF = 0.55 - 0.05*(1-mpo.sin(theta + tilt)**8) # self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
         mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
@@ -522,7 +522,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     wavelength = .590
 
-    period = .281 #round(wavelength/(n_eff_l+n_eff_h),3 )
+    period = .280 #round(wavelength/(n_eff_l+n_eff_h),3 )
 
     data = io.loadmat("Lumerical-Objects/multilayer_design/designs/TE_N7_dispersion_azoPPA_1.615.mat")
     n_eff = itp.RegularGridInterpolator((data["d"][0], data["lambda"][0]), data["n_eff"])
