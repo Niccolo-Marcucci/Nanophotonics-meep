@@ -360,7 +360,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "FF": .5,
         "period": DBR_period,
         "N_rings": 30,
-        "tilt": source_tilt}
+        "tilt": 0}
 
     outcoupler_parameters = {
         "type": 'spiral',
