@@ -341,8 +341,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
-
-    print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
+    if mp.Verbosity().get() > 0:
+        print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
     # plt.close()
 
@@ -368,9 +368,10 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
             resonance_table.append([np.round(1/resonances_f[l]*1e3, 1), int(resonances_Q[l])] )
         if N_resonances == 0 :
             resonance_table.append([ 0, 0 ])
-        print()
-        print(resonance_table)
-        print()
+        if mp.Verbosity().get() > 0:
+            print()
+            print(resonance_table)
+            print()
 
         # with open(f'{sim.name}_output.json', 'a') as fp:
         #     data2save = {f"resonance_table_t{t}": resonance_table}
@@ -566,10 +567,11 @@ if __name__ == "__main__":              # good practise in parallel computing
             data, name = run_parallel(*tuple_list[i])
             output.append(data)
             names.append(name)
-            print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{j}')
-            print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(j-i-1))} more')
-            print()
-            print()
+            if np.mod(i,10) == 0 :
+                print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{j}')
+                print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(j-i-1))} more')
+                print()
+                print()
 
     elif bash_parallel_run :
         N_jobs = int(sys.argv[-1])
@@ -631,8 +633,9 @@ if __name__ == "__main__":              # good practise in parallel computing
             data, name = run_parallel(*tuple_list[tuple_index])
             # data_list.append(data)
             # name_list.append(name)
-            print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{N_loops_per_job}')
-            print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(N_loops_per_job-i-1))} more')
+            if np.mod(i,10) == 0 :
+                print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{N_loops_per_job}')
+                print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(N_loops_per_job-i-1))} more')
 
         # if mp.am_really_master():
         #     output.extend(data_list)
