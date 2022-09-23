@@ -220,8 +220,8 @@ class Simulation(mp.Simulation):
         FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
-        mod_ridges = 44 - 26 # self.eff_index_info["modulation_amplitude_ridges"]
-        mod_tranches = 15 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
+        mod_ridges = 30 # self.eff_index_info["modulation_amplitude_ridges"]
+        mod_tranches = 20 # self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
@@ -557,7 +557,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
-    n_eff_mod_l = n_eff([15e-9, wavelength*1e-6])[0] - n_eff_l
+    n_eff_mod_l = n_eff([10e-9, wavelength*1e-6])[0] - n_eff_l
     n_eff_mod_h = n_eff([39e-9, wavelength*1e-6])[0] - n_eff_h
     n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
     #%% load susceptibilities data.
@@ -570,7 +570,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # n_eff_h = [ a for a in data["optimal_fit_2"][0]]
 
     #%%
-    D = 0.64 #
+    D = 0.56 #
 
     # crete input vector for parallell pool. It has to be a list of tuples,
     # where each element of the list represent one iteration and thus the
