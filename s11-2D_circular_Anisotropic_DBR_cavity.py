@@ -217,11 +217,11 @@ class Simulation(mp.Simulation):
         theta = mpo.atan2(pos.y, pos.x)
         D = self.cavity_parameters["D"]
         tilt  = self.cavity_parameters["tilt"]
-        FF = 0.5 - 0.07*(1-mpo.sin(theta + tilt)**8) # self.cavity_parameters["FF"]
+        FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
-        mod_ridges = self.eff_index_info["modulation_amplitude_ridges"]
-        mod_tranches = self.eff_index_info["modulation_amplitude_tranches"]
+        mod_ridges = 39 - 31 # self.eff_index_info["modulation_amplitude_ridges"]
+        mod_tranches = 15 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
@@ -247,9 +247,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = self.grating_index  + mod_tranches * (1-mpo.sin(theta + tilt)**8)
+                local_index = n_eff_wv(2  + mod_tranches * (1-mpo.sin(theta + tilt)**8))
             else:
-                local_index = self.background_index + mod_ridges * (1-mpo.sin(theta + tilt)**8)
+                local_index = n_eff_wv(31 + mod_ridges * (1-mpo.sin(theta + tilt)**8))
 
         # local_index += (np.random.rand(1) - .5)
         return local_index**2 if local_index > 1 else 1
