@@ -292,7 +292,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"angle{source_tilt*180/np.pi:.2f}_wv{1/f*1e3:.1f}"#"_n_eff_h{n_eff_h:.4f}"#point{Z_f:.0f}_
+    sim_name += f"_n_eff_h{n_eff_mod_h:.0f}_n_eff_l{n_eff_mod_l:.0f}_wv{1/f*1e3:.1f}"#""angle{source_tilt*180/np.pi:.2f}#point{Z_f:.0f}_
 
 
     sim = Simulation(sim_name,symmetries=[]) #mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -341,8 +341,8 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
-
-    print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
+    if mp.Verbosity().get() > 0:
+        print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
     # plt.close()
 
@@ -368,9 +368,10 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
             resonance_table.append([np.round(1/resonances_f[l]*1e3, 1), int(resonances_Q[l])] )
         if N_resonances == 0 :
             resonance_table.append([ 0, 0 ])
-        print()
-        print(resonance_table)
-        print()
+        if mp.Verbosity().get() > 0:
+            print()
+            print(resonance_table)
+            print()
 
         # with open(f'{sim.name}_output.json', 'a') as fp:
         #     data2save = {f"resonance_table_t{t}": resonance_table}
@@ -517,15 +518,14 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for i in range(1):#len(points584)):
 
     # test various thicknesses
-    for th_low in np.linspace(0, 65, 25):
-        for th_high in np.linspace(0, 65, 25):
-
+    for ii, th_low in enumerate(np.linspace(0, 65, 25)):
+        for jj, th_high in enumerate(np.linspace(0, 65, 25)):
             for wavelength in np.linspace(.565, .615, 50):
                 th = np.linspace(0,70,50)
                 n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
                 n_eff_wv = lambda th : n_eff_tmp(th).item()
-                n_eff_h      = n_eff_wv(40) # points584[i,1])
-                n_eff_l      = n_eff_wv(8) # points584[i,0])
+                n_eff_h      = n_eff_wv(th_high) # points584[i,1])
+                n_eff_l      = n_eff_wv(th_low) # points584[i,0])
                 n_eff_mod_l  = n_eff_wv(16) - n_eff_wv(3)# points596[i,0]) - n_eff_wv(points584[i,0])
                 n_eff_mod_h  = n_eff_wv(41) - n_eff_wv(32)# points596[i,1]) - n_eff_wv(points584[i,1])
                 n_eff_spacer = n_eff_wv(65)
@@ -537,8 +537,8 @@ if __name__ == "__main__":              # good practise in parallel computing
                                         D, period,
                                         empty,
                                         source_pos, source_tilt,
-                                        n_eff_mod_l,
-                                        n_eff_mod_h, n_eff_wv, Z_f ) )
+                                        ii,
+                                        jj, n_eff_wv, Z_f ) )
                     j += 1
 
     mp.verbosity(0)
@@ -567,10 +567,11 @@ if __name__ == "__main__":              # good practise in parallel computing
             data, name = run_parallel(*tuple_list[i])
             output.append(data)
             names.append(name)
-            print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{j}')
-            print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(j-i-1))} more')
-            print()
-            print()
+            if np.mod(i,10) == 0 :
+                print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{j}')
+                print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(j-i-1))} more')
+                print()
+                print()
 
     elif bash_parallel_run :
         N_jobs = int(sys.argv[-1])
@@ -632,8 +633,9 @@ if __name__ == "__main__":              # good practise in parallel computing
             data, name = run_parallel(*tuple_list[tuple_index])
             # data_list.append(data)
             # name_list.append(name)
-            print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{N_loops_per_job}')
-            print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(N_loops_per_job-i-1))} more')
+            if np.mod(i,10) == 0 :
+                print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{N_loops_per_job}')
+                print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(N_loops_per_job-i-1))} more')
 
         # if mp.am_really_master():
         #     output.extend(data_list)
