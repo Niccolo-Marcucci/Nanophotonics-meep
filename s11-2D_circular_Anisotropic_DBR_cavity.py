@@ -279,13 +279,13 @@ class Simulation(mp.Simulation):
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y),#
                             component = mp.Ez,
-                            amplitude = 1)]#np.cos(source_tilt)),
-                        # mp.Source(
-                        #     src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                        #     center = source_pos,
-                        #     size = mp.Vector3(),
-                        #     component = mp.Ex,
-                        #     amplitude = -1 * np.sin(source_tilt))] #
+                            amplitude = np.cos(source_tilt)),
+                        mp.Source(
+                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                            center = source_pos,
+                            size = mp.Vector3(),
+                            component = mp.Ex,
+                            amplitude = -1 * np.sin(source_tilt))] #
 
         self.harminv_instance = None
         self.field_profile = None
