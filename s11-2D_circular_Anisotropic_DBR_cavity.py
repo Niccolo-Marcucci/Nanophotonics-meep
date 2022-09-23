@@ -277,15 +277,15 @@ class Simulation(mp.Simulation):
         self.sources = [ mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
                             center = source_pos,
-                            size = mp.Vector3(y = 0), #self.cell_size.y),#
+                            size = mp.Vector3(y = self.cell_size.y),#
                             component = mp.Ey,
-                            amplitude = np.cos(source_tilt)),
-                        mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                            center = source_pos,
-                            size = mp.Vector3(),
-                            component = mp.Ex,
-                            amplitude = -1 * np.sin(source_tilt))] #
+                            amplitude = 1)]#np.cos(source_tilt)),
+                        # mp.Source(
+                        #     src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                        #     center = source_pos,
+                        #     size = mp.Vector3(),
+                        #     component = mp.Ex,
+                        #     amplitude = -1 * np.sin(source_tilt))] #
 
         self.harminv_instance = None
         self.field_profile = None
@@ -304,7 +304,7 @@ class Simulation(mp.Simulation):
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + self.extra_space_xy*.5
                 nfreq = 1000 if df != 0 else 1
-                for angolo in np.linspace(0, np.pi/2,3)[:]:
+                for angolo in np.linspace(0, np.pi/2,0)[:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
                     direction = mp.X if abs(DL_y) < DL * np.cos(np.pi/4) else mp.Y
@@ -360,7 +360,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "FF": .5,
         "period": DBR_period,
         "N_rings": 30,
-        "tilt": 0}
+        "tilt": source_tilt}
 
     outcoupler_parameters = {
         "type": 'spiral',
@@ -413,7 +413,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(),#x=-sim.cavity_r_size - 0.1),
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=-sim.cavity_r_size - 0.1),
                                          source_tilt=source_tilt, allow_profile=False)# y=1e-3
 
     # raise Exception()1
