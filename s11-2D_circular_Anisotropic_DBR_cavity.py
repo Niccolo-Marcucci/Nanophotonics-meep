@@ -314,9 +314,9 @@ class Simulation(mp.Simulation):
                         direction = direction)
                     self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
                     # self.time_monitors.append(mp.Volume(center = mp.Vector3(DL_x, DL_y), size = mp.Vector3(0, 0)))
-                    self.Ex.append([])
-                    self.Ey.append([])
-                    self.Ez.append([])
+                    # self.Ex.append([])
+                    # self.Ey.append([])
+                    # self.Ez.append([])
                 # self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
                 #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
                 #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
