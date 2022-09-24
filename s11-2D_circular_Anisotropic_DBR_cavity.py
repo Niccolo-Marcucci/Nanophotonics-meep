@@ -337,10 +337,12 @@ def save_fields(sim):
         sim.Ez[i].append( sim.get_array(mp.Ez, center = monitor.center, size = monitor.size) )
 
 #%% function for parallel computing
-def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff__fit_vecs=None, Z_f=None):
+def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff_fit_vecs=None, Z_f=None):
     # import meep as mp
 
-    n_eff_wv = lambda th : itp.interp1d(n_eff_wv(0), n_eff__fit_vecs)(th).item() #n_eff_tmp(th).item()
+    n_eff_wv = lambda th : itp.interp1d(n_eff_fit_vecs[0], n_eff_fit_vecs[1])(th).item() #n_eff_tmp(th).item()
+    print(n_eff_wv(2) )
+
     c0 = 1
     # wavelength = 0.590
     wwidth = 0.15
@@ -621,7 +623,7 @@ if __name__ == "__main__":              # good practise in parallel computing
         for wavelength in np.linspace(.565, .615, 50):
             th = np.linspace(0,70,50)
             n_eff_tmp2 = n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) )
-            n_eff__fit_vecs = (th, n_eff_tmp2)
+            n_eff_fit_vecs = (th, n_eff_tmp2)
             n_eff_tmp = itp.interp1d(th, n_eff_tmp2)
             n_eff_wv = lambda tth : itp.interp1d(th, n_eff_tmp2)(tth).item() #n_eff_tmp(th).item()
             n_eff_h      = n_eff_wv(31) # points584[i,1])
@@ -629,7 +631,7 @@ if __name__ == "__main__":              # good practise in parallel computing
             n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)# points596[i,0]) - n_eff_wv(points584[i,0])
             n_eff_mod_h  = n_eff_wv(39) - n_eff_wv(31)# points596[i,1]) - n_eff_wv(points584[i,1])
             n_eff_spacer = n_eff_wv(65)
-            print(n_eff_wv(2) )
+
             source_pos=0
             if n_eff_h > n_eff_l:
                 tuple_list.append( (wavelength,
@@ -638,14 +640,14 @@ if __name__ == "__main__":              # good practise in parallel computing
                                     empty,
                                     source_pos, source_tilt,
                                     n_eff_mod_l,
-                                    n_eff_mod_h, n_eff__fit_vecs, Z_f ) )
+                                    n_eff_mod_h, n_eff_fit_vecs, Z_f ) )
                 j += 1
 
     mp.verbosity(1)
     # mp.quiet(True)
     output = []
     names = []
-    tuple_list.reverse()
+    # tuple_list.reverse()
     t0 = time.time()
     try:
         from mpi4py import MPI
