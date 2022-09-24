@@ -593,7 +593,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(np.pi/4, +np.pi/2, 1)[:]:
+    for source_tilt in np.linspace(0, +np.pi/2, 2)[:]:
 
     # for source_pos in [0]: # 0, period/4, period/2]:
 
@@ -620,7 +620,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for th_low in np.linspace(0, 65, 25):
     #     for th_high in np.linspace(0, 65, 25):
 
-        for wavelength in np.linspace(.565, .615, 50):
+        for wavelength in np.linspace(.565, .615, 100):
             th = np.linspace(0,70,50)
             n_eff_tmp2 = n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) )
             n_eff_fit_vecs = (th, n_eff_tmp2)
