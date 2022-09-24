@@ -26,7 +26,7 @@ date = time.strftime('%y%m%d-%H%M%S')
 
 
 files = os.listdir("data")
-hashtag ='9388d33171'#'e20d2ea866'#5cab4c8862'#'7bae1ab6b6'#''62ef19ee4d'#'4dc3971d95'#'8a593f9138'#'2cb6bfb1fa'
+hashtag ='458763eaeb'#'e20d2ea866'#5cab4c8862'#'7bae1ab6b6'#''62ef19ee4d'#'4dc3971d95'#'8a593f9138'#'2cb6bfb1fa'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -141,7 +141,7 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
         data = mpo.loadmat(folder + '/' + file)
         # fig = plt.figure(dpi=150,figsize=(10,5))
         # ax = fig.add_subplot(111)
-        for i in [0] : #range(len(data['spectra'])):# [0]:#[7,11,15,] : # [7,15] : ##
+        for i in [0,2] : #range(len(data['spectra'])):# [0]:#[7,11,15,] : # [7,15] : ##
             images[k,:,i] = (abs(data['spectra'][i])**2) # np.abs(data['FT_x'])**2 + np.abs(data['FT_y'])**2 #
         wavelength = data["wavelength"][0]
         WV[k,:]  = wavelength

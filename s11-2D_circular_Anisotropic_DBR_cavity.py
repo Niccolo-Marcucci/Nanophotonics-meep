@@ -221,7 +221,7 @@ class Simulation(mp.Simulation):
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
         mod_ridges = 40 - 26 # self.eff_index_info["modulation_amplitude_ridges"]
-        mod_tranches = 7.5 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
+        mod_tranches = 8 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
@@ -247,9 +247,9 @@ class Simulation(mp.Simulation):
 
             # modulate only the higher effective index part
             if is_groove:
-                local_index = n_eff_wv(2  + mod_tranches * (1-mpo.sin(theta + tilt)**8))
+                local_index = n_eff_wv(2  + mod_tranches * (1-mpo.sin(theta + tilt)**6))
             else:
-                local_index = n_eff_wv(26 + mod_ridges * (1-mpo.sin(theta + tilt)**8))
+                local_index = n_eff_wv(26 + mod_ridges * (1-mpo.sin(theta + tilt)**6))
 
         # local_index += (np.random.rand(1) - .5)
         return local_index**2 if local_index > 1 else 1
@@ -337,9 +337,10 @@ def save_fields(sim):
         sim.Ez[i].append( sim.get_array(mp.Ez, center = monitor.center, size = monitor.size) )
 
 #%% function for parallel computing
-def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff_wv=None, Z_f=None):
+def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empty=False, source_pos=0, source_tilt=0, n_eff_mod_l = 0, n_eff_mod_h = 0, n_eff__fit_vecs=None, Z_f=None):
     # import meep as mp
 
+    n_eff_wv = lambda th : itp.interp1d(n_eff_wv(0), n_eff__fit_vecs)(th).item() #n_eff_tmp(th).item()
     c0 = 1
     # wavelength = 0.590
     wwidth = 0.15
@@ -617,16 +618,18 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for th_low in np.linspace(0, 65, 25):
     #     for th_high in np.linspace(0, 65, 25):
 
-        for wavelength in np.linspace(.590, .615, 1):
+        for wavelength in np.linspace(.565, .615, 50):
             th = np.linspace(0,70,50)
-            n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
-            n_eff_wv = lambda th : n_eff_tmp(th).item()
+            n_eff_tmp2 = n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) )
+            n_eff__fit_vecs = (th, n_eff_tmp2)
+            n_eff_tmp = itp.interp1d(th, n_eff_tmp2)
+            n_eff_wv = lambda tth : itp.interp1d(th, n_eff_tmp2)(tth).item() #n_eff_tmp(th).item()
             n_eff_h      = n_eff_wv(31) # points584[i,1])
             n_eff_l      = n_eff_wv(2) # points584[i,0])
             n_eff_mod_l  = n_eff_wv(15) - n_eff_wv(2)# points596[i,0]) - n_eff_wv(points584[i,0])
             n_eff_mod_h  = n_eff_wv(39) - n_eff_wv(31)# points596[i,1]) - n_eff_wv(points584[i,1])
             n_eff_spacer = n_eff_wv(65)
-
+            print(n_eff_wv(2) )
             source_pos=0
             if n_eff_h > n_eff_l:
                 tuple_list.append( (wavelength,
@@ -635,7 +638,7 @@ if __name__ == "__main__":              # good practise in parallel computing
                                     empty,
                                     source_pos, source_tilt,
                                     n_eff_mod_l,
-                                    n_eff_mod_h, n_eff_wv, Z_f ) )
+                                    n_eff_mod_h, n_eff__fit_vecs, Z_f ) )
                 j += 1
 
     mp.verbosity(1)
