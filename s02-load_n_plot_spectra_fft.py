@@ -26,7 +26,7 @@ date = time.strftime('%y%m%d-%H%M%S')
 
 
 files = os.listdir("data")
-hashtag ='0f198e254a'
+hashtag ='458763eaeb'
 
 for file in files :
     if file.find( hashtag ) >= 0:

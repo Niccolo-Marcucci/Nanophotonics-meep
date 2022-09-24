@@ -636,7 +636,7 @@ if __name__ == "__main__":              # good practise in parallel computing
             if np.mod(i,10) == 0 :
                 print(f'It has run for {convert_seconds(time.time()-t1)}, {i+1}/{N_loops_per_job}')
                 print(f'It will take roughly {convert_seconds((time.time()-t0)/(i+1)*(N_loops_per_job-i-1))} more')
-
+                sys.stdout.flush()
         # if mp.am_really_master():
         #     output.extend(data_list)
         #     names.extend(name_list)

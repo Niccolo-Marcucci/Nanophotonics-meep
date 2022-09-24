@@ -40,7 +40,7 @@ def ft(x, t, f):
 
 files = os.listdir("data")
 
-hashtag ='6e4e637dec'
+hashtag ='ff6ee5a868'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -107,23 +107,23 @@ for l in range(len( E_x[:])):
     for i in tqdm(range(1)): #[shape[0]-1]: #  #  [1,5,9,13,16]: # each monitor
         for j in (range(shape[2])) : # each monitor point
             for k in range(shape[3]):
-                # ex = np.concatenate( (E_x[l][i,:,j,k], np.zeros(padding)) )
-                # ex[1:source_len] = 0
-                # ey = np.concatenate( (E_y[l][i,:,j,k], np.zeros(padding)) )
-                # ey[1:source_len] = 0
-                ez = np.concatenate( (E_x[l][i,:,j,k], np.zeros(padding)) )
+                ex = np.concatenate( (E_x[l][i,:,j,k], np.zeros(padding)) )
+                ex[1:source_len] = 0
+                ey = np.concatenate( (E_y[l][i,:,j,k], np.zeros(padding)) )
+                ey[1:source_len] = 0
+                # ez = np.concatenate( (E_y[l][i,:,j,k], np.zeros(padding)) )
                 # ez_log = np.log(abs(ez))
                 # ez_log[ez_log==-np.Inf] = 0
                 # p = np.polyfit(t[source_len:shape[1]], ez_log[source_len:shape[1]],1)
                 # ez = ez / np.exp(np.polyval(p, t))
-                ez[:source_len] = 0
+                # ez[:source_len] = 0
 
 
                 # wv = np.linspace(.500, .600, 100)
                 # f = 1/wv
                 f = np.linspace(-1/dt/2, 1/dt/2, FF.size)
                 f -= np.diff(f)[0]/2 if np.mod(FF.size,2) else 0 # shift only if the vector is odd
-                FF = abs(np.fft.fftshift(np.fft.fft(ez)))**2 #+ abs(np.fft.fftshift(np.fft.fft(ex)))**2#
+                FF = abs(np.fft.fftshift(np.fft.fft(ey)))**2 + abs(np.fft.fftshift(np.fft.fft(ex)))**2#
                 # FF = abs(ft(ez, t, f))**2 #+ abs(np.fft.fftshift(np.fft.fft(ex)))**2#
                 FF_list.append(FF[(1/f>.57)*(1/f <.62)])
 
@@ -132,7 +132,7 @@ for l in range(len( E_x[:])):
                 # for s, wv in enumerate(wvs):
                 #     idx  = np.argmin(abs(1/f - wv))
                 #     field[s,j,k] = FF[idx]
-                ax2.semilogy(t, abs(ez)**2) #+abs(ey)**2)
+                ax2.semilogy(t, abs(ex)**2+abs(ey)**2)
 
 
         ax1.plot(1/f*1e3, FF, '-' if i<10 else '--')
