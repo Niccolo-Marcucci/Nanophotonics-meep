@@ -2,17 +2,19 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=niccolo.marcucci@polito.it
 #SBATCH --partition=global
-#SBATCH --time=00-02:00:00
-#SBATCH --ntasks=50
+#SBATCH --time=00-07:00:00
+#SBATCH --ntasks=64
 # SBATCH --nodes=2
 # SBATCH --ntasks-per-node=
-#SBATCH --mem-per-cpu=400M
+#SBATCH --mem-per-cpu=200M
 # SBATCH --partition=global
 # SBATCH --nodelist=compute-3-[13,17-20]
 # the following nodes are not reserved for anyone in particular
 # SBATCH --nodelist=compute-2-[5,6,9],compute-4-1
 
-mpirun -np 50 python $@ 50
+mpirun -np 64 python $@ 64
 
-mv_file_to_folder_parallely $2
+wait
+
+python mv_file_to_folder_parallely.py $2
 # mv -v $(ls *${2}* | grep -v 'log\|err') data/*$2
