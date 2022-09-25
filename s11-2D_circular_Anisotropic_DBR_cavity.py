@@ -217,11 +217,11 @@ class Simulation(mp.Simulation):
         theta = mpo.atan2(pos.y, pos.x)
         D = self.cavity_parameters["D"]
         tilt  = self.cavity_parameters["tilt"]
-        FF = .55 - .05*(1-mpo.sin(theta + tilt)**6) # self.cavity_parameters["FF"]
+        FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
-        mod_ridges = 40 - 26 # self.eff_index_info["modulation_amplitude_ridges"]
-        mod_tranches = 8 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
+        mod_ridges = 47 - 26 # self.eff_index_info["modulation_amplitude_ridges"]
+        mod_tranches = 15 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
 
         if r < D/2 : #or r > D/2 + N*period - (1-FF)*period:
