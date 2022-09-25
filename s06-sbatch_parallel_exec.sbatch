@@ -16,5 +16,5 @@ mpirun -np 64 python $@ 64
 
 wait
 
-python mv_file_to_folder_parallely.py $2
+python mv_files_to_folder_parallely.py $2
 # mv -v $(ls *${2}* | grep -v 'log\|err') data/*$2
