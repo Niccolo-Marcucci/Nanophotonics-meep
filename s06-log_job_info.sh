@@ -14,7 +14,7 @@ echo $prefix
 
 state=$(seff 303262 | grep -i "state: ")
 
-if [ ${val#"State: "} != "RUNNING" ]; then
+if [ "${val#"State: "}" != "RUNNING" ]; then
     seff $jobid > ${log_file:0:-4}.info
     python mv_n_tar_after_log.py $hash
 fi
