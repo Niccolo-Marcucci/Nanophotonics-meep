@@ -220,7 +220,7 @@ class Simulation(mp.Simulation):
         FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
-        mod_ridges = 40 - 31 # self.eff_index_info["modulation_amplitude_ridges"]
+        mod_ridges = 29 - 31 # self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = 15 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
 
@@ -416,7 +416,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         sim.empty = False
 
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(),#x=-sim.cavity_r_size - 0.1),
-                                         source_tilt=source_tilt, allow_profile=False)# y=1e-3
+                                         source_tilt=source_tilt, allow_profile=True)# y=1e-3
 
     # raise Exception()1
 
@@ -436,7 +436,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     if sim.harminv_instance != None :
         step_functions.append( mp.after_time(150, sim.harminv_instance) )
 
-    step_functions.append(mp.at_every(0.05,save_fields))
+    # step_functions.append(mp.at_every(0.05,save_fields))
     sim.run(*step_functions, until=sim_end)
     if df == 0 :
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
@@ -592,7 +592,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     j = 0           # resets  tiple list (insted of commenting all previous lines)
     tuple_list = []
 
-    for source_tilt in np.linspace(0, +np.pi/2, 2)[:]:
+    for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 16)[1:]:
 
     # for source_pos in [0]: # 0, period/4, period/2]:
 

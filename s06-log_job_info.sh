@@ -12,6 +12,10 @@ hash=${prefix:$(( ${#pref} - 10 ))} # then the hash is 10 chars
 echo $hash
 echo $prefix
 
-seff $jobid > ${log_file:0:-4}.info
+state=$(seff 303262 | grep -i "state: ")
 
-mv -v *${jobid}.* data/*$hash
+if [ ${val#"State: "} != "RUNNING" ]; then
+    seff $jobid > ${log_file:0:-4}.info
+    python mv_n_tar_after_log.py $hash
+fi
+# mv -v *${jobid}.* data/*$hash
