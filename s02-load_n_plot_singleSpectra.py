@@ -24,7 +24,7 @@ import time
 
 files = os.listdir("data")
 
-hashtag ='ff6ee5a868'#'ac7da1b8e1'#'970756bcfb'
+hashtag ='eab3b1d422'#'ac7da1b8e1'#'970756bcfb'
 
 for file in files :
     if file.find( hashtag ) >= 0:

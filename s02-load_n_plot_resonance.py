@@ -25,7 +25,7 @@ date = time.strftime('%y%m%d-%H%M%S')
 
 
 files = os.listdir("data")
-hashtag ='7edc4aea0b'#'68fa746847'#'038dd156ce'#'1c62b710f2'#4fb109da14'#'
+hashtag ='0729d2c745'#'68fa746847'#'038dd156ce'#'1c62b710f2'#4fb109da14'#'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -40,6 +40,9 @@ scnd_param = {'name': '_n_eff_h', # '_D',
 frst_param = {'name': '_n_eff_l', # '_src',
               'list': [],
               'label': 'n_eff wavelength (nm)'} # 'Source Position [nm]'}
+thrd_param = {'name': '_wv', # '_src',
+              'list': [],
+              'label': 'diff (nm)'} # 'Source Position [nm]'}
 
 # sim_filelist will be a two dimensional list containing all useful files
 # (same as frst_param["list"]). In other words, each element of the list is a
@@ -58,16 +61,30 @@ for file in files :
             first_parameter  = float(first_parameter[:first_parameter.find("_")])
             second_parameter = suffix[suffix.find( scnd_param['name'] ) + len(scnd_param['name']):]
             second_parameter = float(second_parameter[:second_parameter.find('_')])
+
+            wv_res = data['resonance_table_t200.0'][0][0]
+            third_parameter  = suffix[suffix.find( '_wv' ) + 3:]
+            third_parameter  = float(third_parameter[:third_parameter.find("_")])
             if not any([second_parameter==val for val in scnd_param['list']]):
                 # if the same value of second_parameter does not exist creat a new entry
                 scnd_param['list'].append(second_parameter)
 
                 sim_filelist.append([file])
                 frst_param['list'].append([first_parameter])
+                thrd_param['list'].append([third_parameter])
             else:
                 j = scnd_param['list'].index(second_parameter)
-                sim_filelist[j].append(file)
-                frst_param['list'][j].append(first_parameter)
+                if not any([first_parameter==val for val in frst_param['list'][j]]):
+                    sim_filelist[j].append(file)
+                    frst_param['list'][j].append(first_parameter)
+                    thrd_param['list'][j].append(abs(third_parameter-wv_res))
+                else:
+                    k = frst_param['list'][j].index(first_parameter)
+                    if abs(third_parameter-wv_res) < thrd_param['list'][j][k] :
+                        sim_filelist[j][k] = file
+                        frst_param['list'][j][k] = first_parameter
+                        thrd_param['list'][j][k] = abs(third_parameter-wv_res)
+
 
 if i == 0 :
     raise FileNotFoundError(f"No spectra file was found for hash {hashtag}")
@@ -98,12 +115,12 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
 
     for k, file in enumerate(sim_filelist[j]) :
         data = mpo.loadmat(folder + '/' + file)
-        resonances[j,k] = data["resonance_table_t170.0"][0,0]
-        qualities[j,k] = data["resonance_table_t170.0"][0,1]
+        resonances[j,k] = data["resonance_table_t200.0"][0,0]
+        qualities[j,k] = data["resonance_table_t200.0"][0,1]
 
-d = np.linspace(0, 65, 30)
-X, Y = np.meshgrid(scnd_param['list'], first_parameter)
-X, Y = np.meshgrid(d[:-1], d[1:], indexing='xy')
+d = np.linspace(0, 65, 25)
+X, Y = np.meshgrid(scnd_param['list'], scnd_param['list'])#first_parameter)
+X, Y = np.meshgrid(d[1:-1], d[2:], indexing='xy')
 
 resonances[resonances==0.] = np.NaN
 # resonances[Y>51] = np.NaN
@@ -124,7 +141,7 @@ def get_contour_verts(cn):
 
     return np.array(lines)
 
-# plt.close('all')
+plt.close('all')
 
 levels_wv = [584, 596 ]
 levels_q = np.linspace(2,2.8, 11)
@@ -156,9 +173,9 @@ lines_q = get_contour_verts(p)
 a = [ ax1.plot(line[:,0], line[:,1], 'r' ) for line in lines_q]
 b = [ ax2.plot(line[:,0], line[:,1], 'r' ) for line in lines_wv]
 
-# plt.figure(fig), plt.savefig(folder + "/resonances_wavelengths_map.png")
-# plt.figure(fig2), plt.savefig(folder + "/resonances_qualities_map.png")
-ax1.plot([3,7.5],[28, 40], '+k', linewidth=3)
+plt.figure(fig), plt.savefig(folder + "/resonances_wavelengths_map.png")
+plt.figure(fig2), plt.savefig(folder + "/resonances_qualities_map.png")
+ax1.plot([2,8],[26, 40], '+k', linewidth=3)
 
 points = []
 for line_q in lines_q:

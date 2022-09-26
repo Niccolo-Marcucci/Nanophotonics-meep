@@ -26,7 +26,7 @@ date = time.strftime('%y%m%d-%H%M%S')
 
 
 files = os.listdir("data")
-hashtag ='458763eaeb'
+hashtag ='f8db994adb'
 
 for file in files :
     if file.find( hashtag ) >= 0:
@@ -35,9 +35,9 @@ for file in files :
 files = os.listdir(folder)
 
 source_positions = []
-scnd_param = {'name': 'point', # '_D',
+scnd_param = {'name': '_angle', # '_D',
               'list': [],
-              'label': 'effective index'} #'Ds [nm]'}
+              'label': 'angle'} #'Ds [nm]'}
 frst_param = {'name': '_wv', # '_src',
               'list': [],
               'label': 'wavelength (nm)'} # 'Source Position [nm]'}
@@ -109,10 +109,14 @@ for j, second_parameter in (enumerate(scnd_param['list'])):
     flag = True
     for k, file in tqdm(enumerate(sim_filelist[j])) :
         data = mpo.loadmat(folder + '/' + file)
+        Ex = data['E_x']
+        Ey = data['E_y']
         Ez = data['E_z']
         shape = Ez.shape
         if len(shape) < 4 :
             shape = ( *shape, 1,1)
+            Ex = Ex.reshape(shape)
+            Ey = Ey.reshape(shape)
             Ez = Ez.reshape(shape)
         t = np.linspace(0, 400, shape[1]);
         dt = np.diff(t)[0];
@@ -124,27 +128,28 @@ for j, second_parameter in (enumerate(scnd_param['list'])):
             WV = np.zeros( ( len(sim_filelist[j]), wv.size) )
             WVV = np.zeros( ( len(sim_filelist[j]), wv.size) )
         flag = False
-        for i in range(shape[0]-1):#[shape[0]-1]: #  ): # #  [1,5,9,13,16]: # each monitor
+        for i in range(shape[0]):#[shape[0]-1]: #  ): # #  [1,5,9,13,16]: # each monitor
             FF = np.zeros(t.size)
             for kk in range(shape[3]):
-                 for jj in (range(shape[2])) : # each monitor point
-                     # ex = np.concatenate( (E_x[l][i,:,j,k], np.zeros(padding)) )
-                     # ex[1:source_len] = 0
-                     # ey = np.concatenate( (E_y[l][i,:,j,k], np.zeros(padding)) )
-                     # ey[1:source_len] = 0
-                     ez = np.concatenate( (Ez[i,:,jj,kk], np.zeros(padding)) )
-                     # ez_log = np.log(abs(ez))
-                     # ez_log[ez_log==-np.Inf] = 0
-                     # p = np.polyfit(t[source_len:shape[1]], ez_log[source_len:shape[1]],1)
-                     # ez = ez / np.exp(np.polyval(p, t))
-                     ez[:source_len] = 0
+                for jj in (range(shape[2])) : # each monitor point
+                    ex = np.concatenate( (Ex[i,:,jj,kk], np.zeros(padding)) )
+                    ex[1:source_len] = 0
+                    ey = np.concatenate( (Ey[i,:,jj,kk], np.zeros(padding)) )
+                    ey[1:source_len] = 0
+                    ez = np.concatenate( (Ez[i,:,jj,kk], np.zeros(padding)) )
+                    # ez_log = np.log(abs(ez))
+                    # ez_log[ez_log==-np.Inf] = 0
+                    # p = np.polyfit(t[source_len:shape[1]], ez_log[source_len:shape[1]],1)
+                    # ez = ez / np.exp(np.polyval(p, t))
+                    ez[:source_len] = 0
 
 
-                     # wv = np.linspace(.500, .600, 100)
-                     # f = 1/wv
-                     f = np.linspace(-1/dt/2, 1/dt/2, FF.size)
-                     f -= np.diff(f)[0]/2 if np.mod(FF.size,2) else 0 # shift only if the vector is odd
-                     FF += abs(np.fft.fftshift(np.fft.fft(ez)))**2
+                    # wv = np.linspace(.500, .600, 100)
+                    # f = 1/wv
+                    f = np.linspace(-1/dt/2, 1/dt/2, FF.size)
+                    f -= np.diff(f)[0]/2 if np.mod(FF.size,2) else 0 # shift only if the vector is odd
+                    # FF += abs(np.fft.fftshift(np.fft.fft(ex)))**2
+                    FF += abs(np.fft.fftshift(np.fft.fft(ey)))**2
             images[k,:,i] = FF[(1/f>.550)*(1/f <.63)]
         wavelength = 1/f[(1/f>.55)*(1/f <.630)]
         WV[k,:]  = wavelength
@@ -182,17 +187,19 @@ for j, second_parameter in (enumerate(scnd_param['list'])):
     # for i in  tqdm(range(0,len(data['spectra']))):
     #     spectra[i,:] = itp.griddata((WV.reshape(WV.size), WVV.reshape(WV.size)), images[:,:,i].reshape(WV.size), (lambd, lambd))
     spectra = np.array(output)
+    io.savemat(folder + f'/sim_2D_{date}_{scnd_param["name"]}{second_parameter:.0f}_Ey_spectrum.mat',
+                {"diagonal_wavelength":lambd, "diagonal_intensity": spectra, "source_angles": np.linspace(0,90,3)[:], "wv_n_eff": WV, "wavelength" : WVV, "maps": images})
     # io.savemat(folder + f'/mat_files/sim_2D_{date}_{scnd_param["name"]}{second_parameter+360:.0f}_opposite_monitor_spectrum.mat',
     #             {"diagonal_wavelength":lambd, "diagonal_intensity": spectra[0], "wv_n_eff": WV, "wavelength" : WVV, "map": image})
-    intensity =  sum([spectra[i,:] for i in range(shape[0]-1,)])#[3,7,11,15]])
+    intensity =  sum([spectra[i,:] for i in range(shape[0],)])#[3,7,11,15]])
     plt.plot(lambd, intensity )
     plt.xlabel('wavelength (nm)')
     plt.ylabel('intensity (a.u.)')
     plt.grid(True)
     # images.append(image)
-    plt.title(f'Period DBR: {period}nm, source_{scnd_param["label"]}: {second_parameter:.0f}, spacer: 560nm')
-    # fig.savefig(folder + f'/intensity/sim_2D_{date}_{scnd_param["name"]}{second_parameter+360:.0f}_intensity.png')
-    plt.close()
+    plt.title(f'Period DBR: {period}nm, source_{scnd_param["label"]}: {second_parameter:.0f}, spacer: 640nm')
+    fig.savefig(folder + f'/sim_2D_{date}_{scnd_param["name"]}{second_parameter:.0f}_Ey_intensity.png')
+    # plt.close()
     inc_sum += intensity
 #%%
 fig = plt.figure()
@@ -203,7 +210,7 @@ plt.xlabel('wavelength (nm)')
 plt.ylabel('intensity (a.u.)')
 plt.grid(True)
 # images.append(image)
-plt.title(f'Period DBR: {period}nm, spacer: 560nm')
+plt.title(f'Period DBR: {period}nm, spacer: 640nm')
 # fig.savefig(folder + f'/sim_2D_{date}_incoerent_sum_intensity.png')
 # fig = plt.figure()
 # image = np.array(images[0] + images[1])#.transpose()
