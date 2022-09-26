@@ -220,7 +220,7 @@ class Simulation(mp.Simulation):
         FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
-        mod_ridges = 39 - 31 # self.eff_index_info["modulation_amplitude_ridges"]
+        mod_ridges = 40 - 31 # self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = 15 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
 
@@ -277,15 +277,15 @@ class Simulation(mp.Simulation):
         self.sources = [ mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
                             center = source_pos,
-                            size = mp.Vector3(y = 3), #self.cell_size.y),#
+                            size = mp.Vector3(y = 0), #self.cell_size.y),#
                             component = mp.Ey,
-                            amplitude = 1)] # np.cos(source_tilt)),
-                       #  mp.Source(
-                       #      src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                       #      center = source_pos,
-                       #      size = mp.Vector3(),
-                       #      component = mp.Ex,
-                       #      amplitude = -1 * np.sin(source_tilt))] #
+                            amplitude = np.cos(source_tilt)),
+                        mp.Source(
+                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
+                            center = source_pos,
+                            size = mp.Vector3(),
+                            component = mp.Ex,
+                            amplitude = -1 * np.sin(source_tilt))] #
 
         self.harminv_instance = None
         self.field_profile = None
@@ -297,7 +297,7 @@ class Simulation(mp.Simulation):
         self.Ez = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ex, mp.Ey], 1/np.array([.5772, .5842, .5854]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ex, mp.Ey], 1/np.array([.5932, .5907, .5875 ]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
@@ -362,7 +362,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "FF": .5,
         "period": DBR_period,
         "N_rings": 30,
-        "tilt": source_tilt}
+        "tilt": 0}
 
     outcoupler_parameters = {
         "type": 'spiral',
@@ -415,7 +415,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     else:
         sim.empty = False
 
-    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(x=-sim.cavity_r_size - 0.1),
+    sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(),#x=-sim.cavity_r_size - 0.1),
                                          source_tilt=source_tilt, allow_profile=False)# y=1e-3
 
     # raise Exception()1
