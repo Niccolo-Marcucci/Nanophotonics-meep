@@ -297,7 +297,7 @@ class Simulation(mp.Simulation):
         self.Ez = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ex, mp.Ey], 1/np.array([.5932, .5907, .5875 ]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ex, mp.Ey], 1/np.array([.5932, .5907, .5876 ]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
@@ -619,7 +619,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for th_low in np.linspace(0, 65, 25):
     #     for th_high in np.linspace(0, 65, 25):
 
-        for wavelength in np.linspace(.565, .615, 100):
+        for wavelength in np.array([.5932, .5907, .5876 ]):
+        # for wavelength in np.linspace(.565, .615, 100):
             th = np.linspace(0,70,50)
             n_eff_tmp2 = n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) )
             n_eff_fit_vecs = (th, n_eff_tmp2)
