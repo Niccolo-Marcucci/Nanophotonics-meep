@@ -292,7 +292,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"_D{D:.0f}_wv{1/f*1e3:.1f}"#""angle{source_tilt*180/np.pi:.2f}#n_eff_h{n_eff_mod_h:.0f}_n_eff_l{n_eff_mod_l:.0f}_
+    sim_name += f"_D{D*1e3:.1f}_wv{1/f*1e3:.1f}"#""angle{source_tilt*180/np.pi:.2f}#n_eff_h{n_eff_mod_h:.0f}_n_eff_l{n_eff_mod_l:.0f}_
 
 
     sim = Simulation(sim_name,symmetries=[]) #mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
