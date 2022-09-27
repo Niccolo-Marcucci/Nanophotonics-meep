@@ -202,14 +202,14 @@ class Simulation(mp.Simulation):
         else:
             if self.cavity_r_size > 0 :
                 DL = self.cavity_r_size + self.extra_space_xy*.5
-                nfreq = 1000 if df != 0 else 1
+                nfreq = 500 if df != 0 else 1
                 DL_x = DL
                 direction = mp.R
                 fluxr = mp.FluxRegion(
                     center = mp.Vector3(DL_x),
                     size = mp.Vector3(0, 0),
                     direction = direction)
-                self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
+                self.spectrum_monitors.append(self.add_flux(f, df/2, nfreq, fluxr))#, yee_grid=True))
                 # self.time_monitors.append(mp.Volume(center = mp.Vector3(DL_x, DL_y), size = mp.Vector3(0, 0)))
                 # self.Ex.append([])
                 # self.Ey.append([])
@@ -224,7 +224,7 @@ class Simulation(mp.Simulation):
                 self.Ez.append([])
 
                 if not self.empty:
-                    self.harminv_instance = mp.Harminv(mp.Ez, mp.Vector3(), f, df)
+                    self.harminv_instance = None # mp.Harminv(mp.Ez, mp.Vector3(), f, df)
 
 def save_fields(sim):
     i=-1
@@ -292,7 +292,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim_name += "cavity_" if cavity_parameters["N_rings"] > 0 else ""
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_Exy_"
-    sim_name += f"_n_eff_h{n_eff_mod_h:.0f}_n_eff_l{n_eff_mod_l:.0f}_wv{1/f*1e3:.1f}"#""angle{source_tilt*180/np.pi:.2f}#point{Z_f:.0f}_
+    sim_name += f"_D{D:.0f}_wv{1/f*1e3:.1f}"#""angle{source_tilt*180/np.pi:.2f}#n_eff_h{n_eff_mod_h:.0f}_n_eff_l{n_eff_mod_l:.0f}_
 
 
     sim = Simulation(sim_name,symmetries=[]) #mp.Mirror(mp.X),mp.Mirror(mp.Y)])# mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
@@ -317,20 +317,20 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
 
     sim.init_sim()
-    if mp.am_really_master():
-        fig = plt.figure(dpi=150, figsize=(10,10))
+    # if mp.am_really_master():
+    #     fig = plt.figure(dpi=150, figsize=(10,10))
 
-        eps = sim.get_array(mp.Dielectric,
-                            center = mp.Vector3(),
-                            size = sim.cell_size)
-        # (x, xx, xxx, _ ) = sim.get_array_metadata(center = mp.Vector3(),
-        #                                          size   = sim.cell_size)
-        plt.plot( np.sqrt(eps) )
+    #     eps = sim.get_array(mp.Dielectric,
+    #                         center = mp.Vector3(),
+    #                         size = sim.cell_size)
+    #     # (x, xx, xxx, _ ) = sim.get_array_metadata(center = mp.Vector3(),
+    #     #                                          size   = sim.cell_size)
+    #     plt.plot( np.sqrt(eps) )
 
-        # fig.colorbar(plot.images[0])
-        fig.savefig(f'{sim.name}-xy.jpg')
-        # plt.show()
-        plt.close()
+    #     # fig.colorbar(plot.images[0])
+    #     fig.savefig(f'{sim.name}-xy.jpg')
+    #     # plt.show()
+    #     plt.close()
 
     # mp.verbosity(0)
     step_functions = []
@@ -505,7 +505,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for anisotropy in np.linspace(0,5, 1):
 
     source_tilt = 0
-    # for D in [1] : # np.linspace(0, 1, 50):
+    for D in np.linspace(0, .8, 50):
 
 
     # test the eff indeces extracted from the contour
@@ -518,28 +518,30 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for i in range(1):#len(points584)):
 
     # test various thicknesses
-    for ii, th_low in enumerate(np.linspace(0, 65, 25)):
-        for jj, th_high in enumerate(np.linspace(0, 65, 25)):
-            for wavelength in np.linspace(.565, .615, 50):
-                th = np.linspace(0,70,50)
-                n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
-                n_eff_wv = lambda th : n_eff_tmp(th).item()
-                n_eff_h      = n_eff_wv(th_high) # points584[i,1])
-                n_eff_l      = n_eff_wv(th_low) # points584[i,0])
-                n_eff_mod_l  = n_eff_wv(16) - n_eff_wv(3)# points596[i,0]) - n_eff_wv(points584[i,0])
-                n_eff_mod_h  = n_eff_wv(41) - n_eff_wv(32)# points596[i,1]) - n_eff_wv(points584[i,1])
-                n_eff_spacer = n_eff_wv(65)
+    # for ii, th_low in enumerate(np.linspace(0, 65, 25)):
+    #     for jj, th_high in enumerate(np.linspace(0, 65, 25)):
+        th_low = 2
+        th_high = 31
+        for wavelength in np.linspace(.565, .615, 50):
+            th = np.linspace(0,70,50)
+            n_eff_tmp = itp.interp1d(th, n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) ))
+            n_eff_wv = lambda th : n_eff_tmp(th).item()
+            n_eff_h      = n_eff_wv(th_high) # points584[i,1])
+            n_eff_l      = n_eff_wv(th_low) # points584[i,0])
+            n_eff_mod_l  = n_eff_wv(16) - n_eff_wv(3)# points596[i,0]) - n_eff_wv(points584[i,0])
+            n_eff_mod_h  = n_eff_wv(41) - n_eff_wv(32)# points596[i,1]) - n_eff_wv(points584[i,1])
+            n_eff_spacer = n_eff_wv(65)
 
-                source_pos=0
-                if n_eff_h > n_eff_l:
-                    tuple_list.append( (wavelength,
-                                        n_eff_h, n_eff_l, n_eff_spacer,
-                                        D, period,
-                                        empty,
-                                        source_pos, source_tilt,
-                                        ii,
-                                        jj, n_eff_wv, Z_f ) )
-                    j += 1
+            source_pos=0
+            if n_eff_h > n_eff_l:
+                tuple_list.append( (wavelength,
+                                    n_eff_h, n_eff_l, n_eff_spacer,
+                                    D, period,
+                                    empty,
+                                    source_pos, source_tilt,
+                                    n_eff_mod_l,
+                                    n_eff_mod_h, n_eff_wv, Z_f ) )
+                j += 1
 
     mp.verbosity(0)
     # mp.quiet(True)
