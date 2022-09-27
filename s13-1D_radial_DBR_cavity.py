@@ -122,11 +122,11 @@ class Simulation(mp.Simulation):
         # round domain with an integer number of grid points
         self.grid_step = 1/self.resolution
 
-        self.cell_size = mp.Vector3(self.domain_x + 2*self.PML_width)
+        self.cell_size = mp.Vector3(z = self.domain_x + 2*self.PML_width)
         if mp.Verbosity().get() > 0:
             print(self.cell_size)
         # make domain an integer number of voxels
-        Nx = int(self.cell_size.x / self.grid_step)
+        Nx = int(self.cell_size.z / self.grid_step)
         Nx += np.mod(Nx,2) # make even; + 1      # make odd
         self.cell_size.z = Nx * self.grid_step
 
@@ -206,7 +206,7 @@ class Simulation(mp.Simulation):
                 DL_x = DL
                 direction = mp.Z
                 fluxr = mp.FluxRegion(
-                    center = mp.Vector3(DL_x),
+                    center = mp.Vector3(z=DL_x),
                     size = mp.Vector3(0, 0),
                     direction = direction)
                 self.spectrum_monitors.append(self.add_flux(f, df/2, nfreq, fluxr))#, yee_grid=True))
