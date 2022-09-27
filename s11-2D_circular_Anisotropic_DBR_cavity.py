@@ -281,7 +281,7 @@ class Simulation(mp.Simulation):
                             size  = mp.Vector3(2*DL*np.sin(angolo)**2, 2*DL*np.cos(angolo)**2),#
                             component = mp.Ey,
                             amplitude = 1,
-                            amp_func=lambda pos:Ey(pos.y-DL*np.sin(angolo), pos.x-DL*np.cos(angolo)))
+                            amp_func=lambda pos:Ey(pos.x+DL*np.cos(angolo),pos.y+DL*np.sin(angolo)))
                         for angolo in [0, np.pi/2, np.pi, np.pi*3/2]]
         # self.sources.extend([mp.Source(
         #                     src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
