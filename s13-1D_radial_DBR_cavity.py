@@ -36,7 +36,7 @@ def convert_seconds (elapsed):
 class Simulation(mp.Simulation):
 
 
-    def __init__(self, sim_name='simulation_2D', dimensions=mp.CYLINDRICAL, symmetries = []):
+    def __init__(self, sim_name='simulation_2D', dimensions=1, symmetries = []):#mp.CYLINDRICAL
 
         self.name = sim_name
 
