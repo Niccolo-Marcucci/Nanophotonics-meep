@@ -274,18 +274,23 @@ class Simulation(mp.Simulation):
         return local_index**2
 
     def init_sources_and_monitors(self, f, df, source_pos, source_tilt, allow_profile=False) :
+        DL = self.cavity_r_size + self.extra_space_xy*.5
         self.sources = [ mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
-                            center = source_pos,
-                            size = mp.Vector3(y = 0), #self.cell_size.y),#
+                            center =  mp.Vector3(DL*np.cos(phi), DL*np.sin(phi)),
+                            size  = mp.Vector3(2*DL*np.sin(phi)**2, 2*DL*np.cos(phi)**2),#
                             component = mp.Ey,
-                            amplitude = np.cos(source_tilt)),
-                        mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
-                            center = source_pos,
-                            size = mp.Vector3(),
+                            amplitude = 1,
+                            amp_func=lambda pos:Ey(pos.y-DL*np.sin(phi), pos.x-DL*np.cos(phi)))
+                        for phi in [0, np.pi/2, np.pi, np.pi*3/2]]
+        self.sources.extend([mp.Source(
+                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
+                            center =  mp.Vector3(DL*np.cos(phi), DL*np.sin(phi)),
+                            size  = mp.Vector3(2*DL*np.sin(phi)**2, 2*DL*np.cos(phi)**2),#
                             component = mp.Ex,
-                            amplitude = -1 * np.sin(source_tilt))] #
+                            amplitude = 1,
+                            amp_func=lambda pos: Ex(pos.y-DL*np.sin(phi), pos.x-DL*np.cos(phi)))
+                        for phi in [0, np.pi/2, np.pi, np.pi*3/2]])
 
         self.harminv_instance = None
         self.field_profile = None
@@ -302,7 +307,7 @@ class Simulation(mp.Simulation):
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y)) #, yee_grid=True))
         else:
             if self.cavity_r_size > 0 :
-                DL = self.cavity_r_size + self.extra_space_xy*.5
+
                 nfreq = 1000 if df != 0 else 1
                 for angolo in np.linspace(0, np.pi/2,3)[:]:
                     DL_x = DL * np.cos(angolo)
@@ -328,7 +333,18 @@ class Simulation(mp.Simulation):
 
                 if not self.empty:
                     self.harminv_instance = None # mp.Harminv(mp.Ez, mp.Vector3(), f, df)
-
+def Ex(x,y):
+    phi = np.atan2(y, x)
+    ampl = 1 / np.sqrt(x**2+y**2)
+    phase = np.exp(1j*2*np.pi/0.28*np.sqrt(x**2+y**2))
+    Ex = ampl * np.cos(phi) * np.sin(phi) * phase
+    return Ex
+def Ey(x,y):
+    phi = np.atan2(y, x)
+    ampl = 1 / np.sqrt(x**2+y**2)
+    phase = np.exp(1j*2*np.pi/0.28*np.sqrt(x**2+y**2))
+    Ey = ampl * np.cos(phi)**2 * phase
+    return Ey
 def save_fields(sim):
     i=-1
     for i, monitor in enumerate(sim.time_monitors):
@@ -428,7 +444,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
         fig.colorbar(plot.images[0])
         fig.savefig(f'{sim.name}-xy.jpg')
-        # plt.show()
+        plt.show()
         plt.close()
 
     # mp.verbosity(0)
