@@ -161,7 +161,7 @@ class Simulation(mp.Simulation):
         for i in range(N):
             groove_start = D/2 + i*period
             groove_end   = D/2 + FF*period + i*period
-            if r > groove_start and r <= groove_end:
+            if r >= groove_start and r < groove_end:
                 is_groove = True
                 break
 
@@ -170,7 +170,7 @@ class Simulation(mp.Simulation):
         else:
             local_index = self.background_index # + mod_ridges
 
-        if r < D/2 or r > D/2 + N*period - (1-FF)*period:
+        if r < D/2 or r >= D/2 + N*period - (1-FF)*period:
             local_index = self.eff_index_info["spacer_index"]
 
             # Z = self.weird_cone( pos)
@@ -300,7 +300,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 80,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -323,9 +323,9 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     #     eps = sim.get_array(mp.Dielectric,
     #                         center = mp.Vector3(),
     #                         size = sim.cell_size)
-    #     # (x, xx, xxx, _ ) = sim.get_array_metadata(center = mp.Vector3(),
-    #     #                                          size   = sim.cell_size)
-    #     plt.plot( np.sqrt(eps) )
+    #     (x, xx, xxx, _ ) = sim.get_array_metadata(center = mp.Vector3(),
+    #                                               size   = sim.cell_size)
+    #     plt.plot(xxx, np.sqrt(eps),'.' )
 
     #     # fig.colorbar(plot.images[0])
     #     fig.savefig(f'{sim.name}-xy.jpg')
@@ -547,7 +547,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # mp.quiet(True)
     output = []
     names = []
-    tuple_list.reverse()
+    # tuple_list.reverse()
     t0 = time.time()
     try:
         from mpi4py import MPI
