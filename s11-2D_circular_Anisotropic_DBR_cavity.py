@@ -281,16 +281,16 @@ class Simulation(mp.Simulation):
                             size  = mp.Vector3(2*DL*np.sin(angolo)**2, 2*DL*np.cos(angolo)**2),#
                             component = mp.Ey,
                             amplitude = 1,
-                            amp_func=lambda pos:Ey(pos.x+DL*np.cos(angolo),pos.y+DL*np.sin(angolo)))
+                            amp_func=lambda pos:Ey(pos.x+DL*np.cos(angolo),pos.y+DL*np.sin(angolo),f))
                         for angolo in [0, np.pi/2, np.pi, np.pi*3/2]]
-        # self.sources.extend([mp.Source(
-        #                     src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
-        #                     center =  mp.Vector3(DL*np.cos(angolo), DL*np.sin(angolo)),
-        #                     size  = mp.Vector3(2*DL*np.sin(angolo)**2, 2*DL*np.cos(angolo)**2),#
-        #                     component = mp.Ex,
-        #                     amplitude = 1,
-        #                     amp_func=lambda pos: Ex(pos.y-DL*np.sin(angolo), pos.x-DL*np.cos(angolo)))
-        #                 for angolo in [0, np.pi/2, np.pi, np.pi*3/2]])
+        self.sources.extend([mp.Source(
+                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
+                            center =  mp.Vector3(DL*np.cos(angolo), DL*np.sin(angolo)),
+                            size  = mp.Vector3(2*DL*np.sin(angolo)**2, 2*DL*np.cos(angolo)**2),#
+                            component = mp.Ex,
+                            amplitude = 1,
+                            amp_func=lambda pos:Ex(pos.x+DL*np.cos(angolo),pos.y+DL*np.sin(angolo),f))
+                        for angolo in [0, np.pi/2, np.pi, np.pi*3/2]])
 
         self.harminv_instance = None
         self.field_profile = None
@@ -334,14 +334,14 @@ class Simulation(mp.Simulation):
                 if not self.empty:
                     self.harminv_instance = None # mp.Harminv(mp.Ez, mp.Vector3(), f, df)
 def Ex(x,y,f):
-    phi = np.atan2(y, x)
+    phi = np.arctan2(y, x)
     ampl = 1 / np.sqrt(x**2+y**2)
     phase = np.exp(1j*2*np.pi * f * np.sqrt(x**2+y**2))
     Ex = ampl * np.cos(phi) * np.sin(phi) * phase
     return Ex
 
 def Ey(x,y,f):
-    phi = np.atan2(y, x)
+    phi = np.arctan2(y, x)
     ampl = 1 / np.sqrt(x**2+y**2)
     phase = np.exp(1j*2*np.pi * f * np.sqrt(x**2+y**2))
     Ey = ampl * np.cos(phi)**2 * phase
