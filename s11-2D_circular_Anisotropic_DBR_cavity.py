@@ -333,18 +333,20 @@ class Simulation(mp.Simulation):
 
                 if not self.empty:
                     self.harminv_instance = None # mp.Harminv(mp.Ez, mp.Vector3(), f, df)
-def Ex(x,y):
+def Ex(x,y,f):
     phi = np.atan2(y, x)
     ampl = 1 / np.sqrt(x**2+y**2)
-    phase = np.exp(1j*2*np.pi/0.28*np.sqrt(x**2+y**2))
+    phase = np.exp(1j*2*np.pi * f * np.sqrt(x**2+y**2))
     Ex = ampl * np.cos(phi) * np.sin(phi) * phase
     return Ex
-def Ey(x,y):
+
+def Ey(x,y,f):
     phi = np.atan2(y, x)
     ampl = 1 / np.sqrt(x**2+y**2)
-    phase = np.exp(1j*2*np.pi/0.28*np.sqrt(x**2+y**2))
+    phase = np.exp(1j*2*np.pi * f * np.sqrt(x**2+y**2))
     Ey = ampl * np.cos(phi)**2 * phase
     return Ey
+
 def save_fields(sim):
     i=-1
     for i, monitor in enumerate(sim.time_monitors):
