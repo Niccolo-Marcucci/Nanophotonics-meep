@@ -128,7 +128,7 @@ class Simulation(mp.Simulation):
         # make domain an integer number of voxels
         Nx = int(self.cell_size.x / self.grid_step)
         Nx += np.mod(Nx,2) # make even; + 1      # make odd
-        self.cell_size.x = Nx * self.grid_step
+        self.cell_size.z = Nx * self.grid_step
 
         if mp.Verbosity().get() > 0:
             print(self.cell_size)
@@ -151,7 +151,7 @@ class Simulation(mp.Simulation):
             json.dump(data2save, fp,  indent=4)
 
     def circular_undeformed_cavity(self, pos):
-        r = pos.z
+        r = pos.norm()
         D = self.cavity_parameters["D"]
         FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
