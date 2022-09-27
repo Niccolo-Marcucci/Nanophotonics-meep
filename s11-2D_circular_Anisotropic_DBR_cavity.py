@@ -220,7 +220,7 @@ class Simulation(mp.Simulation):
         FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
         N = self.cavity_parameters["N_rings"]
-        mod_ridges = 29 - 31 # self.eff_index_info["modulation_amplitude_ridges"]
+        mod_ridges = 39 - 31 # self.eff_index_info["modulation_amplitude_ridges"]
         mod_tranches = 15 - 2 # self.eff_index_info["modulation_amplitude_tranches"]
         n_eff_wv = self.eff_index_info["n_eff_wv"]
 
@@ -434,7 +434,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         sim.empty = False
 
     sim.init_sources_and_monitors(f, df, source_pos=mp.Vector3(),#x=-sim.cavity_r_size - 0.1),
-                                         source_tilt=source_tilt, allow_profile=True)# y=1e-3
+                                         source_tilt=source_tilt, allow_profile=False)# y=1e-3
 
     # raise Exception()1
 
