@@ -151,7 +151,7 @@ class Simulation(mp.Simulation):
             json.dump(data2save, fp,  indent=4)
 
     def circular_undeformed_cavity(self, pos):
-        r = pos.x
+        r = pos.z
         D = self.cavity_parameters["D"]
         FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
@@ -183,7 +183,7 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y),#
-                            component = mp.Ey,
+                            component = mp.Ex,
                             amplitude = 1)] #
 
         self.harminv_instance = None
@@ -196,7 +196,7 @@ class Simulation(mp.Simulation):
         self.Ez = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ey], 1/np.array([.5772, .5842, .5854]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ex], 1/np.array([.5772, .5842, .5854]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy)) #, yee_grid=True))
         else:
@@ -204,7 +204,7 @@ class Simulation(mp.Simulation):
                 DL = self.cavity_r_size + self.extra_space_xy*.5
                 nfreq = 500 if df != 0 else 1
                 DL_x = DL
-                direction = mp.R
+                direction = mp.Z
                 fluxr = mp.FluxRegion(
                     center = mp.Vector3(DL_x),
                     size = mp.Vector3(0, 0),
@@ -214,7 +214,7 @@ class Simulation(mp.Simulation):
                 # self.Ex.append([])
                 # self.Ey.append([])
                 # self.Ez.append([])
-                # self.field_FT = self.add_dft_fields([mp.Ey], f, df, nfreq,
+                # self.field_FT = self.add_dft_fields([mp.Ex], f, df, nfreq,
                 #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
                 #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
                 self.time_monitors.append(mp.Volume(center = mp.Vector3(),
