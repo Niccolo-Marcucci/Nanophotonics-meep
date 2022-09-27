@@ -183,7 +183,7 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y),#
-                            component = mp.Ez,
+                            component = mp.Ey,
                             amplitude = 1)] #
 
         self.harminv_instance = None
@@ -196,7 +196,7 @@ class Simulation(mp.Simulation):
         self.Ez = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ez], 1/np.array([.5772, .5842, .5854]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ey], 1/np.array([.5772, .5842, .5854]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy)) #, yee_grid=True))
         else:
@@ -214,7 +214,7 @@ class Simulation(mp.Simulation):
                 # self.Ex.append([])
                 # self.Ey.append([])
                 # self.Ez.append([])
-                # self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
+                # self.field_FT = self.add_dft_fields([mp.Ey], f, df, nfreq,
                 #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
                 #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
                 self.time_monitors.append(mp.Volume(center = mp.Vector3(),
