@@ -277,20 +277,20 @@ class Simulation(mp.Simulation):
         DL = self.cavity_r_size + self.extra_space_xy*.5
         self.sources = [ mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
-                            center =  mp.Vector3(DL*np.cos(phi), DL*np.sin(phi)),
-                            size  = mp.Vector3(2*DL*np.sin(phi)**2, 2*DL*np.cos(phi)**2),#
+                            center =  mp.Vector3(DL*np.cos(angolo), DL*np.sin(angolo)),
+                            size  = mp.Vector3(2*DL*np.sin(angolo)**2, 2*DL*np.cos(angolo)**2),#
                             component = mp.Ey,
                             amplitude = 1,
-                            amp_func=lambda pos:Ey(pos.y-DL*np.sin(phi), pos.x-DL*np.cos(phi)))
-                        for phi in [0, np.pi/2, np.pi, np.pi*3/2]]
-        self.sources.extend([mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
-                            center =  mp.Vector3(DL*np.cos(phi), DL*np.sin(phi)),
-                            size  = mp.Vector3(2*DL*np.sin(phi)**2, 2*DL*np.cos(phi)**2),#
-                            component = mp.Ex,
-                            amplitude = 1,
-                            amp_func=lambda pos: Ex(pos.y-DL*np.sin(phi), pos.x-DL*np.cos(phi)))
-                        for phi in [0, np.pi/2, np.pi, np.pi*3/2]])
+                            amp_func=lambda pos:Ey(pos.y-DL*np.sin(angolo), pos.x-DL*np.cos(angolo)))
+                        for angolo in [0, np.pi/2, np.pi, np.pi*3/2]]
+        # self.sources.extend([mp.Source(
+        #                     src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
+        #                     center =  mp.Vector3(DL*np.cos(angolo), DL*np.sin(angolo)),
+        #                     size  = mp.Vector3(2*DL*np.sin(angolo)**2, 2*DL*np.cos(angolo)**2),#
+        #                     component = mp.Ex,
+        #                     amplitude = 1,
+        #                     amp_func=lambda pos: Ex(pos.y-DL*np.sin(angolo), pos.x-DL*np.cos(angolo)))
+        #                 for angolo in [0, np.pi/2, np.pi, np.pi*3/2]])
 
         self.harminv_instance = None
         self.field_profile = None
