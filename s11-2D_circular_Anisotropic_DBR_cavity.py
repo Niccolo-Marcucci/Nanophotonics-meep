@@ -279,18 +279,18 @@ class Simulation(mp.Simulation):
         DL = self.cavity_r_size + .1
         self.sources = [mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
-                            center =  mp.Vector3(-DL,0),#DL*np.cos(angolo), DL*np.sin(angolo)),
-                            size  = mp.Vector3(0, 2*DL),#1.9*DL*round(np.sin(angolo)**2), 1.9*DL*round(np.cos(angolo)**2)),#
-                            component = mp.Ey,
-                            amplitude = 1,
-                            amp_func=lambda pos:Ey(pos.x-DL,pos.y,f, n_eff_wv,DL-2*self.grid_step)),
-                         mp.Source(
-                            src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
-                            center =  mp.Vector3(-DL,0),#DL*np.cos(angolo), DL*np.sin(angolo)),
-                            size  = mp.Vector3(0, 2*DL),#2*DL*round(np.sin(angolo)**2), 2*DL*round(np.cos(angolo)**2)),#
-                            component = mp.Ex,
-                            amplitude =  1,
-                            amp_func=lambda pos:Ex(pos.x-DL,pos.y,f, n_eff_wv, DL-2*self.grid_step))]
+                            center =  mp.Vector3(0,0),#DL*np.cos(angolo), DL*np.sin(angolo)),
+                            size  = mp.Vector3(0,0),#1.9*DL*round(np.sin(angolo)**2), 1.9*DL*round(np.cos(angolo)**2)),#
+                            component = mp.Ez,
+                            amplitude = 1)],
+                         #    amp_func=lambda pos:Ey(pos.x-DL,pos.y,f, n_eff_wv,DL-2*self.grid_step)),
+                         # mp.Source(
+                         #    src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
+                         #    center =  mp.Vector3(-DL,0),#DL*np.cos(angolo), DL*np.sin(angolo)),
+                         #    size  = mp.Vector3(0, 2*DL),#2*DL*round(np.sin(angolo)**2), 2*DL*round(np.cos(angolo)**2)),#
+                         #    component = mp.Ex,
+                         #    amplitude =  1,
+                         #    amp_func=lambda pos:Ex(pos.x-DL,pos.y,f, n_eff_wv, DL-2*self.grid_step))]
         #                 for angolo in [0, np.pi,np.pi/2,np.pi/2*3]])
 
         self.harminv_instance = None
@@ -310,7 +310,7 @@ class Simulation(mp.Simulation):
             if self.cavity_r_size > 0 :
 
                 nfreq = 1000 if df != 0 else 1
-                for angolo in np.linspace(0, np.pi/2,0)[:]:
+                for angolo in np.linspace(-np.pi, np.pi, 24)[:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
                     direction = mp.X if abs(DL_y) < DL * np.cos(np.pi/4) else mp.Y
@@ -332,6 +332,11 @@ class Simulation(mp.Simulation):
                 self.Ey.append([])
                 self.Ez.append([])
 
+                self.time_monitors.append(mp.Volume(center = mp.Vector3(),
+                                                    size = mp.Vector3(5,0)))
+                self.Ex.append([])
+                self.Ey.append([])
+                self.Ez.append([])
 
                 if not self.empty:
                     self.harminv_instance = None # mp.Harminv(mp.Ez, mp.Vector3(), f, df)
