@@ -42,7 +42,7 @@ class Simulation(mp.Simulation):
 
         self.extra_space_xy = .5
 
-        self.PML_width = .6
+        self.PML_width = 1
 
         self._empty = True
 
@@ -274,23 +274,24 @@ class Simulation(mp.Simulation):
         return local_index**2
 
     def init_sources_and_monitors(self, f, df, source_pos, source_tilt, allow_profile=False) :
-        DL = self.cavity_r_size + self.extra_space_xy*.5
-        self.sources = [ mp.Source(
+        # n_eff_wv = self.eff_index_info["n_eff_wv"]
+        n_eff_wv = self.background_index
+        DL = 5
+        self.sources = [mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
-                            center =  mp.Vector3(DL*np.cos(angolo), DL*np.sin(angolo)),
-                            size  = mp.Vector3(2*DL*np.sin(angolo)**2, 2*DL*np.cos(angolo)**2),#
+                            center =  mp.Vector3(),#DL*np.cos(angolo), DL*np.sin(angolo)),
+                            size  = mp.Vector3(2*DL, 2*DL),#1.9*DL*round(np.sin(angolo)**2), 1.9*DL*round(np.cos(angolo)**2)),#
                             component = mp.Ey,
                             amplitude = 1,
-                            amp_func=lambda pos:Ey(pos.x+DL*np.cos(angolo),pos.y+DL*np.sin(angolo),f))
-                        for angolo in [0, np.pi/2, np.pi, np.pi*3/2]]
-        self.sources.extend([mp.Source(
+                            amp_func=lambda pos:Ey(pos.x,pos.y,f, n_eff_wv,DL-2*self.grid_step)),
+                         mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
-                            center =  mp.Vector3(DL*np.cos(angolo), DL*np.sin(angolo)),
-                            size  = mp.Vector3(2*DL*np.sin(angolo)**2, 2*DL*np.cos(angolo)**2),#
+                            center =  mp.Vector3(),#DL*np.cos(angolo), DL*np.sin(angolo)),
+                            size  = mp.Vector3(2*DL, 2*DL),#2*DL*round(np.sin(angolo)**2), 2*DL*round(np.cos(angolo)**2)),#
                             component = mp.Ex,
-                            amplitude = 1,
-                            amp_func=lambda pos:Ex(pos.x+DL*np.cos(angolo),pos.y+DL*np.sin(angolo),f))
-                        for angolo in [0, np.pi/2, np.pi, np.pi*3/2]])
+                            amplitude =  1,
+                            amp_func=lambda pos:Ex(pos.x,pos.y,f, n_eff_wv, DL-2*self.grid_step))]
+        #                 for angolo in [0, np.pi,np.pi/2,np.pi/2*3]])
 
         self.harminv_instance = None
         self.field_profile = None
@@ -333,19 +334,23 @@ class Simulation(mp.Simulation):
 
                 if not self.empty:
                     self.harminv_instance = None # mp.Harminv(mp.Ez, mp.Vector3(), f, df)
-def Ex(x,y,f):
+def Ex(x,y,f,n,DL):
     phi = np.arctan2(y, x)
-    ampl = 1 / np.sqrt(x**2+y**2)
-    phase = np.exp(1j*2*np.pi * f * np.sqrt(x**2+y**2))
-    Ex = ampl * np.cos(phi) * np.sin(phi) * phase
-    return Ex
+    theta = np.pi/2 - phi if phi > -np.pi/2 else -np.pi/2*3 - phi
+    R = np.sqrt(x**2+y**2)
+    k = 2*np.pi * n*f
+    phase = np.exp(-1j* k * R)
+    Ex =  np.cos(theta) * ( -k**2 * np.sin(theta) * phase / R )
+    return  0 if abs(x) < DL and  abs(y) < DL else Ex
 
-def Ey(x,y,f):
+def Ey(x,y,f,n,DL):
     phi = np.arctan2(y, x)
-    ampl = 1 / np.sqrt(x**2+y**2)
-    phase = np.exp(1j*2*np.pi * f * np.sqrt(x**2+y**2))
-    Ey = ampl * np.cos(phi)**2 * phase
-    return Ey
+    theta = np.pi/2 - phi if phi > -np.pi/2 else -np.pi/2*3 - phi
+    R = np.sqrt(x**2+y**2)
+    k = 2*np.pi * n*f
+    phase = np.exp(-1j* k * R)
+    Ey =  np.sin(theta) * ( -k**2 * np.sin(theta) * phase / R )
+    return 0 if abs(x) < DL and  abs(y) < DL else Ey
 
 def save_fields(sim):
     i=-1
@@ -365,7 +370,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=400
+    sim_end=30
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -379,7 +384,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "D": D,
         "FF": .5,
         "period": DBR_period,
-        "N_rings": 30,
+        "N_rings": 20,
         "tilt": 0}
 
     outcoupler_parameters = {
@@ -423,7 +428,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 20,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -445,24 +450,35 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
 
         fig.colorbar(plot.images[0])
-        fig.savefig(f'{sim.name}-xy.jpg')
+        # fig.savefig(f'{sim.name}-xy.jpg')
         plt.show()
         plt.close()
+    fig = plt.figure(dpi=100)
+    Animate = mp.Animate2D( sim, fields=mp.EnergyDensity, f=fig, realtime=False, normalize=False,
+                            output_plane=mp.Volume(center=mp.Vector3(), size=mp.Vector3(sim.cell_size.x,sim.cell_size.y)),
+                            eps_parameters={"interpolation":'none', "cmap":'binary'},
+                            field_parameters={"interpolation":'none'})#, , "vmin":-3e-3, "vmax":+3e-3})#"cmap": 'hot''bwr'})#
 
     # mp.verbosity(0)
+
     step_functions = []
     if sim.harminv_instance != None :
         step_functions.append( mp.after_time(150, sim.harminv_instance) )
 
-    # step_functions.append(mp.at_every(0.05,save_fields))
-    sim.run(*step_functions, until=sim_end)
-    if df == 0 :
-        sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
+    if df > 0 & len(sim.time_monitors) > 0:
+        step_functions.append(mp.at_every(0.05,save_fields))
 
+
+    step_functions.append(mp.at_every(.1, Animate))
+
+    sim.run(*step_functions, until=sim_end)
+    if df == 0 & len(sim.time_monitors) > 0:
+        sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
+    Animate.to_mp4(10,f'{sim.name}_animation.mp4')
     # plt.close()
-
+    raise
     t = np.round(sim.round_time(), 2)
 
     data2save = {}
@@ -577,7 +593,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
     n_eff_l_v = [ n_eff_l ]#, 1.0395]
-    n_eff_mod_l = n_eff([10e-9, wavelength*1e-6])[0] - n_eff_l
+    n_eff_mod_l = n_eff([15e-9, wavelength*1e-6])[0] - n_eff_l
     n_eff_mod_h = n_eff([39e-9, wavelength*1e-6])[0] - n_eff_h
     n_eff_spacer = n_eff([65e-9, wavelength*1e-6])[0]
     #%% load susceptibilities data.
@@ -607,10 +623,10 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    j = 0           # resets  tiple list (insted of commenting all previous lines)
-    tuple_list = []
+    # j = 0           # resets  tiple list (insted of commenting all previous lines)
+    # tuple_list = []
 
-    for source_tilt in np.linspace(-np.pi/2, +np.pi/2, 17)[1:]:
+    for source_tilt in np.linspace(0, +np.pi/2, 1)[:]:
 
     # for source_pos in [0]: # 0, period/4, period/2]:
 
@@ -637,7 +653,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # for th_low in np.linspace(0, 65, 25):
     #     for th_high in np.linspace(0, 65, 25):
 
-        for wavelength in np.array([.5932, .5907, .5876 ]):
+        for wavelength in [.5907]:
         # for wavelength in np.linspace(.565, .615, 100):
             th = np.linspace(0,70,50)
             n_eff_tmp2 = n_eff( (th*1e-9, wavelength*1e-6*np.ones(50) ) )
