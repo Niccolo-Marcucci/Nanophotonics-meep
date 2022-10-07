@@ -46,7 +46,7 @@ class Simulation(mp.Simulation):
 
         self._empty = True
 
-        self.epsilon_proxy_function = lambda pos: self.circular_deformed_cavity(pos) #imported_structure(pos) #
+        self.epsilon_proxy_function = lambda pos: self.imported_structure(pos) #circular_deformed_cavity(pos) #
 
         super().__init__(
                     cell_size = mp.Vector3(1,1,0),
@@ -276,21 +276,21 @@ class Simulation(mp.Simulation):
     def init_sources_and_monitors(self, f, df, source_pos, source_tilt, allow_profile=False) :
         # n_eff_wv = self.eff_index_info["n_eff_wv"]
         n_eff_wv = self.background_index
-        DL = 5
+        DL = self.cavity_r_size + .1
         self.sources = [mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
-                            center =  mp.Vector3(),#DL*np.cos(angolo), DL*np.sin(angolo)),
-                            size  = mp.Vector3(2*DL, 2*DL),#1.9*DL*round(np.sin(angolo)**2), 1.9*DL*round(np.cos(angolo)**2)),#
+                            center =  mp.Vector3(-DL,0),#DL*np.cos(angolo), DL*np.sin(angolo)),
+                            size  = mp.Vector3(0, 2*DL),#1.9*DL*round(np.sin(angolo)**2), 1.9*DL*round(np.cos(angolo)**2)),#
                             component = mp.Ey,
                             amplitude = 1,
-                            amp_func=lambda pos:Ey(pos.x,pos.y,f, n_eff_wv,DL-2*self.grid_step)),
+                            amp_func=lambda pos:Ey(pos.x-DL,pos.y,f, n_eff_wv,DL-2*self.grid_step)),
                          mp.Source(
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
-                            center =  mp.Vector3(),#DL*np.cos(angolo), DL*np.sin(angolo)),
-                            size  = mp.Vector3(2*DL, 2*DL),#2*DL*round(np.sin(angolo)**2), 2*DL*round(np.cos(angolo)**2)),#
+                            center =  mp.Vector3(-DL,0),#DL*np.cos(angolo), DL*np.sin(angolo)),
+                            size  = mp.Vector3(0, 2*DL),#2*DL*round(np.sin(angolo)**2), 2*DL*round(np.cos(angolo)**2)),#
                             component = mp.Ex,
                             amplitude =  1,
-                            amp_func=lambda pos:Ex(pos.x,pos.y,f, n_eff_wv, DL-2*self.grid_step))]
+                            amp_func=lambda pos:Ex(pos.x-DL,pos.y,f, n_eff_wv, DL-2*self.grid_step))]
         #                 for angolo in [0, np.pi,np.pi/2,np.pi/2*3]])
 
         self.harminv_instance = None
@@ -310,7 +310,7 @@ class Simulation(mp.Simulation):
             if self.cavity_r_size > 0 :
 
                 nfreq = 1000 if df != 0 else 1
-                for angolo in np.linspace(0, np.pi/2,3)[:]:
+                for angolo in np.linspace(0, np.pi/2,0)[:]:
                     DL_x = DL * np.cos(angolo)
                     DL_y = DL * np.sin(angolo)
                     direction = mp.X if abs(DL_y) < DL * np.cos(np.pi/4) else mp.Y
@@ -327,7 +327,7 @@ class Simulation(mp.Simulation):
                 #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
                 #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
                 self.time_monitors.append(mp.Volume(center = mp.Vector3(),
-                                                    size = mp.Vector3(0,0)))
+                                                    size = mp.Vector3(5,0)))
                 self.Ex.append([])
                 self.Ey.append([])
                 self.Ez.append([])
@@ -341,7 +341,7 @@ def Ex(x,y,f,n,DL):
     k = 2*np.pi * n*f
     phase = np.exp(-1j* k * R)
     Ex =  np.cos(theta) * ( -k**2 * np.sin(theta) * phase / R )
-    return  0 if abs(x) < DL and  abs(y) < DL else Ex
+    return Ex # 0 if abs(x) < DL and  abs(y) < DL else Ex
 
 def Ey(x,y,f,n,DL):
     phi = np.arctan2(y, x)
@@ -350,7 +350,7 @@ def Ey(x,y,f,n,DL):
     k = 2*np.pi * n*f
     phase = np.exp(-1j* k * R)
     Ey =  np.sin(theta) * ( -k**2 * np.sin(theta) * phase / R )
-    return 0 if abs(x) < DL and  abs(y) < DL else Ey
+    return Ey # 0 if abs(x) < DL and  abs(y) < DL else Ey
 
 def save_fields(sim):
     i=-1
@@ -384,7 +384,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         "D": D,
         "FF": .5,
         "period": DBR_period,
-        "N_rings": 20,
+        "N_rings": 30,
         "tilt": 0}
 
     outcoupler_parameters = {
@@ -450,7 +450,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         plot = sim.plot2D(eps_parameters={"interpolation":'none',"cmap":'gnuplot'})
 
         fig.colorbar(plot.images[0])
-        # fig.savefig(f'{sim.name}-xy.jpg')
+        fig.savefig(f'{sim.name}-xy.jpg')
         plt.show()
         plt.close()
     fig = plt.figure(dpi=100)
@@ -580,15 +580,13 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # Z_f = lambda rr, tht: Z_interp((rr,tht))
 
-    # data = io.loadmat("topo_resampled2.mat")
-    # x = data["xx"][0]
-    # y = data["yy"][0]
-    # Z = data["topod"] + 65 - 4.2
-    # Z_interp = itp.RegularGridInterpolator((y, x), Z)
+    data = io.loadmat("topo_resampled2.mat")
+    x = data["xx"][0]
+    y = data["yy"][0]
+    Z = data["topod"] + 65 - 4.2
+    Z_interp = itp.RegularGridInterpolator((y, x), Z)
 
-
-
-    Z_f = lambda x, y: 1 # Z_interp((y,x))
+    Z_f = lambda x, y:  Z_interp((y,x))
     n_eff_h = n_eff([31e-9, wavelength*1e-6])[0]
     n_eff_l = n_eff([ 2e-9, wavelength*1e-6])[0]
     n_eff_h_v = [ n_eff_h ]#, 1.1045]
@@ -623,8 +621,8 @@ if __name__ == "__main__":              # good practise in parallel computing
     empty = False
 
     j = 1
-    # j = 0           # resets  tiple list (insted of commenting all previous lines)
-    # tuple_list = []
+    j = 0           # resets  tiple list (insted of commenting all previous lines)
+    tuple_list = []
 
     for source_tilt in np.linspace(0, +np.pi/2, 1)[:]:
 
