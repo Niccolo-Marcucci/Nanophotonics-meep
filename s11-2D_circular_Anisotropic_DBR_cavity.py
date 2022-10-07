@@ -327,7 +327,7 @@ class Simulation(mp.Simulation):
                 #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
                 #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
                 self.time_monitors.append(mp.Volume(center = mp.Vector3(),
-                                                    size = mp.Vector3(5,0)))
+                                                    size = mp.Vector3(0,5)))
                 self.Ex.append([])
                 self.Ey.append([])
                 self.Ez.append([])
