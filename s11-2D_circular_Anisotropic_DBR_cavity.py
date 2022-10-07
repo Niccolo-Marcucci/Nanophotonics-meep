@@ -371,7 +371,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     wwidth = 0.15
     f=c0/wavelength
 
-    sim_end=30
+    sim_end=400
 
     fmax=c0/(wavelength-wwidth/2)
     fmin=c0/(wavelength+wwidth/2)
@@ -429,7 +429,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 20,
+                                resolution = 40,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -452,7 +452,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
 
         fig.colorbar(plot.images[0])
         fig.savefig(f'{sim.name}-xy.jpg')
-        plt.show()
+        # plt.show()
         plt.close()
     # mp.verbosity(0)
 
