@@ -36,7 +36,7 @@ def convert_seconds (elapsed):
 class Simulation(mp.Simulation):
 
 
-    def __init__(self, sim_name='simulation_2D', dimensions=mp.CYLINDRICAL, symmetries = []):
+    def __init__(self, sim_name='simulation_2D', dimensions=1, symmetries = []):#mp.CYLINDRICAL
 
         self.name = sim_name
 
@@ -122,13 +122,13 @@ class Simulation(mp.Simulation):
         # round domain with an integer number of grid points
         self.grid_step = 1/self.resolution
 
-        self.cell_size = mp.Vector3(self.domain_x + 2*self.PML_width)
+        self.cell_size = mp.Vector3(z = self.domain_x + 2*self.PML_width)
         if mp.Verbosity().get() > 0:
             print(self.cell_size)
         # make domain an integer number of voxels
-        Nx = int(self.cell_size.x / self.grid_step)
+        Nx = int(self.cell_size.z / self.grid_step)
         Nx += np.mod(Nx,2) # make even; + 1      # make odd
-        self.cell_size.x = Nx * self.grid_step
+        self.cell_size.z = Nx * self.grid_step
 
         if mp.Verbosity().get() > 0:
             print(self.cell_size)
@@ -151,7 +151,7 @@ class Simulation(mp.Simulation):
             json.dump(data2save, fp,  indent=4)
 
     def circular_undeformed_cavity(self, pos):
-        r = pos.x
+        r = pos.norm()
         D = self.cavity_parameters["D"]
         FF = self.cavity_parameters["FF"]
         period = self.cavity_parameters["period"]
@@ -161,7 +161,7 @@ class Simulation(mp.Simulation):
         for i in range(N):
             groove_start = D/2 + i*period
             groove_end   = D/2 + FF*period + i*period
-            if r > groove_start and r <= groove_end:
+            if r >= groove_start and r < groove_end:
                 is_groove = True
                 break
 
@@ -170,7 +170,7 @@ class Simulation(mp.Simulation):
         else:
             local_index = self.background_index # + mod_ridges
 
-        if r < D/2 or r > D/2 + N*period - (1-FF)*period:
+        if r < D/2 or r >= D/2 + N*period - (1-FF)*period:
             local_index = self.eff_index_info["spacer_index"]
 
             # Z = self.weird_cone( pos)
@@ -183,7 +183,7 @@ class Simulation(mp.Simulation):
                             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),#,,is_integrated=True
                             center = source_pos,
                             size = mp.Vector3(y = 0), #self.cell_size.y),#
-                            component = mp.Hz,
+                            component = mp.Hy,
                             amplitude = 1)] #
 
         self.harminv_instance = None
@@ -196,7 +196,7 @@ class Simulation(mp.Simulation):
         self.Ez = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Hz], 1/np.array([.5772, .5842, .5854]),#f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Hy], 1/np.array([.5772, .5842, .5854]),#f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy)) #, yee_grid=True))
         else:
@@ -204,9 +204,9 @@ class Simulation(mp.Simulation):
                 DL = self.cavity_r_size + self.extra_space_xy*.5
                 nfreq = 500 if df != 0 else 1
                 DL_x = DL
-                direction = mp.R
+                direction = mp.Z
                 fluxr = mp.FluxRegion(
-                    center = mp.Vector3(DL_x),
+                    center = mp.Vector3(z=DL_x),
                     size = mp.Vector3(0, 0),
                     direction = direction)
                 self.spectrum_monitors.append(self.add_flux(f, df/2, nfreq, fluxr))#, yee_grid=True))
@@ -214,7 +214,7 @@ class Simulation(mp.Simulation):
                 # self.Ex.append([])
                 # self.Ey.append([])
                 # self.Ez.append([])
-                # self.field_FT = self.add_dft_fields([mp.Ez], f, df, nfreq,
+                # self.field_FT = self.add_dft_fields([mp.Ex], f, df, nfreq,
                 #                                     center = mp.Vector3(self.cavity_parameters["D"]/2),
                 #                                     size = mp.Vector3(self.cavity_parameters["D"]))#self.cavity_parameters["D"]/2,self.cavity_parameters["D"]/2 ))
                 self.time_monitors.append(mp.Volume(center = mp.Vector3(),
@@ -300,7 +300,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     sim.eps_averaging = False
     sim.force_complex_fields = False
     sim.init_geometric_objects( eff_index_info = eff_index_info,
-                                resolution = 40,
+                                resolution = 80,
                                 pattern_type = pattern_type,
                                 cavity_parameters = cavity_parameters)
 
@@ -323,9 +323,9 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     #     eps = sim.get_array(mp.Dielectric,
     #                         center = mp.Vector3(),
     #                         size = sim.cell_size)
-    #     # (x, xx, xxx, _ ) = sim.get_array_metadata(center = mp.Vector3(),
-    #     #                                          size   = sim.cell_size)
-    #     plt.plot( np.sqrt(eps) )
+    #     (x, xx, xxx, _ ) = sim.get_array_metadata(center = mp.Vector3(),
+    #                                               size   = sim.cell_size)
+    #     plt.plot(xxx, np.sqrt(eps),'.' )
 
     #     # fig.colorbar(plot.images[0])
     #     fig.savefig(f'{sim.name}-xy.jpg')
@@ -547,7 +547,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # mp.quiet(True)
     output = []
     names = []
-    tuple_list.reverse()
+    # tuple_list.reverse()
     t0 = time.time()
     try:
         from mpi4py import MPI
