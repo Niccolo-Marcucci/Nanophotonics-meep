@@ -460,7 +460,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     if sim.harminv_instance != None :
         step_functions.append( mp.after_time(150, sim.harminv_instance) )
 
-    if df > 0 & len(sim.time_monitors) > 0:
+    if df > 0 and len(sim.time_monitors) > 0:
         step_functions.append(mp.at_every(0.05,save_fields))
 
 
@@ -472,7 +472,7 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
     # step_functions.append(mp.at_every(.1, Animate))
 
     sim.run(*step_functions, until=sim_end)
-    if df == 0 & len(sim.time_monitors) > 0:
+    if df == 0 and len(sim.time_monitors) > 0:
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
