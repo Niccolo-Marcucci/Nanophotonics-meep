@@ -332,6 +332,7 @@ class Simulation(mp.Simulation):
                 self.Ey.append([])
                 self.Ez.append([])
 
+
                 if not self.empty:
                     self.harminv_instance = None # mp.Harminv(mp.Ez, mp.Vector3(), f, df)
 def Ex(x,y,f,n,DL):
@@ -453,12 +454,6 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         fig.savefig(f'{sim.name}-xy.jpg')
         plt.show()
         plt.close()
-    fig = plt.figure(dpi=100)
-    Animate = mp.Animate2D( sim, fields=mp.EnergyDensity, f=fig, realtime=False, normalize=False,
-                            output_plane=mp.Volume(center=mp.Vector3(), size=mp.Vector3(sim.cell_size.x,sim.cell_size.y)),
-                            eps_parameters={"interpolation":'none', "cmap":'binary'},
-                            field_parameters={"interpolation":'none'})#, , "vmin":-3e-3, "vmax":+3e-3})#"cmap": 'hot''bwr'})#
-
     # mp.verbosity(0)
 
     step_functions = []
@@ -469,16 +464,21 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, n_eff_spacer, D, DBR_period, empt
         step_functions.append(mp.at_every(0.05,save_fields))
 
 
-    step_functions.append(mp.at_every(.1, Animate))
+    # fig = plt.figure(dpi=100)
+    # Animate = mp.Animate2D( sim, fields=mp.EnergyDensity, f=fig, realtime=False, normalize=False,
+    #                         output_plane=mp.Volume(center=mp.Vector3(), size=mp.Vector3(sim.cell_size.x,sim.cell_size.y)),
+    #                         eps_parameters={"interpolation":'none', "cmap":'binary'},
+    #                         field_parameters={"interpolation":'none'})#, , "vmin":-3e-3, "vmax":+3e-3})#"cmap": 'hot''bwr'})#
+    # step_functions.append(mp.at_every(.1, Animate))
 
     sim.run(*step_functions, until=sim_end)
     if df == 0 & len(sim.time_monitors) > 0:
         sim.run(save_fields, until=1/f * 5 ) # an integer number of periods
     print(f'\n\nSimulation took {convert_seconds(time.time()-t0)} to run\n')
 
-    Animate.to_mp4(10,f'{sim.name}_animation.mp4')
+    # Animate.to_mp4(10,f'{sim.name}_animation.mp4')
     # plt.close()
-    raise
+    # raise
     t = np.round(sim.round_time(), 2)
 
     data2save = {}
