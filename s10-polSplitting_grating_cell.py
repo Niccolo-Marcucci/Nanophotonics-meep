@@ -14,6 +14,7 @@ from matplotlib import pyplot as plt
 # from multiprocessing import Pool
 # from mpl_toolkits.mplot3d import Axes3D
 import meep_objects as mpo
+from meep_objects import tmm_utils
 # import io
 import sys
 import json
@@ -47,7 +48,7 @@ class Simulation(mp.Simulation):
 
         self.name = sim_name
 
-        self.extra_space_xy = 4
+        self.extra_space_xy = .5
 
         self.PML_width = .5
 
@@ -66,7 +67,7 @@ class Simulation(mp.Simulation):
                     dimensions = dimensions,
                     symmetries = symmetries,
                     filename_prefix = sim_name,
-                    force_complex_fields = False,
+                    force_complex_fields = True,
                     eps_averaging = False)
 
     @property
@@ -97,10 +98,10 @@ class Simulation(mp.Simulation):
         self._empty_geometry = []
         used_layer = used_layer_info['used_layer']
 
-        self.domain_x = outcoupler_parameters["N_periods_x"] * outcoupler_parameters["period"] + self.extra_space_xy
-        self.domain_y = outcoupler_parameters["N_periods_y"] * outcoupler_parameters["period"] + self.extra_space_xy
+        self.domain_x = outcoupler_parameters["N_periods_x"] * outcoupler_parameters["period"] # + self.extra_space_xy
+        self.domain_y = outcoupler_parameters["N_periods_y"] * outcoupler_parameters["period"] # + self.extra_space_xy
 
-        multilayer, multilayer_thickness, design_specs = mpo.dielectric_multilayer(
+        multilayer, multilayer_thickness, self.design_specs = mpo.dielectric_multilayer(
             design_file = multilayer_file,
             substrate_thickness = self.substrate_thickness + self.PML_width,
             x_width = self.domain_x + 2*self.PML_width,
@@ -109,29 +110,28 @@ class Simulation(mp.Simulation):
             unit = 'um',
             exclude_last_layer = False)
 
-        print(design_specs)
         self._empty_geometry.extend(multilayer)            # keep multilayer even if empty
 
         if pattern_type == 'positive':
-            grating_index = np.real(design_specs['idx_layers'][used_layer+1])
+            grating_index = np.real(self.design_specs['idx_layers'][used_layer+1])
 
             # dummy_layer = mp.Block(
-            #     material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer])),
+            #     material = mp.Medium(index = np.real(self.design_specs['idx_layers'][used_layer])),
             #     size     = mp.Vector3(self.domain_x,
             #                           self.domain_y,
-            #                           design_specs['d_layers'][used_layer]),
-            #     center   = mp.Vector3(0, 0, 0))#design_specs['d_layers'][used_layer]/2))
+            #                           self.design_specs['d_layers'][used_layer]),
+            #     center   = mp.Vector3(0, 0, 0))#self.design_specs['d_layers'][used_layer]/2))
             # self._empty_geometry.append(dummy_layer)       # part of the multilayer
 
         elif pattern_type == 'negative':
-            grating_index = np.real(design_specs['idx_layers'][used_layer])
+            grating_index = np.real(self.design_specs['idx_layers'][used_layer])
 
             dummy_layer = mp.Block(
-                material = mp.Medium(index = np.real(design_specs['idx_layers'][used_layer+1])),
+                material = mp.Medium(index = np.real(self.design_specs['idx_layers'][used_layer+1])),
                 size     = mp.Vector3(self.domain_x + 2*self.PML_width,
                                       self.domain_y + 2*self.PML_width,
-                                      design_specs['d_layers'][used_layer]),
-                center   = mp.Vector3(0, 0, 0))#design_specs['d_layers'][used_layer]/2))
+                                      self.design_specs['d_layers'][used_layer]),
+                center   = mp.Vector3(0, 0, 0))#self.design_specs['d_layers'][used_layer]/2))
             self._empty_geometry.append(dummy_layer)       # part of the multilayer
 
         else :
@@ -146,8 +146,8 @@ class Simulation(mp.Simulation):
             scatter_shape = outcoupler_parameters["scatter_shape"],
             N_periods_x = outcoupler_parameters["N_periods_x"],
             N_periods_y = outcoupler_parameters["N_periods_y"],
-            thickness = float(design_specs['d_layers'][used_layer]),
-            center = mp.Vector3(z= 0) )#design_specs['d_layers'][used_layer]/2))
+            thickness = float(self.design_specs['d_layers'][used_layer]),
+            center = mp.Vector3(z= 0) )#self.design_specs['d_layers'][used_layer]/2))
         self._geometry.extend(outcoupler)
 
 
@@ -165,8 +165,8 @@ class Simulation(mp.Simulation):
         # round domain with an integer number of grid points
         self.grid_step = 1/self.resolution
 
-        self.cell_size = mp.Vector3(self.domain_x + 2*self.PML_width,
-                                    self.domain_y + 2*self.PML_width,
+        self.cell_size = mp.Vector3(self.domain_x, # + 2*self.PML_width,
+                                    self.domain_y, # + 2*self.PML_width,
                                     self.domain_z + 2*self.PML_width)
         # make domain an integer number of voxels
         Nx = int(self.cell_size.x / self.grid_step)
@@ -184,10 +184,10 @@ class Simulation(mp.Simulation):
         print(f"Minimum expected memory is {96*Nx*Ny*Nz/2**30:.2f}GB")
         print()
 
-        self.geometry_center = mp.Vector3(0, 0, -(self.cell_size.z/2 - self.top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]/2))
-        # self.geometry_center = mp.Vector3(0,    -(self.cell_size.y/2 - self.top_air_gap - self.PML_width - np.sum(design_specs['d_layers'][used_layer+1:-1]) - design_specs['d_layers'][used_layer]))
+        self.geometry_center = mp.Vector3(0, 0, -(self.cell_size.z/2 - self.top_air_gap - self.PML_width - np.sum(self.design_specs['d_layers'][used_layer+1:-1]) - self.design_specs['d_layers'][used_layer]/2))
+        # self.geometry_center = mp.Vector3(0,    -(self.cell_size.y/2 - self.top_air_gap - self.PML_width - np.sum(self.design_specs['d_layers'][used_layer+1:-1]) - self.design_specs['d_layers'][used_layer]))
         print(self.geometry_center.z)
-        self.boundary_layers = [mp.PML(self.PML_width)] #thickness=self.PML_width, direction=mp.Z)]
+        self.boundary_layers = [mp.PML(thickness=self.PML_width, direction=mp.Z)]#self.PML_width)] #
         # self.k_point = mp.Vector3() # PBC
 
         # print( [self.cell_size.x / self.
@@ -203,11 +203,22 @@ class Simulation(mp.Simulation):
 
 
     def init_sources_and_monitors(self, f, df, allow_farfield=True) :
+
+        n = self.design_specs['idx_layers']
+        d = self.design_specs['d_layers']
+        d[-1] = self.top_air_gap
+        theta_lim = np.arcsin(n[-1]/n[0]) / np.pi*180
+        thetas = np.linspace(theta_lim, theta_lim + 15, 10000)
+        R, _, _, _ = tmm_utils.reflectivity(1/f, thetas, d, n, 's')
+        R[np.isnan(R)] = np.Inf
+        idx = np.argmin(R)
+        z, nz, P, field = tmm_utils.field_distribution(1/f, thetas[idx], d, n, 's', res=50)
+
         self.sources = [ mp.Source(
             src = mp.ContinuousSource(f,fwidth=0.1,is_integrated=True) if df==0 else mp.GaussianSource(f,fwidth=df,is_integrated=True),
-            center = mp.Vector3(z = self.top_air_gap/2),
-            size = mp.Vector3(self.cell_size.x, self.cell_size.y, 0),
-            component = mp.Ey)]
+            center = mp.Vector3(z = self.top_air_gap/4),
+            size = mp.Vector3(0, self.cell_size.y, self.cell_size.z),
+            component = mp.Ey) ]
 
         self.nearfield_monitor = None
         self.harminv_instance = None
@@ -222,11 +233,10 @@ class Simulation(mp.Simulation):
             self.nearfield_monitor = self.add_near2far(f, 0, 1, nearfield)#, yee_grid=True))
 
 
-
 #%% geometry and simulation parameters
 if __name__ == "__main__":              # good practise in parallel computing
     c0 = 1
-    wavelength = 0.532
+    wavelength = 0.600
     wwidth = .03
     f = c0 / wavelength
 
@@ -242,7 +252,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     file = 'design_TE_N7' #'design_TM_gd3_buriedDBR_onSiO2'
     buried = False
-    pattern_type = 'positive'           # 'positive' or 'negative'
+    pattern_type = 'negative'           # 'positive' or 'negative'
     out_grating_type = 'polSplitting'         # 'spiral' or 'polSplitting' or 'only'
 
     # pol splitting info
@@ -250,7 +260,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     FF = FF_pol_splitter
     n_eff = n_eff_h*(1-FF) + n_eff_l*FF if pattern_type=='positive' else n_eff_h*FF + n_eff_l*(1-FF)
     scatter_disposition='filled'        # 'radial' or 'filled'
-    D_phi = 0# np.pi/3;
+    D_phi = np.pi/3;
     sigma = -1;                         # select for circl left or circ right
     K_bsw = 2*np.pi * n_eff / wavelength
     m = 1                               # ordinary grating order
@@ -259,7 +269,7 @@ if __name__ == "__main__":              # good practise in parallel computing
 
     # outcoupler info
 
-    N_outcoupler = 1 #round(np.pi/D_phi) * 1
+    N_outcoupler = 3 #round(np.pi/D_phi) * 1
     d_cavity_out = 5
     charge = 1
 
@@ -330,7 +340,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     fig = plt.figure(dpi=200)
     plot = sim.plot2D( output_plane=mp.Volume(center=center, size=mp.Vector3(simsize.x, 0,  simsize.z)),
                        labels=True,
-                       eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon} )
+                       eps_parameters={"interpolation":'none',"cmap":'gnuplot', "vmin":'0.5', "vmax":max_epsilon, "axis":"tight"} )
     try:
         fig.colorbar(plot.images[0], orientation="horizontal")
     except:
@@ -366,7 +376,7 @@ if __name__ == "__main__":              # good practise in parallel computing
     # # mlab.show()
 
     #%%
-    # raise RuntimeError("comment this line to run til the end")
+    raise RuntimeError("comment this line to run til the end")
     def print_time(sim):
         print(f'\n\nSimulation is at {sim.round_time()} \n It has run for {convert_seconds(time.time()-t0)}\n')
 

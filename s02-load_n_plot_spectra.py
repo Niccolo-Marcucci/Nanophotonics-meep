@@ -26,7 +26,7 @@ date = time.strftime('%y%m%d-%H%M%S')
 
 
 files = os.listdir("data")
-hashtag ='da2692083b'
+hashtag ='30ecff55ee'#''50cfe7c52d'#'
 
 found = False
 for file in files :
@@ -42,9 +42,9 @@ if not found:
 files = os.listdir(folder)
 
 source_positions = []
-scnd_param = {'name': '_angle', # '_D',
+scnd_param = {'name':  '_D', #'_angle', #
               'list': [],
-              'label': 'angle (°)'} #'Ds [nm]'}
+              'label': 'spacer'} #'Ds [nm]'}
 frst_param = {'name': '_wv', # '_src',
               'list': [],
               'label': 'wavelength (nm)'} # 'Source Position [nm]'}
@@ -89,12 +89,12 @@ if len(spectrum_empty) == 0:
 period = 280
 
 #%% sort second parameter list
-second_parameter = np.array([-angle if angle <= 0 else 180-angle for angle in scnd_param['list']]) # valid only for angle!!!
-
+# second_parameter = np.array([-angle if angle <= 0 else 180-angle for angle in scnd_param['list']]) # valid only for angle!!!
+second_parameter = np.array(scnd_param['list'])
 if second_parameter.size > 1:
     sort_idx = second_parameter.argsort(0)
     sim_filelist = [sim_filelist[idx] for idx in sort_idx]
-    scnd_param['list'] = [round(second_parameter[idx]) for idx in sort_idx]
+    scnd_param['list'] = [(second_parameter[idx]) for idx in sort_idx]
     frst_param['list'] = [frst_param['list'][idx] for idx in sort_idx]
 # fig = plt.figure(dpi=150,figsize=(10,5))
 # ax = fig.add_subplot(111)
@@ -102,6 +102,7 @@ if second_parameter.size > 1:
 
 lambd = np.linspace(570,610,500)
 inc_sum = np.zeros(lambd.size)
+im_wv_spacer = np.zeros((lambd.size, len(scnd_param['list'])))
 flag = True
 for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
     first_parameter = np.array(frst_param['list'][j])
@@ -148,7 +149,7 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
         data = mpo.loadmat(folder + '/' + file)
         # fig = plt.figure(dpi=150,figsize=(10,5))
         # ax = fig.add_subplot(111)
-        for i in [0,1,2] : #range(len(data['spectra'])):# [0]:#[7,11,15,] : # [7,15] : ##
+        for i in [0]:#,1,2] : #range(len(data['spectra'])):# [0]:#[7,11,15,] : # [7,15] : ##
             images[k,:,i] = (abs(data['spectra'][i])**2) # np.abs(data['FT_x'])**2 + np.abs(data['FT_y'])**2 #
         wavelength = data["wavelength"][0]
         WV[k,:]  = wavelength
@@ -212,7 +213,7 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
     plt.xlabel('wavelength (nm)')
     plt.ylabel(f'{frst_param["label"]}')
     plt.title(f'Period DBR: {period}nm, source_{scnd_param["label"]}: {second_parameter:.0f}, spacer: 560nm')
-    fig.savefig(folder + f'/sim1D_{date}_{scnd_param["name"]}{second_parameter:.0f}_intensity_map.png')
+    # fig.savefig(folder + f'/sim1D_{date}_{scnd_param["name"]}{second_parameter:.0f}_intensity_map.png')
 
     plt.close()
 
@@ -234,8 +235,8 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
     # for i in  tqdm(range(0,len(data['spectra']))):
     #     spectra[i,:] = itp.griddata((WV.reshape(WV.size), WVV.reshape(WV.size)), images[:,:,i].reshape(WV.size), (lambd, lambd))
     spectra = np.array(output)
-    io.savemat(folder + f'/sim_2D_{date}_{scnd_param["name"]}{second_parameter:.0f}_opposite_monitor_spectrum.mat',
-                {"diagonal_wavelength":lambd, "diagonal_intensity": spectra, "monitors_angles": np.linspace(0,90,3)[:], "wv_n_eff": WV, "wavelength" : WVV, "maps": images})
+    # io.savemat(folder + f'/sim_2D_{date}_{scnd_param["name"]}{second_parameter:.0f}_opposite_monitor_spectrum.mat',
+    #             {"diagonal_wavelength":lambd, "diagonal_intensity": spectra, "monitors_angles": np.linspace(0,90,3)[:], "wv_n_eff": WV, "wavelength" : WVV, "maps": images})
     intensity =  sum([spectra[i,:] for i in range(len(data['spectra']))])#[3,7,11,15]])
     plt.plot(lambd, intensity )
     plt.xlabel('wavelength (nm)')
@@ -244,29 +245,45 @@ for j, second_parameter in tqdm(enumerate(scnd_param['list'])):
     # images.append(image)
     # plt.title(f'Period DBR: {period}nm, source_{scnd_param["label"]}: {second_parameter:.0f}, spacer: 560nm')
     # fig_d.savefig(folder + f'/sim1D_{date}_{scnd_param["name"]}{second_parameter:.0f}_intensity.png')
-    # plt.close()
+    # plt.close()if flag :
     inc_sum += intensity
-fig_d.savefig(folder + f'/sim1D_{date}_{scnd_param["name"]}{second_parameter:.0f}_intensity.png')
+    im_wv_spacer[:,j] = intensity
+# fig_d.savefig(folder + f'/sim1D_{date}_{scnd_param["name"]}{second_parameter:.0f}_intensity.png')
 #%%
-fig = plt.figure()
-fig.set_figheight(6)
-fig.set_figwidth(12)
-plt.plot(lambd, inc_sum )
-plt.xlabel('wavelength (nm)')
-plt.ylabel('intensity (a.u.)')
-plt.grid(True)
-# images.append(image)
-plt.title(f'Period DBR: {period}nm, spacer: 560nm')
+# fig = plt.figure()
+# fig.set_figheight(6)
+# fig.set_figwidth(12)
+# plt.plot(lambd, inc_sum )
+# plt.xlabel('wavelength (nm)')
+# plt.ylabel('intensity (a.u.)')
+# plt.grid(True)
+# # images.append(image)
+# plt.title(f'Period DBR: {period}nm, spacer: 560nm')
 
-fig.savefig(folder + f'/sim1D_{date}_incoerent_sum_intensity.png')
+# fig.savefig(folder + f'/sim1D_{date}_incoerent_sum_intensity.png')
+
+# fig = plt.figure()
+# plt.pcolormesh(WV, WVV, image_sum)
+
+# fig.set_figheight(6)
+# fig.set_figwidth(15)
+# fig.set_dpi(100)
+# plt.xlabel('wavelength (nm)')
+# plt.ylabel(f'{frst_param["label"]}')
+# plt.title(f'Period DBR: {period}nm, spacer: 560nm')
+# fig.savefig(folder + f'/ortog_monitors_sim_2D_{date}_incoerent_sum_intensity_map.png')
+
 
 fig = plt.figure()
-plt.pcolormesh(WV, WVV, image_sum)
+[LAMBD, D] = np.meshgrid(lambd, scnd_param['list'], indexing='ij')
+
+plt.pcolormesh(LAMBD, D, im_wv_spacer)
 
 fig.set_figheight(6)
 fig.set_figwidth(15)
 fig.set_dpi(100)
 plt.xlabel('wavelength (nm)')
-plt.ylabel(f'{frst_param["label"]}')
-plt.title(f'Period DBR: {period}nm, spacer: 560nm')
-fig.savefig(folder + f'/ortog_monitors_sim_2D_{date}_incoerent_sum_intensity_map.png')
+plt.ylabel(f'{scnd_param["label"]}')
+plt.title(f'Period DBR: {period}nm')
+fig.savefig(folder + f'/{scnd_param["label"]}_dependence_map_{date}.png')
+io.savemat(folder + f'/{scnd_param["label"]}_dependence_map_{date}.mat',{"LAMBD":LAMBD, "D":D, "im_wv_spacer":im_wv_spacer})
