@@ -180,14 +180,14 @@ class Simulation(mp.Simulation):
             src = mp.ContinuousSource(f,fwidth=0.1) if df==0 else mp.GaussianSource(f,fwidth=df),
             center = source_pos,
             size = mp.Vector3(),
-            component = mp.Ey)]
+            component = mp.Ez)]
 
         self.harminv_instance = None
         self.field_profile = None
         self.spectrum_monitors = []
 
         if  allow_profile :
-            self.field_profile = self.add_dft_fields([mp.Ey, mp.Ex], f, 0, 1,
+            self.field_profile = self.add_dft_fields([mp.Ez], f, 0, 1,
                                                      center = mp.Vector3(),
                                                      size = mp.Vector3(self.domain_x-.5*self.extra_space_xy,self.domain_y-.5*self.extra_space_xy )) #, yee_grid=True))
         else:
@@ -202,7 +202,7 @@ class Simulation(mp.Simulation):
                 self.spectrum_monitors.append(self.add_flux(f, df, nfreq, fluxr))#, yee_grid=True))
 
                 if not self.empty:
-                    self.harminv_instance = mp.Harminv(mp.Ey, mp.Vector3(), f, df)
+                    self.harminv_instance = mp.Harminv(mp.Ez, mp.Vector3(), f, df)
 
 #%% function for parallel computing
 def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, source_pos=0, anisotropy = 0, tilt_anisotropy = 0):
@@ -259,10 +259,10 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
     sim_name += "and_outcoupler_" if outcoupler_parameters["N_rings"] > 0 else ""
     sim_name += f"{sim_prefix}_"
     # sim_name += f"anis{anisotropy:.1f}_tilt{tilt_anisotropy:.1f}"
-    sim_name += f"_period{DBR_period*1000:.0f}_D{D*1000:.0f}"
+    sim_name += f"period{DBR_period*1000:.0f}_D{D*1000:.0f}"
 
 
-    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y,phase=-1) ])#mp.Mirror(mp.Y,phase=-1)])#
+    sim = Simulation(sim_name,symmetries=[mp.Mirror(mp.X), mp.Mirror(mp.Y) ])#mp.Mirror(mp.Y,phase=-1)])#
     sim.extra_space_xy += wavelength#/n_eff_l
     sim.eps_averaging = False
     sim.force_complex_fields = True
@@ -333,9 +333,12 @@ def run_parallel(wavelength, n_eff_h, n_eff_l, D, DBR_period, empty=False, sourc
 
     if sim.field_profile != None:
         for j in range(sim.field_profile.nfreqs):
-            data2save[f"field_profile_Hz_{j}"] = sim.get_dft_array(sim.field_profile, mp.Hz, j)
-            data2save[f"field_profile_Ey_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ey, j)
-            data2save[f"field_profile_Ex_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ex, j)
+            # data2save[f"field_profile_Hz_{j}"] = sim.get_dft_array(sim.field_profile, mp.Hz, j)
+            # data2save[f"field_profile_Ey_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ey, j)
+            # data2save[f"field_profile_Ex_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ex, j)
+            data2save[f"field_profile_Ez_{j}"] = sim.get_dft_array(sim.field_profile, mp.Ez, j)
+            data2save[f"field_profile_Hy_{j}"] = sim.get_dft_array(sim.field_profile, mp.Hy, j)
+            data2save[f"field_profile_Hx_{j}"] = sim.get_dft_array(sim.field_profile, mp.Hx, j)
         data2save["field_profile_Eps"] = sim.get_array(mp.Dielectric,
                                                        center = sim.field_profile.regions[0].center,
                                                        size = sim.field_profile.regions[0].size)
